@@ -86,8 +86,8 @@ export function useCentroCosto() {
     // ==========================================================
 
     const mostrarTipoMaquinariaActual = useMemo(() => mostrarTipoMaquinaria(tipoCcId), [tipoCcId])
-    const mostrarComparativoActual = useMemo(() => mostrarComparativo(tipoCcId)[tipoCcId])
-    const mostrarVariedadActual = useMemo(() => mostrarVariedad(tipoCcId)[tipoCcId])
+    const mostrarComparativoActual = useMemo(() => mostrarComparativo(tipoCcId), [tipoCcId])
+    const mostrarVariedadActual = useMemo(() => mostrarVariedad(tipoCcId), [tipoCcId])
 
     // ==========================================================
     // CARGAR MAESTROS
