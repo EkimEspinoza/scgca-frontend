@@ -18,6 +18,7 @@ import {
 import {
   crearCentroCosto,
   actualizarCentroCosto,
+  MAX_COD_CC,
 } from '../../services/centroCostoService'
 
 function CentroCostoForm({
@@ -134,6 +135,8 @@ function CentroCostoForm({
       return
     }
 
+    // Hydrate/reset controlled form fields when the dialog target changes.
+    // eslint-disable-next-line react/set-state-in-effect
     setErrores({})
     setErrorGuardar('')
 
@@ -299,7 +302,7 @@ function CentroCostoForm({
       event.target.value.replace(
         /\D/g,
         '',
-      )
+      ).slice(0, String(MAX_COD_CC).length)
 
     setCodCc(valor)
 
@@ -443,9 +446,20 @@ function CentroCostoForm({
      * Código solo es obligatorio
      * cuando se crea.
      */
-    if (!modoEdicion && !codCc) {
-      nuevosErrores.codCc =
-        'Ingrese el código del Centro de Costo.'
+    if (!modoEdicion) {
+      const codigo = Number(codCc)
+
+      if (!codCc) {
+        nuevosErrores.codCc =
+          'Ingrese el código del Centro de Costo.'
+      } else if (
+        !Number.isSafeInteger(codigo) ||
+        codigo < 0 ||
+        codigo > MAX_COD_CC
+      ) {
+        nuevosErrores.codCc =
+          `El código debe estar entre 0 y ${MAX_COD_CC}.`
+      }
     }
 
     /*
@@ -791,10 +805,11 @@ function CentroCostoForm({
               )}
               helperText={
                 errores.codCc ||
-                'Solo se permiten números.'
+                `Solo números, máximo ${MAX_COD_CC}.`
               }
               inputProps={{
                 inputMode: 'numeric',
+                maxLength: String(MAX_COD_CC).length,
               }}
             />
           )}

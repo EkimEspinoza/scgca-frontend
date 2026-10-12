@@ -1,14 +1,11 @@
 import {
-  createContext,
-  useContext,
   useEffect,
   useState,
 } from 'react'
 
-import { useAuth } from './AuthContext'
+import { EmpresaContext } from './empresaContextStore'
+import { useAuth } from './useAuth'
 import { obtenerEmpresas } from '../services/empresaService'
-
-const EmpresaContext = createContext()
 
 export function EmpresaProvider({ children }) {
   const { user, perfil, loading: authLoading } = useAuth()
@@ -85,8 +82,4 @@ export function EmpresaProvider({ children }) {
       {children}
     </EmpresaContext.Provider>
   )
-}
-
-export function useEmpresa() {
-  return useContext(EmpresaContext)
 }

@@ -1,35 +1,29 @@
 import {
   Box,
-  Button,
-  CircularProgress,
   FormControl,
-  InputAdornment,
+  IconButton,
   InputLabel,
   MenuItem,
   Paper,
   Select,
   TextField,
+  Tooltip,
 } from '@mui/material'
-
 import {
   Search as SearchIcon,
-  Clear as ClearIcon,
+  CleaningServices as CleaningServicesIcon,
 } from '@mui/icons-material'
-
 function CentroCostoFilters({
   empresas,
   tiposCentroCosto,
   tiposMaquinaria,
   comparativos,
   variedades,
-
   tiposMaquinariaDisponibles,
   comparativosDisponibles,
   variedadesDisponibles,
-
   loadingMaestros,
   loadingOpciones,
-
   empresaId,
   estado,
   tipoCcId,
@@ -37,11 +31,9 @@ function CentroCostoFilters({
   comparativoId,
   variedadId,
   busqueda,
-
   mostrarTipoMaquinaria,
   mostrarComparativo,
   mostrarVariedad,
-
   onEmpresaChange,
   onEstadoChange,
   onTipoCcChange,
@@ -52,385 +44,486 @@ function CentroCostoFilters({
   onLimpiarFiltros,
 }) {
   /*
-   * ==========================================
-   * OPCIONES DISPONIBLES
-   * ==========================================
-   *
-   * Filtramos los maestros utilizando los IDs
-   * que realmente existen en dim_centro_costo.
+   * =========================================================
+   * FILTRAR OPCIONES DEPENDIENTES
+   * =========================================================
    */
-
-  const tiposMaquinariaFiltrados =
-    tiposMaquinaria.filter((tipo) =>
-      tiposMaquinariaDisponibles.includes(
-        Number(tipo.id_tipo_maq),
-      ),
-    )
-
-  const comparativosFiltrados =
-    comparativos.filter((comparativo) =>
-      comparativosDisponibles.includes(
-        Number(comparativo.id_comparativo),
-      ),
-    )
-
-  const variedadesFiltradas =
-    variedades.filter((variedad) =>
-      variedadesDisponibles.includes(
-        Number(variedad.id_variedad),
-      ),
-    )
-
-  /*
-   * ==========================================
-   * INDICADOR DE CARGA
-   * ==========================================
-   */
-  const IndicadorCarga = () => {
-    if (!loadingOpciones) {
-      return null
+  const filtrarOpciones = (
+    opciones = [],
+    disponibles = [],
+  ) => {
+    if (
+      !disponibles ||
+      disponibles.length === 0
+    ) {
+      return opciones
     }
-
-    return (
-      <CircularProgress
-        size={18}
-        sx={{
-          position: 'absolute',
-          right: 35,
-          top: '50%',
-          transform: 'translateY(-50%)',
-        }}
-      />
+    const idsDisponibles =
+      new Set(
+        disponibles.map(
+          (item) => Number(item),
+        ),
+      )
+    return opciones.filter(
+      (item) =>
+        idsDisponibles.has(
+          Number(
+            item.id_tipo_maq ??
+            item.id_comparativo ??
+            item.id_variedad,
+          ),
+        ),
     )
   }
-
+  /*
+   * =========================================================
+   * OPCIONES FILTRADAS
+   * =========================================================
+   */
+  const tiposMaquinariaFiltrados =
+    filtrarOpciones(
+      tiposMaquinaria,
+      tiposMaquinariaDisponibles,
+    )
+  const comparativosFiltrados =
+    filtrarOpciones(
+      comparativos,
+      comparativosDisponibles,
+    )
+  const variedadesFiltradas =
+    filtrarOpciones(
+      variedades,
+      variedadesDisponibles,
+    )
+  /*
+   * =========================================================
+   * ESTADO DE CARGA
+   * =========================================================
+   */
+  const cargando =
+    loadingMaestros ||
+    loadingOpciones
+  /*
+   * =========================================================
+   * RENDER
+   * =========================================================
+   */
   return (
     <Paper
       elevation={0}
       sx={{
-        p: 2,
-        mb: 3,
+        width: '100%',
+        maxWidth: '100%',
+        p: 1.5,
+        borderRadius: 1,
         border: '1px solid',
         borderColor: 'divider',
-        borderRadius: 2,
+        backgroundColor:
+          'background.paper',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
       }}
     >
+      {/* =====================================================
+          FILA PRINCIPAL DE FILTROS
+      ====================================================== */}
       <Box
         sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, 1fr)',
-            md: 'repeat(3, 1fr)',
-            lg: 'repeat(4, 1fr)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.25,
+          width: '100%',
+          minWidth: 0,
+          /*
+           * En escritorio:
+           * todos los filtros permanecen en una sola fila.
+           *
+           * En pantallas pequeñas:
+           * pueden distribuirse en varias filas.
+           */
+          flexWrap: {
+            xs: 'wrap',
+            lg: 'nowrap',
           },
-          gap: 2,
         }}
       >
-        {/* ==================================
+        {/* =================================================
             EMPRESA
-        =================================== */}
+        ================================================== */}
         <FormControl
           size="small"
-          fullWidth
+          disabled={cargando}
+          sx={{
+            flex: {
+              xs: '1 1 100%',
+              sm: '1 1 180px',
+              lg: '0 1 180px',
+            },
+            minWidth: {
+              xs: '100%',
+              sm: 160,
+              lg: 160,
+            },
+          }}
         >
           <InputLabel>
             Empresa
           </InputLabel>
-
           <Select
-            value={empresaId}
+            value={
+              empresaId ?? ''
+            }
             label="Empresa"
-            onChange={onEmpresaChange}
-            disabled={loadingMaestros}
+            onChange={
+              onEmpresaChange
+            }
           >
             <MenuItem value="">
               Todas las empresas
             </MenuItem>
-
-            {empresas.map((empresa) => (
-              <MenuItem
-                key={empresa.id_empresa}
-                value={empresa.id_empresa}
-              >
-                {empresa.nombre_comercial}
-              </MenuItem>
-            ))}
+            {empresas.map(
+              (empresa) => (
+                <MenuItem
+                  key={
+                    empresa.id_empresa
+                  }
+                  value={
+                    empresa.id_empresa
+                  }
+                >
+                  {
+                    empresa.nombre_comercial
+                  }
+                </MenuItem>
+              ),
+            )}
           </Select>
         </FormControl>
-
-        {/* ==================================
+        {/* =================================================
             ESTADO
-        =================================== */}
+        ================================================== */}
         <FormControl
           size="small"
-          fullWidth
+          disabled={cargando}
+          sx={{
+            flex: {
+              xs: '1 1 100%',
+              sm: '1 1 130px',
+              lg: '0 1 130px',
+            },
+            minWidth: {
+              xs: '100%',
+              sm: 120,
+              lg: 120,
+            },
+          }}
         >
           <InputLabel>
             Estado
           </InputLabel>
-
           <Select
-            value={estado}
+            value={
+              estado ?? ''
+            }
             label="Estado"
-            onChange={onEstadoChange}
-          >
-            <MenuItem value="">
-              Todos
-            </MenuItem>
-
-            <MenuItem value="true">
-              Activo
-            </MenuItem>
-
-            <MenuItem value="false">
-              Inactivo
-            </MenuItem>
-          </Select>
-        </FormControl>
-
-        {/* ==================================
-            TIPO CENTRO DE COSTO
-        =================================== */}
-        <FormControl
-          size="small"
-          fullWidth
-        >
-          <InputLabel>
-            Tipo de Centro de Costo
-          </InputLabel>
-
-          <Select
-            value={tipoCcId}
-            label="Tipo de Centro de Costo"
-            onChange={onTipoCcChange}
-            disabled={
-              loadingMaestros ||
-              loadingOpciones
+            onChange={
+              onEstadoChange
             }
           >
             <MenuItem value="">
               Todos
             </MenuItem>
-
-            {tiposCentroCosto.map((tipo) => (
-              <MenuItem
-                key={tipo.id_tip_cc}
-                value={tipo.id_tip_cc}
-              >
-                {tipo.des_tip_cc}
-              </MenuItem>
-            ))}
+            <MenuItem value="ACTIVO">
+              Activo
+            </MenuItem>
+            <MenuItem value="INACTIVO">
+              Inactivo
+            </MenuItem>
           </Select>
         </FormControl>
-
-        {/* ==================================
-            TIPO MAQUINARIA
-        =================================== */}
+        {/* =================================================
+            TIPO DE CENTRO DE COSTO
+        ================================================== */}
+        <FormControl
+          size="small"
+          disabled={cargando}
+          sx={{
+            flex: {
+              xs: '1 1 100%',
+              sm: '1 1 240px',
+              lg: '1.4 1 240px',
+            },
+            minWidth: {
+              xs: '100%',
+              sm: 220,
+              lg: 220,
+            },
+          }}
+        >
+          <InputLabel>
+            Tipo de Centro de Costo
+          </InputLabel>
+          <Select
+            value={
+              tipoCcId ?? ''
+            }
+            label="Tipo de Centro de Costo"
+            onChange={
+              onTipoCcChange
+            }
+          >
+            <MenuItem value="">
+              Todos
+            </MenuItem>
+            {tiposCentroCosto.map(
+              (tipo) => (
+                <MenuItem
+                  key={
+                    tipo.id_tip_cc
+                  }
+                  value={
+                    tipo.id_tip_cc
+                  }
+                >
+                  {
+                    tipo.des_tip_cc
+                  }
+                </MenuItem>
+              ),
+            )}
+          </Select>
+        </FormControl>
+        {/* =================================================
+            TIPO DE MAQUINARIA
+        ================================================== */}
         {mostrarTipoMaquinaria && (
-          <Box
+          <FormControl
+            size="small"
+            disabled={
+              cargando ||
+              !tipoCcId
+            }
             sx={{
-              position: 'relative',
+              flex: '1 1 190px',
+              minWidth: 170,
             }}
           >
-            <FormControl
-              size="small"
-              fullWidth
+            <InputLabel>
+              Tipo de Maquinaria
+            </InputLabel>
+            <Select
+              value={
+                tipoMaqId ?? ''
+              }
+              label="Tipo de Maquinaria"
+              onChange={
+                onTipoMaqChange
+              }
             >
-              <InputLabel>
-                Tipo de Maquinaria
-              </InputLabel>
-
-              <Select
-                value={tipoMaqId}
-                label="Tipo de Maquinaria"
-                onChange={onTipoMaqChange}
-                disabled={
-                  loadingOpciones
-                }
-              >
-                <MenuItem value="">
-                  Todos
-                </MenuItem>
-
-                {tiposMaquinariaFiltrados.map(
-                  (tipo) => (
-                    <MenuItem
-                      key={
-                        tipo.id_tipo_maq
-                      }
-                      value={
-                        tipo.id_tipo_maq
-                      }
-                    >
-                      {
-                        tipo.des_tipo_maquinaria
-                      }
-                    </MenuItem>
-                  ),
-                )}
-              </Select>
-            </FormControl>
-
-            <IndicadorCarga />
-          </Box>
+              <MenuItem value="">
+                Todos
+              </MenuItem>
+              {tiposMaquinariaFiltrados.map(
+                (tipo) => (
+                  <MenuItem
+                    key={
+                      tipo.id_tipo_maq
+                    }
+                    value={
+                      tipo.id_tipo_maq
+                    }
+                  >
+                    {
+                      tipo.des_tipo_maquinaria
+                    }
+                  </MenuItem>
+                ),
+              )}
+            </Select>
+          </FormControl>
         )}
-
-        {/* ==================================
+        {/* =================================================
             COMPARATIVO
-        =================================== */}
+        ================================================== */}
         {mostrarComparativo && (
-          <Box
+          <FormControl
+            size="small"
+            disabled={
+              cargando ||
+              !tipoCcId
+            }
             sx={{
-              position: 'relative',
+              flex: '1 1 170px',
+              minWidth: 150,
             }}
           >
-            <FormControl
-              size="small"
-              fullWidth
+            <InputLabel>
+              Comparativo
+            </InputLabel>
+            <Select
+              value={
+                comparativoId ?? ''
+              }
+              label="Comparativo"
+              onChange={
+                onComparativoChange
+              }
             >
-              <InputLabel>
-                Comparativo
-              </InputLabel>
-
-              <Select
-                value={comparativoId}
-                label="Comparativo"
-                onChange={
-                  onComparativoChange
-                }
-                disabled={
-                  loadingOpciones
-                }
-              >
-                <MenuItem value="">
-                  Todos
-                </MenuItem>
-
-                {comparativosFiltrados.map(
-                  (comparativo) => (
-                    <MenuItem
-                      key={
-                        comparativo.id_comparativo
-                      }
-                      value={
-                        comparativo.id_comparativo
-                      }
-                    >
-                      {
-                        comparativo.descripcion
-                      }
-                    </MenuItem>
-                  ),
-                )}
-              </Select>
-            </FormControl>
-
-            <IndicadorCarga />
-          </Box>
+              <MenuItem value="">
+                Todos
+              </MenuItem>
+              {comparativosFiltrados.map(
+                (item) => (
+                  <MenuItem
+                    key={
+                      item.id_comparativo
+                    }
+                    value={
+                      item.id_comparativo
+                    }
+                  >
+                    {
+                      item.descripcion
+                    }
+                  </MenuItem>
+                ),
+              )}
+            </Select>
+          </FormControl>
         )}
-
-        {/* ==================================
+        {/* =================================================
             VARIEDAD
-        =================================== */}
+        ================================================== */}
         {mostrarVariedad && (
-          <Box
+          <FormControl
+            size="small"
+            disabled={
+              cargando ||
+              !tipoCcId
+            }
             sx={{
-              position: 'relative',
+              flex: '1 1 170px',
+              minWidth: 150,
             }}
           >
-            <FormControl
-              size="small"
-              fullWidth
+            <InputLabel>
+              Variedad
+            </InputLabel>
+            <Select
+              value={
+                variedadId ?? ''
+              }
+              label="Variedad"
+              onChange={
+                onVariedadChange
+              }
             >
-              <InputLabel>
-                Variedad
-              </InputLabel>
-
-              <Select
-                value={variedadId}
-                label="Variedad"
-                onChange={
-                  onVariedadChange
-                }
-                disabled={
-                  loadingOpciones
-                }
-              >
-                <MenuItem value="">
-                  Todas
-                </MenuItem>
-
-                {variedadesFiltradas.map(
-                  (variedad) => (
-                    <MenuItem
-                      key={
-                        variedad.id_variedad
-                      }
-                      value={
-                        variedad.id_variedad
-                      }
-                    >
-                      {
-                        variedad.descripcion
-                      }
-                    </MenuItem>
-                  ),
-                )}
-              </Select>
-            </FormControl>
-
-            <IndicadorCarga />
-          </Box>
+              <MenuItem value="">
+                Todas
+              </MenuItem>
+              {variedadesFiltradas.map(
+                (item) => (
+                  <MenuItem
+                    key={
+                      item.id_variedad
+                    }
+                    value={
+                      item.id_variedad
+                    }
+                  >
+                    {
+                      item.descripcion
+                    }
+                  </MenuItem>
+                ),
+              )}
+            </Select>
+          </FormControl>
         )}
-
-        {/* ==================================
+        {/* =================================================
             BUSCAR
-        =================================== */}
+        ================================================== */}
         <TextField
           size="small"
-          fullWidth
           label="Buscar"
           placeholder="Código o descripción"
-          value={busqueda}
-          onChange={onBusquedaChange}
+          value={
+            busqueda ?? ''
+          }
+          onChange={
+            onBusquedaChange
+          }
+          disabled={cargando}
+          sx={{
+            flex: {
+              xs: '1 1 100%',
+              sm: '1 1 220px',
+              lg: '1.3 1 220px',
+            },
+            minWidth: {
+              xs: '100%',
+              sm: 200,
+              lg: 200,
+            },
+            '& .MuiInputBase-root': {
+              backgroundColor:
+                'background.paper',
+            },
+          }}
           slotProps={{
             input: {
               startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon
-                    fontSize="small"
-                    sx={{
-                      color: 'text.secondary',
-                    }}
-                  />
-                </InputAdornment>
+                <SearchIcon
+                  sx={{
+                    mr: 1,
+                    color:
+                      'text.secondary',
+                    fontSize: 20,
+                  }}
+                />
               ),
             },
           }}
         />
-
-        {/* ==================================
+        {/* =================================================
             LIMPIAR FILTROS
-        =================================== */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-          }}
+        ================================================== */}
+        <Tooltip
+          title="Limpiar filtros"
+          arrow
         >
-          <Button
-            variant="outlined"
-            startIcon={<ClearIcon />}
-            onClick={onLimpiarFiltros}
-            fullWidth
-          >
-            Limpiar filtros
-          </Button>
-        </Box>
+          <span>
+            <IconButton
+              onClick={
+                onLimpiarFiltros
+              }
+              disabled={
+                cargando
+              }
+              size="small"
+              color="primary"
+              aria-label="Limpiar filtros"
+              sx={{
+                width: 38,
+                height: 38,
+                flexShrink: 0,
+                borderRadius: 1,
+                '&:hover': {
+                  backgroundColor:
+                    'rgba(46, 125, 50, 0.08)',
+                },
+              }}
+            >
+              <CleaningServicesIcon
+                sx={{
+                  fontSize: 21,
+                }}
+              />
+            </IconButton>
+          </span>
+        </Tooltip>
       </Box>
     </Paper>
   )
 }
-
 export default CentroCostoFilters

@@ -1,767 +1,987 @@
 import {
-  Box,
-  Chip,
-  IconButton,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TablePagination,
-  TableRow,
-  Tooltip,
-  Typography,
+    Box,
+    IconButton,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TablePagination,
+    TableRow,
+    Tooltip,
+    Typography,
 } from '@mui/material'
 
 import {
-  Edit as EditIcon,
+    Edit as EditIcon,
 } from '@mui/icons-material'
 
-
 function CentroCostoTable({
-  centros,
-  loading,
-  total,
-  pagina,
-  registrosPorPagina,
-  onChangePagina,
-  onChangeRegistrosPorPagina,
-  onEditar,
+    centros,
+    loading,
+    total,
+    pagina,
+    registrosPorPagina,
+    onChangePagina,
+    onChangeRegistrosPorPagina,
+    onEditar,
 }) {
-  /*
-   * =========================================================
-   * COLOR POR EMPRESA
-   * =========================================================
-   */
-  const obtenerColorEmpresa = (
-    nombreComercial,
-  ) => {
-    const nombre = (
-      nombreComercial || ''
-    ).toUpperCase()
+    /*
+     * =========================================================
+     * COLOR DE LA BARRA LATERAL SEGÚN EMPRESA
+     * =========================================================
+     */
 
-    if (nombre.includes('RANCHO')) {
-      return {
-        backgroundColor: '#EAF4FC',
-        hoverColor: '#E0EFFA',
-        indicatorColor: '#1976D2',
-      }
+    const obtenerColorEmpresa = (
+        nombreComercial,
+    ) => {
+        const nombre = (
+            nombreComercial || ''
+        ).toUpperCase()
+
+        if (
+            nombre.includes('RANCHO')
+        ) {
+            return '#1976D2'
+        }
+
+        if (
+            nombre.includes('MOCHE') ||
+            nombre.includes('SAMNSA')
+        ) {
+            return '#2E7D32'
+        }
+
+        if (
+            nombre.includes('MCR')
+        ) {
+            return '#9C27B0'
+        }
+
+        if (
+            nombre.includes('CANTERA')
+        ) {
+            return '#ED6C02'
+        }
+
+        return '#BDBDBD'
     }
 
-    if (
-      nombre.includes('MOCHE') ||
-      nombre.includes('SAMNSA')
-    ) {
-      return {
-        backgroundColor: '#EDF7EE',
-        hoverColor: '#E3F2E5',
-        indicatorColor: '#2E7D32',
-      }
+    /*
+     * =========================================================
+     * COLOR DEL PUNTO DE ESTADO
+     *
+     * Verde suave = ACTIVO
+     * Rojo suave  = INACTIVO
+     * =========================================================
+     */
+
+    const obtenerColorEstado = (
+        estado,
+    ) => {
+        return estado
+            ? '#66BB6A'
+            : '#EF9A9A'
     }
 
-    if (nombre.includes('MCR')) {
-      return {
-        backgroundColor: '#F7EDF8',
-        hoverColor: '#F0E3F2',
-        indicatorColor: '#8E44AD',
-      }
+    /*
+     * =========================================================
+     * COLOR DEL TEXTO DE ESTADO
+     * =========================================================
+     */
+
+    const obtenerColorTextoEstado = (
+        estado,
+    ) => {
+        return estado
+            ? '#388E3C'
+            : '#C62828'
     }
 
-    if (nombre.includes('CANTERA')) {
-      return {
-        backgroundColor: '#FFF9E8',
-        hoverColor: '#FFF4D5',
-        indicatorColor: '#ED9C00',
-      }
+    /*
+     * =========================================================
+     * COLOR DEL TIPO DE CENTRO DE COSTO
+     *
+     * Se utiliza únicamente en el texto.
+     * =========================================================
+     */
+
+    const obtenerColorTipoCC = (
+        tipo,
+    ) => {
+        const nombre = (
+            tipo || ''
+        ).toUpperCase()
+
+        if (
+            nombre ===
+            'MAQUINARIAS Y EQUIPOS'
+        ) {
+            return '#1976D2'
+        }
+
+        if (
+            nombre ===
+            'LEVANTE Y MANTENIMIENTO'
+        ) {
+            return '#2E7D32'
+        }
+
+        if (
+            nombre ===
+            'INVERSIÓN E INSTALACIÓN CAMPO'
+        ) {
+            return '#E65100'
+        }
+
+        if (
+            nombre === 'VIVEROS'
+        ) {
+            return '#8E24AA'
+        }
+
+        if (
+            nombre.includes(
+                'ADMINISTRATIVO',
+            )
+        ) {
+            return '#546E7A'
+        }
+
+        if (
+            nombre === 'GENÉRICO'
+        ) {
+            return '#607D8B'
+        }
+
+        if (
+            nombre.includes(
+                'OTROS COSTOS',
+            )
+        ) {
+            return '#795548'
+        }
+
+        return '#374151'
     }
 
-    return {
-      backgroundColor: '#FFFFFF',
-      hoverColor: '#F8FAF9',
-      indicatorColor: '#9CA3AF',
+    /*
+     * =========================================================
+     * TEXTO CON VALOR POR DEFECTO
+     * =========================================================
+     */
+
+    const mostrarValor = (
+        valor,
+    ) => {
+        return valor || '-'
     }
-  }
 
+    return (
+        <Paper
+            elevation={0}
+            sx={{
+                width: '100%',
+                height: '100%',
+                minWidth: 0,
+                minHeight: 0,
 
-  /*
-   * =========================================================
-   * TEXTO CON VALOR POR DEFECTO
-   * =========================================================
-   */
-  const mostrarValor = (
-    valor,
-  ) => {
-    return valor || '-'
-  }
+                display: 'flex',
+                flexDirection: 'column',
 
-
-  /*
-   * =========================================================
-   * ESTILO GENERAL DE CELDAS
-   * =========================================================
-   */
-  const estiloCelda = {
-    borderBottom: '1px solid',
-    borderColor: 'divider',
-    px: 1.75,
-    py: 1.5,
-  }
-
-
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 2,
-        overflow: 'hidden',
-        backgroundColor: 'background.paper',
-      }}
-    >
-      {/* =====================================================
-          CONTENEDOR DE TABLA
-      ====================================================== */}
-      <TableContainer
-        sx={{
-          maxHeight:
-            'calc(100vh - 330px)',
-          overflowX: 'auto',
-          px: { xs: 0.5, md: 1 },
-          pt: 1,
-        }}
-      >
-        <Table
-          stickyHeader
-          size="small"
-          sx={{
-            minWidth: 1150,
-            tableLayout: 'fixed',
-            borderCollapse: 'separate',
-            borderSpacing: '0 4px',
-          }}
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                overflow: 'hidden',
+                backgroundColor:
+                    'background.paper',
+            }}
         >
 
-          {/* =================================================
-              CABECERA
-          ================================================== */}
-          <TableHead>
-            <TableRow>
-              <TableCell
+            {/* =================================================
+                TABLA
+            ================================================== */}
+
+            <TableContainer
                 sx={{
-                  width: 115,
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  px: 1.75,
-                  py: 1.5,
-                  color: 'text.primary',
-                  backgroundColor: '#F8FAF9',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                  borderTopLeftRadius: 8,
+                    width: '100%',
+                    flex: '1 1 0%',
+                    minWidth: 0,
+                    minHeight: 0,
+
+                    overflowX: 'auto',
+                    overflowY: 'auto',
                 }}
-              >
-                Empresa
-              </TableCell>
+            >
 
-              <TableCell
-                sx={{
-                  width: 100,
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  px: 1.75,
-                  py: 1.5,
-                  color: 'text.primary',
-                  backgroundColor: '#F8FAF9',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
-                Código CC
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  width: 285,
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  px: 1.75,
-                  py: 1.5,
-                  color: 'text.primary',
-                  backgroundColor: '#F8FAF9',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
-                Descripción
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  width: 190,
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  px: 1.75,
-                  py: 1.5,
-                  color: 'text.primary',
-                  backgroundColor: '#F8FAF9',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
-                Tipo CC
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  width: 180,
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  px: 1.75,
-                  py: 1.5,
-                  color: 'text.primary',
-                  backgroundColor: '#F8FAF9',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
-                Tipo Maquinaria
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  width: 145,
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  px: 1.75,
-                  py: 1.5,
-                  color: 'text.primary',
-                  backgroundColor: '#F8FAF9',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
-                Comparativo
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  width: 165,
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  px: 1.75,
-                  py: 1.5,
-                  color: 'text.primary',
-                  backgroundColor: '#F8FAF9',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
-                Variedad
-              </TableCell>
-
-              <TableCell
-                align="center"
-                sx={{
-                  width: 105,
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  px: 1.5,
-                  py: 1.5,
-                  color: 'text.primary',
-                  backgroundColor: '#F8FAF9',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
-                Estado
-              </TableCell>
-
-              <TableCell
-                align="center"
-                sx={{
-                  width: 80,
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  px: 1.25,
-                  py: 1.5,
-                  color: 'text.primary',
-                  backgroundColor: '#F8FAF9',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                  borderTopRightRadius: 8,
-                }}
-              >
-                Acción
-              </TableCell>
-            </TableRow>
-          </TableHead>
-
-
-          {/* =================================================
-              CUERPO
-          ================================================== */}
-          <TableBody>
-
-            {/* ===============================================
-                CARGANDO
-            ================================================ */}
-            {loading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={9}
-                  align="center"
-                  sx={{
-                    py: 7,
-                    borderBottom: 'none',
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                  >
-                    Cargando centros de costo...
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : centros.length === 0 ? (
-
-              /* =============================================
-                 SIN RESULTADOS
-              ============================================== */
-              <TableRow>
-                <TableCell
-                  colSpan={9}
-                  align="center"
-                  sx={{
-                    py: 7,
-                    borderBottom: 'none',
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                  >
-                    No se encontraron centros de costo.
-                  </Typography>
-                </TableCell>
-              </TableRow>
-
-            ) : (
-
-              /* =============================================
-                 REGISTROS
-              ============================================== */
-              centros.map((centro) => {
-                const colores =
-                  obtenerColorEmpresa(
-                    centro.empresa
-                      ?.nombre_comercial,
-                  )
-
-                return (
-                  <TableRow
-                    key={centro.cod_cc_pk}
-                    hover
+                <Table
+                    stickyHeader
+                    size="small"
                     sx={{
-                      backgroundColor:
-                        colores.backgroundColor,
+                        width: '100%',
+                        tableLayout: 'fixed',
 
-                      transition:
-                        'background-color 0.15s ease',
+                        '& .MuiTableCell-root': {
+                            fontSize: '13px',
+                        },
 
-                      '&:hover': {
-                        backgroundColor:
-                          colores.hoverColor,
-                      },
-
-                      '& td': {
-                        borderBottom:
-                          '1px solid',
-                        borderColor:
-                          'divider',
-                      },
-
-                      '& td:first-of-type': {
-                        borderTopLeftRadius: 8,
-                        borderBottomLeftRadius: 8,
-                      },
-
-                      '& td:last-of-type': {
-                        borderTopRightRadius: 8,
-                        borderBottomRightRadius: 8,
-                      },
+                        '& .MuiTypography-root': {
+                            fontSize: '13px',
+                        },
                     }}
-                  >
+                >
 
-                    {/* ======================================
-                        EMPRESA
-                    ======================================= */}
-                    <TableCell
-                      sx={{
-                        ...estiloCelda,
-                        fontWeight: 700,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1,
-                          minWidth: 0,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            width: 5,
-                            height: 28,
-                            borderRadius: 4,
-                            flexShrink: 0,
-                            backgroundColor:
-                              colores.indicatorColor,
-                          }}
-                        />
+                    {/* =================================================
+                        CABECERA
+                    ================================================== */}
 
-                        <Typography
-                          variant="body2"
-                          fontWeight={700}
-                          sx={{
-                            overflow: 'hidden',
-                            textOverflow:
-                              'ellipsis',
-                            whiteSpace:
-                              'nowrap',
-                          }}
-                        >
-                          {mostrarValor(
-                            centro.empresa
-                              ?.nombre_comercial,
-                          )}
-                        </Typography>
-                      </Box>
-                    </TableCell>
+                    <TableHead>
 
+                        <TableRow>
 
-                    {/* ======================================
-                        CÓDIGO
-                    ======================================= */}
-                    <TableCell
-                      sx={{
-                        ...estiloCelda,
-                        whiteSpace: 'nowrap',
-                        fontVariantNumeric:
-                          'tabular-nums',
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 600,
-                          fontVariantNumeric:
-                            'tabular-nums',
-                        }}
-                      >
-                        {centro.cod_cc}
-                      </Typography>
-                    </TableCell>
+                            <TableCell
+                                sx={{
+                                    width: '12%',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    backgroundColor:
+                                        '#F8FAF9',
+                                    color:
+                                        '#1F2937',
+                                    py: 1.25,
+                                }}
+                            >
+                                Empresa
+                            </TableCell>
 
+                            <TableCell
+                                sx={{
+                                    width: '8%',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    backgroundColor:
+                                        '#F8FAF9',
+                                    color:
+                                        '#1F2937',
+                                    py: 1.25,
+                                }}
+                            >
+                                Código CC
+                            </TableCell>
 
-                    {/* ======================================
-                        DESCRIPCIÓN
-                    ======================================= */}
-                    <TableCell
-                      sx={{
-                        ...estiloCelda,
-                        fontWeight: 500,
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 600,
-                          color:
-                            'text.primary',
-                          overflow: 'hidden',
-                          textOverflow:
-                            'ellipsis',
-                          whiteSpace:
-                            'nowrap',
-                        }}
-                        title={
-                          centro.desc_cc
-                        }
-                      >
-                        {mostrarValor(
-                          centro.desc_cc,
+                            <TableCell
+                                sx={{
+                                    width: '21%',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    backgroundColor:
+                                        '#F8FAF9',
+                                    color:
+                                        '#1F2937',
+                                    py: 1.25,
+                                }}
+                            >
+                                Descripción
+                            </TableCell>
+
+                            <TableCell
+                                sx={{
+                                    width: '13%',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    backgroundColor:
+                                        '#F8FAF9',
+                                    color:
+                                        '#1F2937',
+                                    py: 1.25,
+                                }}
+                            >
+                                Tipo CC
+                            </TableCell>
+
+                            <TableCell
+                                sx={{
+                                    width: '13%',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    backgroundColor:
+                                        '#F8FAF9',
+                                    color:
+                                        '#1F2937',
+                                    py: 1.25,
+                                }}
+                            >
+                                Tipo Maquinaria
+                            </TableCell>
+
+                            <TableCell
+                                sx={{
+                                    width: '9%',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    backgroundColor:
+                                        '#F8FAF9',
+                                    color:
+                                        '#1F2937',
+                                    py: 1.25,
+                                }}
+                            >
+                                Comparativo
+                            </TableCell>
+
+                            <TableCell
+                                sx={{
+                                    width: '9%',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    backgroundColor:
+                                        '#F8FAF9',
+                                    color:
+                                        '#1F2937',
+                                    py: 1.25,
+                                }}
+                            >
+                                Variedad
+                            </TableCell>
+
+                            <TableCell
+                                align="center"
+                                sx={{
+                                    width: '7%',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    backgroundColor:
+                                        '#F8FAF9',
+                                    color:
+                                        '#1F2937',
+                                    py: 1.25,
+                                }}
+                            >
+                                Estado
+                            </TableCell>
+
+                            <TableCell
+                                align="center"
+                                sx={{
+                                    width: '8%',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    backgroundColor:
+                                        '#F8FAF9',
+                                    color:
+                                        '#1F2937',
+                                    py: 1.25,
+                                }}
+                            >
+                                Acción
+                            </TableCell>
+
+                        </TableRow>
+
+                    </TableHead>
+
+                    {/* =================================================
+                        CUERPO
+                    ================================================== */}
+
+                    <TableBody>
+
+                        {/* =================================================
+                            CARGANDO
+                        ================================================== */}
+
+                        {loading ? (
+
+                            <TableRow>
+
+                                <TableCell
+                                    colSpan={9}
+                                    align="center"
+                                    sx={{
+                                        py: 6,
+                                    }}
+                                >
+
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                    >
+                                        Cargando centros de costo...
+                                    </Typography>
+
+                                </TableCell>
+
+                            </TableRow>
+
+                        ) : centros.length === 0 ? (
+
+                            /* =================================================
+                               SIN RESULTADOS
+                            ================================================== */
+
+                            <TableRow>
+
+                                <TableCell
+                                    colSpan={9}
+                                    align="center"
+                                    sx={{
+                                        py: 6,
+                                    }}
+                                >
+
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                    >
+                                        No se encontraron centros de costo.
+                                    </Typography>
+
+                                </TableCell>
+
+                            </TableRow>
+
+                        ) : (
+
+                            /* =================================================
+                               REGISTROS
+                            ================================================== */
+
+                            centros.map(
+                                (centro) => {
+
+                                    const colorEmpresa =
+                                        obtenerColorEmpresa(
+                                            centro
+                                                .empresa
+                                                ?.nombre_comercial,
+                                        )
+
+                                    const colorEstado =
+                                        obtenerColorEstado(
+                                            centro.estado,
+                                        )
+
+                                    const colorTextoEstado =
+                                        obtenerColorTextoEstado(
+                                            centro.estado,
+                                        )
+
+                                    const tipoCC =
+                                        centro
+                                            .tipo_cc
+                                            ?.des_tip_cc
+
+                                    const colorTipoCC =
+                                        obtenerColorTipoCC(
+                                            tipoCC,
+                                        )
+
+                                    return (
+                                        <TableRow
+                                            key={
+                                                centro.cod_cc_pk
+                                            }
+                                            hover
+                                            sx={{
+                                                backgroundColor:
+                                                    '#FFFFFF',
+
+                                                '&:hover': {
+                                                    backgroundColor:
+                                                        '#F8FAF9',
+                                                },
+
+                                                '& td': {
+                                                    borderBottom:
+                                                        '1px solid #E8ECEA',
+                                                },
+
+                                                '&:last-child td':
+                                                    {
+                                                        borderBottom:
+                                                            'none',
+                                                    },
+
+                                                /*
+                                                 * Barra lateral
+                                                 * de empresa.
+                                                 */
+                                                '& td:first-of-type':
+                                                    {
+                                                        borderLeft:
+                                                            `4px solid ${colorEmpresa}`,
+                                                    },
+                                            }}
+                                        >
+
+                                            {/* ======================================
+                                                EMPRESA
+                                            ======================================= */}
+
+                                            <TableCell
+                                                sx={{
+                                                    fontWeight: 500,
+                                                    whiteSpace:
+                                                        'nowrap',
+                                                    overflow:
+                                                        'hidden',
+                                                    textOverflow:
+                                                        'ellipsis',
+                                                    py: 1.15,
+                                                    pl: 1.5,
+                                                }}
+                                            >
+
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        fontWeight: 500,
+                                                        overflow:
+                                                            'hidden',
+                                                        textOverflow:
+                                                            'ellipsis',
+                                                        whiteSpace:
+                                                            'nowrap',
+                                                    }}
+                                                    title={
+                                                        centro
+                                                            .empresa
+                                                            ?.nombre_comercial
+                                                    }
+                                                >
+                                                    {
+                                                        mostrarValor(
+                                                            centro
+                                                                .empresa
+                                                                ?.nombre_comercial,
+                                                        )
+                                                    }
+                                                </Typography>
+
+                                            </TableCell>
+
+                                            {/* ======================================
+                                                CÓDIGO CC
+                                            ======================================= */}
+
+                                            <TableCell
+                                                sx={{
+                                                    whiteSpace:
+                                                        'nowrap',
+                                                    fontVariantNumeric:
+                                                        'tabular-nums',
+                                                    fontWeight: 600,
+                                                    py: 1.15,
+                                                }}
+                                            >
+                                                {
+                                                    centro.cod_cc
+                                                }
+                                            </TableCell>
+
+                                            {/* ======================================
+                                                DESCRIPCIÓN
+                                            ======================================= */}
+
+                                            <TableCell
+                                                sx={{
+                                                    fontWeight: 500,
+                                                    py: 1.15,
+                                                }}
+                                            >
+
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        fontWeight: 500,
+                                                        overflow:
+                                                            'hidden',
+                                                        textOverflow:
+                                                            'ellipsis',
+                                                        whiteSpace:
+                                                            'nowrap',
+                                                    }}
+                                                    title={
+                                                        centro.desc_cc
+                                                    }
+                                                >
+                                                    {
+                                                        mostrarValor(
+                                                            centro.desc_cc,
+                                                        )
+                                                    }
+                                                </Typography>
+
+                                            </TableCell>
+
+                                            {/* ======================================
+                                                TIPO CC
+                                            ======================================= */}
+
+                                            <TableCell
+                                                sx={{
+                                                    overflow:
+                                                        'hidden',
+                                                    textOverflow:
+                                                        'ellipsis',
+                                                    whiteSpace:
+                                                        'nowrap',
+                                                    py: 1.15,
+                                                }}
+                                            >
+
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        color:
+                                                            colorTipoCC,
+                                                        overflow:
+                                                            'hidden',
+                                                        textOverflow:
+                                                            'ellipsis',
+                                                        whiteSpace:
+                                                            'nowrap',
+                                                    }}
+                                                    title={
+                                                        tipoCC
+                                                    }
+                                                >
+                                                    {
+                                                        mostrarValor(
+                                                            tipoCC,
+                                                        )
+                                                    }
+                                                </Typography>
+
+                                            </TableCell>
+
+                                            {/* ======================================
+                                                TIPO MAQUINARIA
+                                            ======================================= */}
+
+                                            <TableCell
+                                                sx={{
+                                                    overflow:
+                                                        'hidden',
+                                                    textOverflow:
+                                                        'ellipsis',
+                                                    whiteSpace:
+                                                        'nowrap',
+                                                    py: 1.15,
+                                                }}
+                                            >
+
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        overflow:
+                                                            'hidden',
+                                                        textOverflow:
+                                                            'ellipsis',
+                                                        whiteSpace:
+                                                            'nowrap',
+                                                    }}
+                                                    title={
+                                                        centro
+                                                            .tipo_maq
+                                                            ?.des_tipo_maquinaria
+                                                    }
+                                                >
+                                                    {
+                                                        mostrarValor(
+                                                            centro
+                                                                .tipo_maq
+                                                                ?.des_tipo_maquinaria,
+                                                        )
+                                                    }
+                                                </Typography>
+
+                                            </TableCell>
+
+                                            {/* ======================================
+                                                COMPARATIVO
+                                            ======================================= */}
+
+                                            <TableCell
+                                                sx={{
+                                                    overflow:
+                                                        'hidden',
+                                                    textOverflow:
+                                                        'ellipsis',
+                                                    whiteSpace:
+                                                        'nowrap',
+                                                    py: 1.15,
+                                                }}
+                                            >
+
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        overflow:
+                                                            'hidden',
+                                                        textOverflow:
+                                                            'ellipsis',
+                                                        whiteSpace:
+                                                            'nowrap',
+                                                    }}
+                                                    title={
+                                                        centro
+                                                            .comparativo
+                                                            ?.descripcion
+                                                    }
+                                                >
+                                                    {
+                                                        mostrarValor(
+                                                            centro
+                                                                .comparativo
+                                                                ?.descripcion,
+                                                        )
+                                                    }
+                                                </Typography>
+
+                                            </TableCell>
+
+                                            {/* ======================================
+                                                VARIEDAD
+                                            ======================================= */}
+
+                                            <TableCell
+                                                sx={{
+                                                    overflow:
+                                                        'hidden',
+                                                    textOverflow:
+                                                        'ellipsis',
+                                                    whiteSpace:
+                                                        'nowrap',
+                                                    py: 1.15,
+                                                }}
+                                            >
+
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        overflow:
+                                                            'hidden',
+                                                        textOverflow:
+                                                            'ellipsis',
+                                                        whiteSpace:
+                                                            'nowrap',
+                                                    }}
+                                                    title={
+                                                        centro
+                                                            .variedad
+                                                            ?.descripcion
+                                                    }
+                                                >
+                                                    {
+                                                        mostrarValor(
+                                                            centro
+                                                                .variedad
+                                                                ?.descripcion,
+                                                        )
+                                                    }
+                                                </Typography>
+
+                                            </TableCell>
+
+                                            {/* ======================================
+                                                ESTADO
+                                                Punto + texto
+                                            ======================================= */}
+
+                                            <TableCell
+                                                align="center"
+                                                sx={{
+                                                    py: 1.15,
+                                                }}
+                                            >
+
+                                                <Box
+                                                    sx={{
+                                                        display:
+                                                            'inline-flex',
+                                                        alignItems:
+                                                            'center',
+                                                        justifyContent:
+                                                            'center',
+                                                        gap: 0.75,
+                                                    }}
+                                                >
+
+                                                    {/* PUNTO */}
+
+                                                    <Box
+                                                        sx={{
+                                                            width: 7,
+                                                            height: 7,
+                                                            minWidth: 7,
+                                                            borderRadius:
+                                                                '50%',
+                                                            backgroundColor:
+                                                                colorEstado,
+                                                        }}
+                                                    />
+
+                                                    {/* TEXTO */}
+
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                            fontWeight: 600,
+                                                            color:
+                                                                colorTextoEstado,
+                                                        }}
+                                                    >
+                                                        {
+                                                            centro.estado
+                                                                ? 'Activo'
+                                                                : 'Inactivo'
+                                                        }
+                                                    </Typography>
+
+                                                </Box>
+
+                                            </TableCell>
+
+                                            {/* ======================================
+                                                ACCIONES
+                                            ======================================= */}
+
+                                            <TableCell
+                                                align="center"
+                                                sx={{
+                                                    py: 1.15,
+                                                }}
+                                            >
+
+                                                <Box
+                                                    sx={{
+                                                        display:
+                                                            'inline-flex',
+                                                        alignItems:
+                                                            'center',
+                                                        justifyContent:
+                                                            'center',
+                                                        gap: 0.25,
+                                                    }}
+                                                >
+
+                                                    {/* ==================================
+                                                        EDITAR
+                                                    =================================== */}
+
+                                                    <Tooltip
+                                                        title="Editar Centro de Costo"
+                                                        arrow
+                                                    >
+
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() =>
+                                                                onEditar(
+                                                                    centro,
+                                                                )
+                                                            }
+                                                            aria-label="Editar Centro de Costo"
+                                                            sx={{
+                                                                width: 32,
+                                                                height: 32,
+                                                            }}
+                                                        >
+
+                                                            <EditIcon
+                                                                fontSize="small"
+                                                            />
+
+                                                        </IconButton>
+
+                                                    </Tooltip>
+
+                                                </Box>
+
+                                            </TableCell>
+
+                                        </TableRow>
+                                    )
+                                },
+                            )
                         )}
-                      </Typography>
-                    </TableCell>
 
+                    </TableBody>
 
-                    {/* ======================================
-                        TIPO CC
-                    ======================================= */}
-                    <TableCell
-                      sx={{
-                        ...estiloCelda,
-                        overflow: 'hidden',
-                        textOverflow:
-                          'ellipsis',
-                        whiteSpace:
-                          'nowrap',
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          overflow: 'hidden',
-                          textOverflow:
-                            'ellipsis',
-                          whiteSpace:
-                            'nowrap',
-                        }}
-                        title={
-                          centro.tipo_cc
-                            ?.des_tip_cc
-                        }
-                      >
-                        {mostrarValor(
-                          centro.tipo_cc
-                            ?.des_tip_cc,
-                        )}
-                      </Typography>
-                    </TableCell>
+                </Table>
 
+            </TableContainer>
 
-                    {/* ======================================
-                        TIPO MAQUINARIA
-                    ======================================= */}
-                    <TableCell
-                      sx={{
-                        ...estiloCelda,
-                        overflow: 'hidden',
-                        textOverflow:
-                          'ellipsis',
-                        whiteSpace:
-                          'nowrap',
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          overflow: 'hidden',
-                          textOverflow:
-                            'ellipsis',
-                          whiteSpace:
-                            'nowrap',
-                        }}
-                        title={
-                          centro.tipo_maq
-                            ?.des_tipo_maquinaria
-                        }
-                      >
-                        {mostrarValor(
-                          centro.tipo_maq
-                            ?.des_tipo_maquinaria,
-                        )}
-                      </Typography>
-                    </TableCell>
+            {/* =====================================================
+                PAGINACIÓN
+            ====================================================== */}
 
+            <TablePagination
+                component="div"
+                count={
+                    total
+                }
+                page={
+                    pagina
+                }
+                onPageChange={
+                    onChangePagina
+                }
+                rowsPerPage={
+                    registrosPorPagina
+                }
+                onRowsPerPageChange={
+                    onChangeRegistrosPorPagina
+                }
+                rowsPerPageOptions={[
+                    10,
+                    25,
+                    50,
+                    100,
+                ]}
+                labelRowsPerPage="Registros por página"
+                labelDisplayedRows={({
+                    from,
+                    to,
+                    count,
+                }) =>
+                    `${from}-${to} de ${
+                        count !== -1
+                            ? count
+                            : `más de ${to}`
+                    }`
+                }
+                sx={{
+                    borderTop:
+                        '1px solid #E8ECEA',
 
-                    {/* ======================================
-                        COMPARATIVO
-                    ======================================= */}
-                    <TableCell
-                      sx={{
-                        ...estiloCelda,
-                        overflow: 'hidden',
-                        textOverflow:
-                          'ellipsis',
-                        whiteSpace:
-                          'nowrap',
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          overflow: 'hidden',
-                          textOverflow:
-                            'ellipsis',
-                          whiteSpace:
-                            'nowrap',
-                        }}
-                        title={
-                          centro.comparativo
-                            ?.descripcion
-                        }
-                      >
-                        {mostrarValor(
-                          centro.comparativo
-                            ?.descripcion,
-                        )}
-                      </Typography>
-                    </TableCell>
+                    '& .MuiTablePagination-toolbar':
+                        {
+                            minHeight: 52,
+                        },
 
+                    '& .MuiTablePagination-selectLabel':
+                        {
+                            fontSize: '13px',
+                        },
 
-                    {/* ======================================
-                        VARIEDAD
-                    ======================================= */}
-                    <TableCell
-                      sx={{
-                        ...estiloCelda,
-                        overflow: 'hidden',
-                        textOverflow:
-                          'ellipsis',
-                        whiteSpace:
-                          'nowrap',
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          overflow: 'hidden',
-                          textOverflow:
-                            'ellipsis',
-                          whiteSpace:
-                            'nowrap',
-                        }}
-                        title={
-                          centro.variedad
-                            ?.descripcion
-                        }
-                      >
-                        {mostrarValor(
-                          centro.variedad
-                            ?.descripcion,
-                        )}
-                      </Typography>
-                    </TableCell>
+                    '& .MuiTablePagination-displayedRows':
+                        {
+                            fontSize: '13px',
+                        },
 
+                    '& .MuiTablePagination-select':
+                        {
+                            fontSize: '13px',
+                        },
+                }}
+            />
 
-                    {/* ======================================
-                        ESTADO
-                    ======================================= */}
-                    <TableCell
-                      align="center"
-                      sx={{
-                        ...estiloCelda,
-                      }}
-                    >
-                      <Chip
-                        label={
-                          centro.estado
-                            ? 'Activo'
-                            : 'Inactivo'
-                        }
-                        color={
-                          centro.estado
-                            ? 'success'
-                            : 'default'
-                        }
-                        size="small"
-                        sx={{
-                          minWidth: 72,
-                          fontWeight: 600,
-                        }}
-                      />
-                    </TableCell>
-
-
-                    {/* ======================================
-                        ACCIÓN
-                    ======================================= */}
-                    <TableCell
-                      align="center"
-                      sx={{
-                        ...estiloCelda,
-                      }}
-                    >
-                      <Tooltip
-                        title="Editar Centro de Costo"
-                        arrow
-                      >
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() =>
-                            onEditar(centro)
-                          }
-                          aria-label="Editar Centro de Costo"
-                          sx={{
-                            width: 34,
-                            height: 34,
-                            '&:hover': {
-                              backgroundColor:
-                                'action.hover',
-                            },
-                          }}
-                        >
-                          <EditIcon
-                            fontSize="small"
-                          />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-
-                  </TableRow>
-                )
-              })
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-
-      {/* ===================================================
-          PAGINACIÓN
-      ==================================================== */}
-      <Box
-        sx={{
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          px: 1,
-        }}
-      >
-        <TablePagination
-          component="div"
-          count={total}
-          page={pagina}
-          onPageChange={
-            onChangePagina
-          }
-          rowsPerPage={
-            registrosPorPagina
-          }
-          onRowsPerPageChange={
-            onChangeRegistrosPorPagina
-          }
-          rowsPerPageOptions={[
-            10,
-            25,
-            50,
-            100,
-          ]}
-          labelRowsPerPage="Registros por página"
-          labelDisplayedRows={({
-            from,
-            to,
-            count,
-          }) =>
-            `${from}-${to} de ${
-              count !== -1
-                ? count
-                : `más de ${to}`
-            }`
-          }
-        />
-      </Box>
-    </Paper>
-  )
+        </Paper>
+    )
 }
-
 
 export default CentroCostoTable

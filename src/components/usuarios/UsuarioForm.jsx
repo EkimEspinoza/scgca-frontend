@@ -1,584 +1,826 @@
-import { useEffect, useMemo, useState } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 
 import {
   Alert,
-  Autocomplete,
   Box,
   Button,
+  Checkbox,
   Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   FormControl,
+  FormHelperText,
   InputLabel,
   MenuItem,
+  OutlinedInput,
   Select,
-  Snackbar,
+  Stack,
   TextField,
   Typography,
 } from '@mui/material'
 
-import SaveIcon from '@mui/icons-material/Save'
-import CloseIcon from '@mui/icons-material/Close'
-
 import {
-  guardarUsuario,
-  obtenerUsuarioPorId,
-} from '../../services/usuarioService'
+  Business as BusinessIcon,
+  Close as CloseIcon,
+  Save as SaveIcon,
+} from '@mui/icons-material'
 
 
-export default function UsuarioForm({
+function UsuarioForm({
   open,
-  usuarioEditar,
+  usuario,
   permisos = [],
   empresas = [],
+  guardando = false,
   onClose,
-  onSaved,
+  onSave,
 }) {
-  const modoEdicion = Boolean(usuarioEditar)
+  const esEdicion = Boolean(usuario)
 
-  const [loading, setLoading] = useState(false)
-  const [guardando, setGuardando] = useState(false)
-
-  const [nombre, setNombre] = useState('')
-  const [apellido, setApellido] = useState('')
-  const [idPermiso, setIdPermiso] = useState('')
-  const [estado, setEstado] = useState('PENDIENTE')
-  const [empresasSeleccionadas, setEmpresasSeleccionadas] = useState([])
-
-  const [error, setError] = useState('')
-
-  const [notificacion, setNotificacion] = useState({
-    open: false,
-    mensaje: '',
-    severity: 'success',
+  const [formulario, setFormulario] = useState({
+    email: '',
+    nombre: '',
+    apellido: '',
+    id_permiso: '',
+    estado: 'PENDIENTE',
+    empresas: [],
   })
 
+  const [errores, setErrores] = useState({})
 
-  /*
-   * Permiso seleccionado
-   */
-  const permisoSeleccionado = useMemo(() => {
-    return permisos.find(
-      (permiso) =>
-        Number(permiso.id_permiso) ===
-        Number(idPermiso),
-    )
-  }, [permisos, idPermiso])
-
-
-  const esAdmin =
-    permisoSeleccionado?.nombre === 'ADMIN'
-
-
-  /*
-   * Cargar información del usuario
-   */
   useEffect(() => {
     if (!open) {
       return
     }
 
-    if (!usuarioEditar) {
-      setNombre('')
-      setApellido('')
-      setIdPermiso('')
-      setEstado('PENDIENTE')
-      setEmpresasSeleccionadas([])
-      setError('')
+    // Reinitialize the draft whenever the dialog opens or its target user changes.
+    // eslint-disable-next-line react/set-state-in-effect
+    if (usuario) {
+      const empresasAsignadas = (
+        usuario.usuario_empresa ?? []
+      )
+        .filter(
+          (empresa) =>
+            empresa.estado === true,
+        )
+        .map(
+          (empresa) =>
+            Number(empresa.id_empresa),
+        )
 
-      return
+      // eslint-disable-next-line react/set-state-in-effect
+      setFormulario({
+        email: usuario.email ?? '',
+        nombre: usuario.nombre ?? '',
+        apellido: usuario.apellido ?? '',
+        id_permiso:
+          usuario.id_permiso
+            ? String(
+                usuario.id_permiso,
+              )
+            : '',
+        estado:
+          usuario.estado ??
+          'PENDIENTE',
+        empresas:
+          empresasAsignadas,
+      })
+    } else {
+      setFormulario({
+        email: '',
+        nombre: '',
+        apellido: '',
+        id_permiso: '',
+        estado: 'PENDIENTE',
+        empresas: [],
+      })
     }
 
-    const cargarUsuario = async () => {
-      try {
-        setLoading(true)
-        setError('')
-
-        const usuario =
-          await obtenerUsuarioPorId(
-            usuarioEditar.id_usuario,
-          )
-
-        setNombre(usuario.nombre ?? '')
-        setApellido(usuario.apellido ?? '')
-        setIdPermiso(usuario.id_permiso ?? '')
-        setEstado(usuario.estado ?? 'PENDIENTE')
-
-        const idsEmpresas =
-          (usuario.usuario_empresa ?? [])
-            .filter(
-              (item) => item.estado === true,
-            )
-            .map((item) =>
-              Number(item.id_empresa),
-            )
-
-        const empresasActuales =
-          empresas.filter((empresa) =>
-            idsEmpresas.includes(
-              Number(empresa.id_empresa),
-            ),
-          )
-
-        setEmpresasSeleccionadas(
-          empresasActuales,
-        )
-      } catch (err) {
-        console.error(err)
-
-        setError(
-          err?.message ||
-          'No se pudo cargar la información del usuario.',
-        )
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    cargarUsuario()
+    setErrores({})
   }, [
     open,
-    usuarioEditar,
-    empresas,
+    usuario,
   ])
 
 
-  /*
-   * Cuando cambia a ADMIN,
-   * quitar las empresas seleccionadas.
-   */
-  useEffect(() => {
-    if (esAdmin) {
-      setEmpresasSeleccionadas([])
+  const permisoSeleccionado =
+    useMemo(() => {
+      return permisos.find(
+        (permiso) =>
+          Number(
+            permiso.id_permiso,
+          ) ===
+          Number(
+            formulario.id_permiso,
+          ),
+      )
+    }, [
+      permisos,
+      formulario.id_permiso,
+    ])
+
+
+  const esAdmin =
+    permisoSeleccionado?.nombre ===
+    'ADMIN'
+
+
+  const manejarCambio = (
+    campo,
+    valor,
+  ) => {
+    setFormulario(
+      (prev) => ({
+        ...prev,
+        [campo]: valor,
+      }),
+    )
+
+    if (errores[campo]) {
+      setErrores(
+        (prev) => ({
+          ...prev,
+          [campo]: '',
+        }),
+      )
     }
-  }, [esAdmin])
-
-
-  /*
-   * Limpiar y cerrar
-   */
-  const handleCerrar = () => {
-    if (guardando) {
-      return
-    }
-
-    setError('')
-    onClose()
   }
 
 
-  /*
-   * Guardar
-   */
-  const handleGuardar = async () => {
-    setError('')
+  const manejarPermiso = (
+    event,
+  ) => {
+    const valor =
+      event.target.value
 
-    /*
-     * Validación nombre
-     */
-    if (!nombre.trim()) {
-      setError(
-        'El nombre del usuario es obligatorio.',
+    const permiso =
+      permisos.find(
+        (item) =>
+          Number(
+            item.id_permiso,
+          ) ===
+          Number(valor),
       )
-      return
-    }
 
+    const nuevoEsAdmin =
+      permiso?.nombre ===
+      'ADMIN'
 
-    /*
-     * Validación permiso
-     */
-    if (!idPermiso) {
-      setError(
-        'Debe seleccionar un permiso.',
+    setFormulario(
+      (prev) => ({
+        ...prev,
+        id_permiso: valor,
+        empresas: nuevoEsAdmin
+          ? []
+          : prev.empresas,
+      }),
+    )
+
+    if (errores.id_permiso) {
+      setErrores(
+        (prev) => ({
+          ...prev,
+          id_permiso: '',
+        }),
       )
-      return
     }
+  }
 
+
+  const validar = () => {
+    const nuevosErrores = {}
 
     /*
-     * Validación empresas
+     * =====================================================
+     * EMAIL
+     * =====================================================
      *
-     * ADMIN no requiere empresas.
+     * El email es obligatorio únicamente
+     * al crear un usuario.
+     *
+     * En edición no se modifica.
+     */
+    if (!esEdicion) {
+      const email =
+        formulario.email.trim()
+
+      if (!email) {
+        nuevosErrores.email =
+          'Ingresa el correo electrónico.'
+      } else {
+        const emailValido =
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+        if (!emailValido.test(email)) {
+          nuevosErrores.email =
+            'Ingresa un correo electrónico válido.'
+        }
+      }
+    }
+
+
+    /*
+     * =====================================================
+     * NOMBRE
+     * =====================================================
+     */
+    if (
+      !formulario.nombre.trim()
+    ) {
+      nuevosErrores.nombre =
+        'Ingresa el nombre.'
+    }
+
+
+    /*
+     * =====================================================
+     * PERMISO
+     * =====================================================
+     */
+    if (
+      !formulario.id_permiso
+    ) {
+      nuevosErrores.id_permiso =
+        'Selecciona un permiso.'
+    }
+
+
+    /*
+     * =====================================================
+     * EMPRESAS
+     * =====================================================
      */
     if (
       !esAdmin &&
-      empresasSeleccionadas.length === 0
+      formulario.empresas.length ===
+        0
     ) {
-      setError(
-        'Debe asignar al menos una empresa al usuario.',
-      )
+      nuevosErrores.empresas =
+        'Selecciona al menos una empresa.'
+    }
+
+
+    setErrores(nuevosErrores)
+
+    return (
+      Object.keys(
+        nuevosErrores,
+      ).length === 0
+    )
+  }
+
+
+  const manejarGuardar = async () => {
+    if (!validar()) {
       return
     }
 
+    await onSave({
+      ...(esEdicion
+        ? {}
+        : {
+            email:
+              formulario.email
+                .trim()
+                .toLowerCase(),
+          }),
 
-    try {
-      setGuardando(true)
+      nombre:
+        formulario.nombre.trim(),
 
-      const idsEmpresas =
+      apellido:
+        formulario.apellido.trim(),
+
+      id_permiso:
+        Number(
+          formulario.id_permiso,
+        ),
+
+      estado:
+        formulario.estado,
+
+      empresas:
         esAdmin
           ? []
-          : empresasSeleccionadas.map(
-              (empresa) =>
-                Number(empresa.id_empresa),
-            )
+          : formulario.empresas,
+    })
+  }
 
-      const usuarioGuardado =
-        await guardarUsuario(
-          usuarioEditar.id_usuario,
-          {
-            nombre,
-            apellido,
-            id_permiso: Number(idPermiso),
-            estado,
-          },
-          idsEmpresas,
-        )
 
-      setNotificacion({
-        open: true,
-        mensaje:
-          'Usuario actualizado correctamente.',
-        severity: 'success',
-      })
-
-      /*
-       * Avisar a Usuarios.jsx
-       */
-      if (onSaved) {
-        onSaved(usuarioGuardado)
-      }
-
-      /*
-       * Cerramos después de guardar.
-       */
-      onClose()
-    } catch (err) {
-      console.error(err)
-
-      let mensaje =
-        'No se pudo actualizar el usuario.'
-
-      if (err?.code === '23503') {
-        mensaje =
-          'Existe una relación inválida con el permiso o la empresa.'
-      }
-
-      if (err?.code === '42501') {
-        mensaje =
-          'No tienes permisos para realizar esta operación.'
-      }
-
-      if (err?.code === '23505') {
-        mensaje =
-          'La asignación de empresa ya existe.'
-      }
-
-      setError(mensaje)
-    } finally {
-      setGuardando(false)
+  const renderEmpresas = () => {
+    if (esAdmin) {
+      return (
+        <Alert
+          severity="info"
+          icon={<BusinessIcon />}
+          sx={{
+            borderRadius: 1,
+          }}
+        >
+          <Typography
+            variant="body2"
+          >
+            Los usuarios con permiso
+            <strong> ADMIN </strong>
+            tienen acceso a todas las
+            empresas. No es necesario
+            asignarlas individualmente.
+          </Typography>
+        </Alert>
+      )
     }
+
+    return (
+      <FormControl
+        fullWidth
+        error={Boolean(
+          errores.empresas,
+        )}
+      >
+        <InputLabel>
+          Empresas asignadas
+        </InputLabel>
+
+        <Select
+          multiple
+          value={
+            formulario.empresas
+          }
+          onChange={(event) => {
+            manejarCambio(
+              'empresas',
+              event.target.value.map(
+                (value) =>
+                  Number(value),
+              ),
+            )
+          }}
+          input={
+            <OutlinedInput
+              label="Empresas asignadas"
+            />
+          }
+          renderValue={(
+            seleccionadas,
+          ) => (
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap:
+                  'wrap',
+                gap: 0.5,
+              }}
+            >
+              {seleccionadas.map(
+                (idEmpresa) => {
+                  const empresa =
+                    empresas.find(
+                      (item) =>
+                        Number(
+                          item.id_empresa,
+                        ) ===
+                        Number(
+                          idEmpresa,
+                        ),
+                    )
+
+                  return (
+                    <Chip
+                      key={
+                        idEmpresa
+                      }
+                      label={
+                        empresa?.nombre_comercial ??
+                        idEmpresa
+                      }
+                      size="small"
+                    />
+                  )
+                },
+              )}
+            </Box>
+          )}
+          sx={{
+            minHeight: 42,
+            borderRadius: 1,
+          }}
+        >
+          {empresas.map(
+            (empresa) => (
+              <MenuItem
+                key={
+                  empresa.id_empresa
+                }
+                value={
+                  empresa.id_empresa
+                }
+              >
+                <Checkbox
+                  checked={formulario.empresas.includes(
+                    Number(
+                      empresa.id_empresa,
+                    ),
+                  )}
+                  size="small"
+                />
+
+                <Typography
+                  variant="body2"
+                >
+                  {
+                    empresa.nombre_comercial
+                  }
+                </Typography>
+              </MenuItem>
+            ),
+          )}
+        </Select>
+
+        <FormHelperText>
+          {errores.empresas ||
+            'Selecciona las empresas a las que tendrá acceso el usuario.'}
+        </FormHelperText>
+      </FormControl>
+    )
   }
 
 
   return (
-    <>
-      <Dialog
-        open={open}
-        onClose={handleCerrar}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>
-          Editar usuario
-        </DialogTitle>
-
-        <DialogContent dividers>
-          {loading ? (
-            <Box
-              sx={{
-                minHeight: 250,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 1,
-              }}
-            >
-              <CircularProgress size={28} />
-
-              <Typography
-                variant="body2"
-                color="text.secondary"
-              >
-                Cargando usuario...
-              </Typography>
-            </Box>
-          ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 2,
-                pt: 1,
-              }}
-            >
-              {error && (
-                <Alert severity="error">
-                  {error}
-                </Alert>
-              )}
-
-
-              {/* NOMBRE */}
-              <TextField
-                fullWidth
-                label="Nombre"
-                value={nombre}
-                onChange={(event) =>
-                  setNombre(event.target.value)
-                }
-                disabled={guardando}
-                required
-              />
-
-
-              {/* APELLIDO */}
-              <TextField
-                fullWidth
-                label="Apellido"
-                value={apellido}
-                onChange={(event) =>
-                  setApellido(event.target.value)
-                }
-                disabled={guardando}
-              />
-
-
-              {/* CORREO / AUTH USER */}
-              {usuarioEditar?.auth_user_id && (
-                <TextField
-                  fullWidth
-                  label="Identificador de autenticación"
-                  value={usuarioEditar.auth_user_id}
-                  disabled
-                  helperText="Este identificador no puede modificarse."
-                />
-              )}
-
-
-              {/* PERMISO */}
-              <FormControl
-                fullWidth
-                required
-              >
-                <InputLabel>
-                  Permiso
-                </InputLabel>
-
-                <Select
-                  value={idPermiso}
-                  label="Permiso"
-                  onChange={(event) =>
-                    setIdPermiso(
-                      event.target.value,
-                    )
-                  }
-                  disabled={guardando}
-                >
-                  {permisos
-                    .filter(
-                      (permiso) =>
-                        permiso.estado === true,
-                    )
-                    .map((permiso) => (
-                      <MenuItem
-                        key={permiso.id_permiso}
-                        value={
-                          permiso.id_permiso
-                        }
-                      >
-                        {permiso.nombre}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-
-
-              {/* EMPRESAS */}
-              {!esAdmin && (
-                <Autocomplete
-                  multiple
-                  disableCloseOnSelect
-                  options={empresas}
-                  value={empresasSeleccionadas}
-                  onChange={(_, nuevasEmpresas) =>
-                    setEmpresasSeleccionadas(
-                      nuevasEmpresas,
-                    )
-                  }
-                  disabled={guardando}
-                  getOptionLabel={(option) =>
-                    option.nombre_comercial ??
-                    ''
-                  }
-                  isOptionEqualToValue={(
-                    option,
-                    value,
-                  ) =>
-                    Number(
-                      option.id_empresa,
-                    ) ===
-                    Number(
-                      value.id_empresa,
-                    )
-                  }
-                  renderTags={(
-                    value,
-                    getTagProps,
-                  ) =>
-                    value.map(
-                      (option, index) => (
-                        <Chip
-                          label={
-                            option.nombre_comercial
-                          }
-                          size="small"
-                          {...getTagProps({
-                            index,
-                          })}
-                          key={
-                            option.id_empresa
-                          }
-                        />
-                      ),
-                    )
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Empresas"
-                      placeholder={
-                        empresasSeleccionadas.length ===
-                        0
-                          ? 'Seleccione empresas'
-                          : ''
-                      }
-                      required
-                    />
-                  )}
-                />
-              )}
-
-
-              {esAdmin && (
-                <Alert severity="info">
-                  El usuario ADMIN tiene acceso a
-                  todas las empresas.
-                </Alert>
-              )}
-
-
-              {/* ESTADO */}
-              <FormControl fullWidth>
-                <InputLabel>
-                  Estado
-                </InputLabel>
-
-                <Select
-                  value={estado}
-                  label="Estado"
-                  onChange={(event) =>
-                    setEstado(
-                      event.target.value,
-                    )
-                  }
-                  disabled={guardando}
-                >
-                  <MenuItem value="ACTIVO">
-                    ACTIVO
-                  </MenuItem>
-
-                  <MenuItem value="PENDIENTE">
-                    PENDIENTE
-                  </MenuItem>
-
-                  <MenuItem value="INACTIVO">
-                    INACTIVO
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          )}
-        </DialogContent>
-
-
-        <DialogActions
-          sx={{
-            px: 3,
-            py: 2,
-          }}
-        >
-          <Button
-            variant="outlined"
-            color="inherit"
-            startIcon={<CloseIcon />}
-            onClick={handleCerrar}
-            disabled={guardando}
-          >
-            Cancelar
-          </Button>
-
-          <Button
-            variant="contained"
-            startIcon={
-              guardando ? (
-                <CircularProgress
-                  size={18}
-                  color="inherit"
-                />
-              ) : (
-                <SaveIcon />
-              )
-            }
-            onClick={handleGuardar}
-            disabled={
-              loading ||
-              guardando ||
-              !modoEdicion
-            }
-          >
-            {guardando
-              ? 'Guardando...'
-              : 'Guardar cambios'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-
-      <Snackbar
-        open={notificacion.open}
-        autoHideDuration={4000}
-        onClose={() =>
-          setNotificacion((actual) => ({
-            ...actual,
-            open: false,
-          }))
-        }
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
+    <Dialog
+      open={open}
+      onClose={
+        guardando
+          ? undefined
+          : onClose
+      }
+      fullWidth
+      maxWidth="sm"
+      PaperProps={{
+        sx: {
+          borderRadius: 1.5,
+          overflow: 'hidden',
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          px: 3,
+          py: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent:
+            'space-between',
+          gap: 2,
         }}
       >
-        <Alert
-          severity={notificacion.severity}
-          variant="filled"
-          sx={{ width: '100%' }}
+        <Box>
+          <Typography
+            variant="h6"
+            fontWeight={700}
+          >
+            {esEdicion
+              ? 'Editar usuario'
+              : 'Nuevo usuario'}
+          </Typography>
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              mt: 0.25,
+            }}
+          >
+            {esEdicion
+              ? 'Actualiza los datos, permisos y empresas asignadas.'
+              : 'Completa los datos del usuario.'}
+          </Typography>
+        </Box>
+
+        <Button
+          onClick={onClose}
+          disabled={guardando}
+          color="inherit"
+          sx={{
+            minWidth: 36,
+            width: 36,
+            height: 36,
+            borderRadius: 1,
+            p: 0,
+          }}
         >
-          {notificacion.mensaje}
-        </Alert>
-      </Snackbar>
-    </>
+          <CloseIcon fontSize="small" />
+        </Button>
+      </DialogTitle>
+
+      <Divider />
+
+      <DialogContent
+        sx={{
+          px: 3,
+          py: 2.5,
+        }}
+      >
+        <Stack spacing={2}>
+
+          {esEdicion &&
+            usuario?.auth_user_id && (
+              <Alert
+                severity="info"
+                sx={{
+                  borderRadius: 1,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                >
+                  La cuenta de acceso está
+                  administrada por
+                  <strong>
+                    {' '}
+                    Supabase Auth
+                  </strong>
+                  . Desde aquí se administra
+                  el perfil, permiso, estado y
+                  empresas.
+                </Typography>
+              </Alert>
+            )}
+
+
+          {/* =================================================
+              DATOS DEL USUARIO
+          ================================================= */}
+
+          {!esEdicion && (
+            <TextField
+              label="Correo electrónico"
+              value={
+                formulario.email
+              }
+              onChange={(event) =>
+                manejarCambio(
+                  'email',
+                  event.target.value,
+                )
+              }
+              error={Boolean(
+                errores.email,
+              )}
+              helperText={
+                errores.email ||
+                'Se enviará una invitación a este correo.'
+              }
+              fullWidth
+              size="small"
+              type="email"
+              autoComplete="email"
+              disabled={guardando}
+            />
+          )}
+
+
+          {esEdicion &&
+            usuario?.auth_user_id && (
+              <TextField
+                label="Correo electrónico"
+                value={
+                  usuario.email ??
+                  ''
+                }
+                fullWidth
+                size="small"
+                disabled
+                helperText="El correo se administra desde Supabase Auth."
+              />
+            )}
+
+
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: '1fr 1fr',
+              },
+              gap: 2,
+            }}
+          >
+            <TextField
+              label="Nombre"
+              value={
+                formulario.nombre
+              }
+              onChange={(event) =>
+                manejarCambio(
+                  'nombre',
+                  event.target.value,
+                )
+              }
+              error={Boolean(
+                errores.nombre,
+              )}
+              helperText={
+                errores.nombre
+              }
+              fullWidth
+              size="small"
+              disabled={guardando}
+            />
+
+            <TextField
+              label="Apellido"
+              value={
+                formulario.apellido
+              }
+              onChange={(event) =>
+                manejarCambio(
+                  'apellido',
+                  event.target.value,
+                )
+              }
+              fullWidth
+              size="small"
+              disabled={guardando}
+            />
+          </Box>
+
+
+          {/* =================================================
+              PERMISO / ESTADO
+          ================================================= */}
+
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: '1fr 1fr',
+              },
+              gap: 2,
+            }}
+          >
+            <FormControl
+              fullWidth
+              size="small"
+              error={Boolean(
+                errores.id_permiso,
+              )}
+              disabled={guardando}
+            >
+              <InputLabel>
+                Permiso
+              </InputLabel>
+
+              <Select
+                value={
+                  formulario.id_permiso
+                }
+                label="Permiso"
+                onChange={
+                  manejarPermiso
+                }
+              >
+                {permisos.map(
+                  (permiso) => (
+                    <MenuItem
+                      key={
+                        permiso.id_permiso
+                      }
+                      value={
+                        permiso.id_permiso
+                      }
+                    >
+                      {
+                        permiso.nombre
+                      }
+                    </MenuItem>
+                  ),
+                )}
+              </Select>
+
+              <FormHelperText>
+                {errores.id_permiso}
+              </FormHelperText>
+            </FormControl>
+
+
+            <FormControl
+              fullWidth
+              size="small"
+              disabled={guardando}
+            >
+              <InputLabel>
+                Estado
+              </InputLabel>
+
+              <Select
+                value={
+                  formulario.estado
+                }
+                label="Estado"
+                onChange={(event) =>
+                  manejarCambio(
+                    'estado',
+                    event.target.value,
+                  )
+                }
+              >
+                <MenuItem value="ACTIVO">
+                  Activo
+                </MenuItem>
+
+                <MenuItem value="PENDIENTE">
+                  Pendiente
+                </MenuItem>
+
+                <MenuItem value="INACTIVO">
+                  Inactivo
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+
+          {/* =================================================
+              EMPRESAS
+          ================================================= */}
+
+          <Box>
+            <Typography
+              variant="subtitle2"
+              fontWeight={700}
+              sx={{
+                mb: 1,
+              }}
+            >
+              Acceso a empresas
+            </Typography>
+
+            {renderEmpresas()}
+          </Box>
+
+        </Stack>
+      </DialogContent>
+
+      <Divider />
+
+      <DialogActions
+        sx={{
+          px: 3,
+          py: 2,
+          gap: 1,
+        }}
+      >
+        <Button
+          onClick={onClose}
+          disabled={guardando}
+          variant="outlined"
+          color="inherit"
+          sx={{
+            height: 40,
+            minWidth: 110,
+            borderRadius: 1,
+          }}
+        >
+          Cancelar
+        </Button>
+
+        <Button
+          onClick={manejarGuardar}
+          variant="contained"
+          disabled={guardando}
+          startIcon={
+            guardando ? (
+              <CircularProgress
+                size={18}
+                color="inherit"
+              />
+            ) : (
+              <SaveIcon />
+            )
+          }
+          sx={{
+            height: 40,
+            minWidth: 140,
+            borderRadius: 1,
+          }}
+        >
+          {guardando
+            ? 'Guardando...'
+            : 'Guardar'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }
+
+
+export default UsuarioForm

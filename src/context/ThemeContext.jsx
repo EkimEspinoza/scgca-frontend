@@ -1,6 +1,4 @@
 import {
-  createContext,
-  useContext,
   useMemo,
   useState,
 } from 'react'
@@ -15,8 +13,7 @@ import {
   ThemeProvider,
 } from '@mui/material'
 
-
-const ThemeContext = createContext()
+import { ThemeContext } from './themeContextStore'
 
 
 /*
@@ -90,9 +87,4 @@ export function AppThemeProvider({ children }) {
       </ThemeProvider>
     </ThemeContext.Provider>
   )
-}
-
-
-export function useAppTheme() {
-  return useContext(ThemeContext)
 }

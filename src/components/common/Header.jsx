@@ -2,6 +2,7 @@ import {
   AccountCircle,
   ExpandMore,
   Menu as MenuIcon,
+  LockOutlined,
 } from '@mui/icons-material'
 
 import {
@@ -21,8 +22,12 @@ import {
 
 import { useState } from 'react'
 
-import { useAuth } from '../../context/AuthContext'
-import { useEmpresa } from '../../context/EmpresaContext'
+import {
+  useNavigate,
+} from 'react-router-dom'
+
+import { useAuth } from '../../context/useAuth'
+import { useEmpresa } from '../../context/useEmpresa'
 
 
 function Header({
@@ -40,6 +45,9 @@ function Header({
     cambiarEmpresa,
     esAdmin,
   } = useEmpresa()
+
+  const navigate =
+    useNavigate()
 
   const [
     anchorEl,
@@ -69,6 +77,15 @@ function Header({
 
   const handleMenuClose = () => {
     setAnchorEl(null)
+  }
+
+
+  const handleCambiarContrasena = () => {
+    handleMenuClose()
+
+    navigate(
+      '/cambiar-contrasena',
+    )
   }
 
 
@@ -155,13 +172,6 @@ function Header({
           minHeight:
             '64px !important',
 
-          /*
-           * Ya no utilizamos
-           * space-between directamente.
-           *
-           * Dividimos el Header en:
-           * izquierda / derecha.
-           */
           justifyContent:
             'space-between',
 
@@ -182,6 +192,7 @@ function Header({
         {/* =================================================
             BLOQUE IZQUIERDO
         ================================================== */}
+
         <Box
           sx={{
             display: 'flex',
@@ -198,6 +209,7 @@ function Header({
         >
 
           {/* MENÚ MÓVIL */}
+
           {isMobile && (
             <IconButton
               onClick={
@@ -215,6 +227,7 @@ function Header({
 
 
           {/* EMPRESA */}
+
           <FormControl
             size="small"
             sx={{
@@ -293,11 +306,32 @@ function Header({
 
         {/* =================================================
             BLOQUE DERECHO — USUARIO
+            Todo el bloque abre el menú
         ================================================== */}
+
         <Box
+          onClick={
+            handleMenuOpen
+          }
+          role="button"
+          tabIndex={0}
+          onKeyDown={(
+            event,
+          ) => {
+            if (
+              event.key ===
+                'Enter' ||
+              event.key === ' '
+            ) {
+              event.preventDefault()
+
+              handleMenuOpen(event)
+            }
+          }}
           sx={{
             display: 'flex',
             alignItems: 'center',
+
             gap: {
               xs: 0,
               sm: 0.5,
@@ -305,24 +339,56 @@ function Header({
             },
 
             flexShrink: 0,
+
+            cursor: 'pointer',
+
+            borderRadius: 1,
+
+            px: {
+              xs: 0.5,
+              sm: 1,
+            },
+
+            py: 0.5,
+
+            transition:
+              'background-color 0.15s ease',
+
+            '&:hover': {
+              backgroundColor:
+                'action.hover',
+            },
+
+            '&:focus-visible': {
+              outline:
+                '2px solid',
+              outlineColor:
+                'primary.main',
+              outlineOffset: 2,
+            },
           }}
         >
 
+          {/* ICONO DE USUARIO */}
+
           <IconButton
-            onClick={
-              handleMenuOpen
-            }
             color="inherit"
+            aria-label="Menú de usuario"
             sx={{
               p: {
                 xs: 0.75,
                 sm: 1,
               },
+
+              pointerEvents:
+                'none',
             }}
           >
             <AccountCircle />
           </IconButton>
 
+
+          {/* INFORMACIÓN DEL USUARIO */}
 
           <Box
             sx={{
@@ -379,6 +445,8 @@ function Header({
           </Box>
 
 
+          {/* FLECHA */}
+
           <ExpandMore
             sx={{
               display: {
@@ -399,6 +467,7 @@ function Header({
         {/* =================================================
             MENÚ USUARIO
         ================================================== */}
+
         <Menu
           anchorEl={anchorEl}
           open={menuOpen}
@@ -415,12 +484,41 @@ function Header({
           }}
         >
 
+          {/* USUARIO */}
+
           <MenuItem disabled>
             {perfil?.nombre}{' '}
             {perfil?.apellido}
           </MenuItem>
 
+
           <Divider />
+
+
+          {/* CAMBIAR CONTRASEÑA */}
+
+          <MenuItem
+            onClick={
+              handleCambiarContrasena
+            }
+          >
+            <LockOutlined
+              fontSize="small"
+              sx={{
+                mr: 1.5,
+                color:
+                  'text.secondary',
+              }}
+            />
+
+            Cambiar contraseña
+          </MenuItem>
+
+
+          <Divider />
+
+
+          {/* CERRAR SESIÓN */}
 
           <MenuItem
             onClick={

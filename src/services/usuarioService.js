@@ -1,88 +1,236 @@
 import { supabase } from '../lib/supabase'
 
+export {
+  obtenerEmpresasParaUsuario,
+  obtenerPermisos,
+  guardarEmpresasUsuario,
+} from './empresaService'
 
-/*
- * Obtener todos los usuarios
- */
-export async function obtenerUsuarios() {
-  const { data, error } = await supabase
-    .from('usuarios')
-    .select(
-      `
-        id_usuario,
-        auth_user_id,
-        nombre,
-        apellido,
-        id_permiso,
-        estado,
-        created_at,
-        updated_at,
+// ============================================================
+// CREAR USUARIO
+// ============================================================
+//
+// La creación se realiza mediante la Edge Function:
+//
+// crear-usuario
+//
+// La Edge Function se encarga de:
+// - Crear el usuario en Supabase Auth.
+// - Enviar la invitación por correo.
+// - Crear/actualizar public.usuarios.
+// - Asignar el permiso.
+// - Asignar las empresas.
+// - Mantener PENDIENTE como estado inicial.
+//
+// ============================================================
 
-        permiso:permiso(
-          id_permiso,
-          nombre,
-          descripcion,
-          estado
-        ),
+export async function crearUsuario(datos) {
+  const {
+    email,
+    nombre,
+    apellido,
+    id_permiso,
+    empresas = [],
+  } = datos
 
-        usuario_empresa(
-          id_usuario_empresa,
-          id_empresa,
-          estado,
+  const emailNormalizado =
+    email?.trim().toLowerCase()
 
-          empresa:Dim_Empresa(
-            id_empresa,
-            descripcion,
-            nombre_comercial,
-            estado
-          )
-        )
-      `,
-    )
-    .order('nombre', { ascending: true })
-    .order('apellido', { ascending: true })
+  const nombreNormalizado =
+    nombre?.trim()
+
+  const apellidoNormalizado =
+    apellido?.trim() || ''
+
+  const permiso =
+    Number(id_permiso)
+
+  const empresasNormalizadas =
+    Array.isArray(empresas)
+      ? empresas.map(Number)
+      : []
+
+  // ============================================================
+  // INVOCAR EDGE FUNCTION
+  // ============================================================
+
+  const {
+    data,
+    error,
+  } = await supabase.functions.invoke(
+    'crear-usuario',
+    {
+      body: {
+        email: emailNormalizado,
+        nombre: nombreNormalizado,
+        apellido: apellidoNormalizado,
+        id_permiso: permiso,
+        empresas: empresasNormalizadas,
+      },
+    },
+  )
+
+  // ============================================================
+  // ERROR DE LA EDGE FUNCTION
+  // ============================================================
 
   if (error) {
-    console.error('Error cargando usuarios:', error)
+    console.error(
+      'Error llamando Edge Function crear-usuario:',
+      error,
+    )
+
+    let mensaje =
+      error.message ||
+      'No se pudo crear el usuario.'
+
+    try {
+      if (error.context) {
+        const response =
+          error.context
+
+        if (
+          typeof response.json ===
+          'function'
+        ) {
+          const body =
+            await response.json()
+
+          if (body?.error) {
+            mensaje = body.error
+          }
+        }
+      }
+    } catch (parseError) {
+      console.error(
+        'No se pudo interpretar el error de la Edge Function:',
+        parseError,
+      )
+    }
+
+    throw new Error(mensaje)
+  }
+
+  // ============================================================
+  // ERROR DEVUELTO EN EL BODY
+  // ============================================================
+
+  if (data?.error) {
+    throw new Error(data.error)
+  }
+
+  // ============================================================
+  // RESPUESTA
+  // ============================================================
+
+  return data
+}
+
+// ============================================================
+// OBTENER USUARIOS
+// ============================================================
+
+export async function obtenerUsuarios() {
+  const {
+    data,
+    error,
+  } = await supabase
+    .from('usuarios')
+    .select(`
+      id_usuario,
+      auth_user_id,
+      nombre,
+      apellido,
+      estado,
+      id_permiso,
+      created_at,
+      updated_at,
+
+      permiso:permiso(
+        id_permiso,
+        nombre,
+        descripcion,
+        estado
+      ),
+
+      usuario_empresa(
+        id_usuario_empresa,
+        id_empresa,
+        estado,
+
+        empresa:Dim_Empresa(
+          id_empresa,
+          descripcion,
+          nombre_comercial,
+          estado
+        )
+      )
+    `)
+    .order(
+      'id_usuario',
+      {
+        ascending: true,
+      },
+    )
+
+  if (error) {
+    console.error(
+      'Error obteniendo usuarios:',
+      error,
+    )
+
     throw error
   }
 
   return data ?? []
 }
 
+// ============================================================
+// OBTENER USUARIO POR ID
+// ============================================================
 
-/*
- * Obtener un usuario por ID
- */
-export async function obtenerUsuarioPorId(idUsuario) {
-  const { data, error } = await supabase
+export async function obtenerUsuarioPorId(
+  idUsuario,
+) {
+  const {
+    data,
+    error,
+  } = await supabase
     .from('usuarios')
-    .select(
-      `
-        id_usuario,
-        auth_user_id,
-        nombre,
-        apellido,
+    .select(`
+      id_usuario,
+      auth_user_id,
+      nombre,
+      apellido,
+      estado,
+      id_permiso,
+      created_at,
+      updated_at,
+
+      permiso:permiso(
         id_permiso,
+        nombre,
+        descripcion,
+        estado
+      ),
+
+      usuario_empresa(
+        id_usuario_empresa,
+        id_empresa,
         estado,
-        created_at,
-        updated_at,
 
-        permiso:permiso(
-          id_permiso,
-          nombre,
-          descripcion,
-          estado
-        ),
-
-        usuario_empresa(
-          id_usuario_empresa,
+        empresa:Dim_Empresa(
           id_empresa,
+          descripcion,
+          nombre_comercial,
           estado
         )
-      `,
+      )
+    `)
+    .eq(
+      'id_usuario',
+      idUsuario,
     )
-    .eq('id_usuario', idUsuario)
     .single()
 
   if (error) {
@@ -97,13 +245,10 @@ export async function obtenerUsuarioPorId(idUsuario) {
   return data
 }
 
+// ============================================================
+// ACTUALIZAR USUARIO
+// ============================================================
 
-/*
- * Actualizar información del usuario
- *
- * IMPORTANTE:
- * auth_user_id NO se modifica.
- */
 export async function actualizarUsuario(
   idUsuario,
   datos,
@@ -115,35 +260,34 @@ export async function actualizarUsuario(
     estado,
   } = datos
 
-  const { data, error } = await supabase
+  const {
+    data,
+    error,
+  } = await supabase
     .from('usuarios')
     .update({
-      nombre: nombre?.trim(),
-      apellido: apellido?.trim() || null,
-      id_permiso,
+      nombre:
+        nombre?.trim() || '',
+      apellido:
+        apellido?.trim() || '',
+      id_permiso:
+        Number(id_permiso),
       estado,
-      updated_at: new Date().toISOString(),
+      updated_at:
+        new Date().toISOString(),
     })
-    .eq('id_usuario', idUsuario)
-    .select(
-      `
-        id_usuario,
-        auth_user_id,
-        nombre,
-        apellido,
-        id_permiso,
-        estado,
-        created_at,
-        updated_at,
-
-        permiso:permiso(
-          id_permiso,
-          nombre,
-          descripcion,
-          estado
-        )
-      `,
+    .eq(
+      'id_usuario',
+      idUsuario,
     )
+    .select(`
+      id_usuario,
+      auth_user_id,
+      nombre,
+      apellido,
+      estado,
+      id_permiso
+    `)
     .single()
 
   if (error) {
@@ -158,40 +302,29 @@ export async function actualizarUsuario(
   return data
 }
 
+// ============================================================
+// ACTUALIZAR EMPRESAS DE USUARIO
+// ============================================================
 
-/*
- * Actualizar empresas asignadas al usuario
- *
- * La estrategia es:
- *
- * 1. Desactivar las asignaciones actuales.
- * 2. Crear/reactivar las nuevas asignaciones.
- *
- * ADMIN no necesita registros en usuario_empresa,
- * porque tiene acceso a todas las empresas mediante RLS.
- */
 export async function actualizarEmpresasUsuario(
   idUsuario,
-  empresas,
+  empresas = [],
 ) {
-  const empresasIds = [
-    ...new Set(
-      (empresas ?? []).map(Number),
-    ),
-  ]
+  // ------------------------------------------------------------
+  // Desactivar todas las asignaciones actuales
+  // ------------------------------------------------------------
 
-
-  /*
-   * Primero desactivamos todas las asignaciones
-   * actuales del usuario.
-   */
-  const { error: errorDesactivar } =
-    await supabase
-      .from('usuario_empresa')
-      .update({
-        estado: false,
-      })
-      .eq('id_usuario', idUsuario)
+  const {
+    error: errorDesactivar,
+  } = await supabase
+    .from('usuario_empresa')
+    .update({
+      estado: false,
+    })
+    .eq(
+      'id_usuario',
+      idUsuario,
+    )
 
   if (errorDesactivar) {
     console.error(
@@ -202,65 +335,66 @@ export async function actualizarEmpresasUsuario(
     throw errorDesactivar
   }
 
+  // ------------------------------------------------------------
+  // Si no hay empresas, terminamos
+  // ------------------------------------------------------------
 
-  /*
-   * Si no hay empresas nuevas,
-   * terminamos aquí.
-   */
-  if (empresasIds.length === 0) {
+  if (
+    !Array.isArray(empresas) ||
+    empresas.length === 0
+  ) {
     return []
   }
 
+  // ------------------------------------------------------------
+  // Obtener asignaciones existentes
+  // ------------------------------------------------------------
 
-  /*
-   * Revisamos si ya existen registros
-   * para evitar duplicados.
-   */
-  const { data: existentes, error: errorExistentes } =
-    await supabase
-      .from('usuario_empresa')
-      .select(
-        `
-          id_usuario_empresa,
-          id_usuario,
-          id_empresa,
-          estado
-        `,
-      )
-      .eq('id_usuario', idUsuario)
-      .in('id_empresa', empresasIds)
+  const {
+    data: existentes,
+    error: errorExistentes,
+  } = await supabase
+    .from('usuario_empresa')
+    .select(`
+      id_usuario_empresa,
+      id_empresa
+    `)
+    .eq(
+      'id_usuario',
+      idUsuario,
+    )
 
   if (errorExistentes) {
     console.error(
-      'Error consultando asignaciones existentes:',
+      'Error obteniendo empresas existentes:',
       errorExistentes,
     )
 
     throw errorExistentes
   }
 
+  const empresasExistentes =
+    existentes ?? []
 
-  const mapaExistentes = new Map(
-    (existentes ?? []).map(
-      (registro) => [
-        Number(registro.id_empresa),
-        registro,
-      ],
-    ),
-  )
+  // ------------------------------------------------------------
+  // Reactivar existentes o crear nuevas
+  // ------------------------------------------------------------
 
+  for (const idEmpresa of empresas) {
+    const idEmpresaNumero =
+      Number(idEmpresa)
 
-  /*
-   * Reactivar registros existentes
-   * o crear los que no existen.
-   */
-  for (const idEmpresa of empresasIds) {
     const existente =
-      mapaExistentes.get(idEmpresa)
+      empresasExistentes.find(
+        (item) =>
+          Number(
+            item.id_empresa,
+          ) === idEmpresaNumero,
+      )
 
     if (existente) {
       const {
-        error,
+        error: errorActualizar,
       } = await supabase
         .from('usuario_empresa')
         .update({
@@ -271,59 +405,65 @@ export async function actualizarEmpresasUsuario(
           existente.id_usuario_empresa,
         )
 
-      if (error) {
+      if (errorActualizar) {
         console.error(
           'Error reactivando empresa:',
-          error,
+          errorActualizar,
         )
 
-        throw error
+        throw errorActualizar
       }
     } else {
       const {
-        error,
+        error: errorInsertar,
       } = await supabase
         .from('usuario_empresa')
         .insert({
-          id_usuario: idUsuario,
-          id_empresa: idEmpresa,
+          id_usuario:
+            idUsuario,
+          id_empresa:
+            idEmpresaNumero,
           estado: true,
         })
 
-      if (error) {
+      if (errorInsertar) {
         console.error(
-          'Error asignando empresa:',
-          error,
+          'Error insertando empresa:',
+          errorInsertar,
         )
 
-        throw error
+        throw errorInsertar
       }
     }
   }
 
+  // ------------------------------------------------------------
+  // Retornar asignaciones activas
+  // ------------------------------------------------------------
 
-  /*
-   * Devolvemos las asignaciones activas.
-   */
   const {
     data,
     error,
   } = await supabase
     .from('usuario_empresa')
-    .select(
-      `
-        id_usuario_empresa,
-        id_usuario,
-        id_empresa,
-        estado
-      `,
+    .select(`
+      id_usuario_empresa,
+      id_usuario,
+      id_empresa,
+      estado
+    `)
+    .eq(
+      'id_usuario',
+      idUsuario,
     )
-    .eq('id_usuario', idUsuario)
-    .eq('estado', true)
+    .eq(
+      'estado',
+      true,
+    )
 
   if (error) {
     console.error(
-      'Error obteniendo empresas asignadas:',
+      'Error obteniendo empresas actualizadas:',
       error,
     )
 
@@ -333,40 +473,30 @@ export async function actualizarEmpresasUsuario(
   return data ?? []
 }
 
+// ============================================================
+// GUARDAR EMPRESAS DE USUARIO
+// ============================================================
 
-/*
- * Guardar usuario + empresas
- *
- * Esta función será utilizada por el formulario.
- */
 export async function guardarUsuario(
   idUsuario,
   datos,
-  empresas,
 ) {
-  const usuarioActualizado =
+  const usuario =
     await actualizarUsuario(
       idUsuario,
       datos,
     )
 
-
-  /*
-   * Si el usuario es ADMIN,
-   * no necesitamos asignarle empresas.
-   */
-  if (Number(datos.id_permiso) === 1) {
-    await actualizarEmpresasUsuario(
-      idUsuario,
-      [],
+  if (
+    Array.isArray(
+      datos.empresas,
     )
-  } else {
+  ) {
     await actualizarEmpresasUsuario(
       idUsuario,
-      empresas,
+      datos.empresas,
     )
   }
 
-
-  return usuarioActualizado
+  return usuario
 }

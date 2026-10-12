@@ -1,14 +1,10 @@
 import {
-  createContext,
-  useContext,
   useEffect,
   useState,
 } from 'react'
 
 import { supabase } from '../lib/supabase'
-
-
-const AuthContext = createContext()
+import { AuthContext } from './authContextStore'
 
 
 export function AuthProvider({ children }) {
@@ -243,9 +239,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-
-export function useAuth() {
-  return useContext(AuthContext)
 }

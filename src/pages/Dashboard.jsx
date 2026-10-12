@@ -10,8 +10,8 @@ import {
   Typography,
 } from '@mui/material'
 
-import { useAuth } from '../context/AuthContext'
-import { useEmpresa } from '../context/EmpresaContext'
+import { useAuth } from '../context/useAuth'
+import { useEmpresa } from '../context/useEmpresa'
 
 import PageTitle from '../components/PageTitle'
 import KpiCard from '../components/KpiCard'

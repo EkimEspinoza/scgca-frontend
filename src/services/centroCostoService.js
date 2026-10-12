@@ -1,10 +1,15 @@
 import { supabase } from '../lib/supabase'
 
+const BASE_COD_CC_PK = 100000
+export const MAX_COD_CC = BASE_COD_CC_PK - 1
+
+
 /*
  * =========================================================
  * CONVERTIR ESTADO
  * =========================================================
  */
+
 function convertirEstado(estado) {
   if (
     estado === null ||
@@ -34,11 +39,13 @@ function convertirEstado(estado) {
   return Boolean(estado)
 }
 
+
 /*
  * =========================================================
  * OBTENER CENTROS DE COSTO
  * =========================================================
  */
+
 export async function obtenerCentrosCosto({
   empresaId = null,
   tipoCcId = null,
@@ -50,6 +57,7 @@ export async function obtenerCentrosCosto({
   pagina = 1,
   registrosPorPagina = 25,
 }) {
+
   const desde =
     (pagina - 1) *
     registrosPorPagina
@@ -59,11 +67,13 @@ export async function obtenerCentrosCosto({
     registrosPorPagina -
     1
 
+
   /*
    * =======================================================
    * CONSULTA BASE
    * =======================================================
    */
+
   let query = supabase
     .from('dim_centro_costo')
     .select(
@@ -111,11 +121,13 @@ export async function obtenerCentrosCosto({
       },
     )
 
+
   /*
    * =======================================================
    * FILTRO EMPRESA
    * =======================================================
    */
+
   if (empresaId !== null) {
     query = query.eq(
       'id_empresa',
@@ -123,11 +135,13 @@ export async function obtenerCentrosCosto({
     )
   }
 
+
   /*
    * =======================================================
    * FILTRO ESTADO
    * =======================================================
    */
+
   if (estado !== null) {
     query = query.eq(
       'estado',
@@ -135,11 +149,13 @@ export async function obtenerCentrosCosto({
     )
   }
 
+
   /*
    * =======================================================
    * FILTRO TIPO CENTRO DE COSTO
    * =======================================================
    */
+
   if (tipoCcId !== null) {
     query = query.eq(
       'id_tip_cc',
@@ -147,11 +163,13 @@ export async function obtenerCentrosCosto({
     )
   }
 
+
   /*
    * =======================================================
    * FILTRO TIPO MAQUINARIA
    * =======================================================
    */
+
   if (tipoMaqId !== null) {
     query = query.eq(
       'id_tipo_maq',
@@ -159,11 +177,13 @@ export async function obtenerCentrosCosto({
     )
   }
 
+
   /*
    * =======================================================
    * FILTRO COMPARATIVO
    * =======================================================
    */
+
   if (comparativoId !== null) {
     query = query.eq(
       'id_comparativo',
@@ -171,11 +191,13 @@ export async function obtenerCentrosCosto({
     )
   }
 
+
   /*
    * =======================================================
    * FILTRO VARIEDAD
    * =======================================================
    */
+
   if (variedadId !== null) {
     query = query.eq(
       'id_variedad',
@@ -183,343 +205,51 @@ export async function obtenerCentrosCosto({
     )
   }
 
-  /*
-   * =======================================================
-   * BÚSQUEDA
-   *
-   * Busca por:
-   * - descripción
-   * - código
-   * =======================================================
-   */
+
   if (busqueda?.trim()) {
-    const texto =
-      busqueda.trim()
-
-    /*
-     * -----------------------------------------------
-     * BÚSQUEDA POR DESCRIPCIÓN
-     * -----------------------------------------------
-     */
-    const queryDescripcion =
-      supabase
-        .from('dim_centro_costo')
-        .select(
-          `
-            cod_cc_pk,
-            id_empresa,
-            cod_cc,
-            desc_cc,
-            id_tip_cc,
-            id_tipo_maq,
-            id_comparativo,
-            id_variedad,
-            estado,
-            created_at,
-            updated_at,
-
-            empresa:Dim_Empresa(
-              id_empresa,
-              descripcion,
-              nombre_comercial
-            ),
-
-            tipo_cc:Dim_TipoCC(
-              id_tip_cc,
-              des_tip_cc
-            ),
-
-            tipo_maq:dim_tipo_maq(
-              id_tipo_maq,
-              des_tipo_maquinaria
-            ),
-
-            comparativo:dim_comparativo(
-              id_comparativo,
-              descripcion
-            ),
-
-            variedad:dim_variedad(
-              id_variedad,
-              descripcion
-            )
-          `,
-        )
-        .ilike(
-          'desc_cc',
-          `%${texto}%`,
-        )
-
-    /*
-     * -----------------------------------------------
-     * BÚSQUEDA POR CÓDIGO
-     * -----------------------------------------------
-     */
-    let queryCodigo = null
-
-    if (/^\d+$/.test(texto)) {
-      queryCodigo =
-        supabase
-          .from(
-            'dim_centro_costo',
-          )
-          .select(
-            `
-              cod_cc_pk,
-              id_empresa,
-              cod_cc,
-              desc_cc,
-              id_tip_cc,
-              id_tipo_maq,
-              id_comparativo,
-              id_variedad,
-              estado,
-              created_at,
-              updated_at,
-
-              empresa:Dim_Empresa(
-                id_empresa,
-                descripcion,
-                nombre_comercial
-              ),
-
-              tipo_cc:Dim_TipoCC(
-                id_tip_cc,
-                des_tip_cc
-              ),
-
-              tipo_maq:dim_tipo_maq(
-                id_tipo_maq,
-                des_tipo_maquinaria
-              ),
-
-              comparativo:dim_comparativo(
-                id_comparativo,
-                descripcion
-              ),
-
-              variedad:dim_variedad(
-                id_variedad,
-                descripcion
-              )
-            `,
-          )
-          .eq(
-            'cod_cc',
-            Number(texto),
-          )
-    }
-
-    /*
-     * -----------------------------------------------
-     * EJECUTAR BÚSQUEDAS
-     * -----------------------------------------------
-     */
-    const consultas = [
-      queryDescripcion,
+    const texto = busqueda.trim()
+    const textoParaFiltro = texto
+      .replace(/[\\%_]/g, '\\$&')
+      .replace(/"/g, '\\"')
+    const condiciones = [
+      `desc_cc.ilike."%${textoParaFiltro}%"`,
     ]
 
-    if (queryCodigo) {
-      consultas.push(queryCodigo)
-    }
-
-    const resultados =
-      await Promise.all(
-        consultas,
-      )
-
-    /*
-     * -----------------------------------------------
-     * VALIDAR ERRORES
-     * -----------------------------------------------
-     */
-    for (const resultado of resultados) {
-      if (resultado.error) {
-        throw resultado.error
+    if (/^\d+$/.test(texto)) {
+      const codigo = Number(texto)
+      if (
+        Number.isSafeInteger(codigo) &&
+        codigo <= MAX_COD_CC
+      ) {
+        condiciones.push(`cod_cc.eq.${codigo}`)
       }
     }
 
-    /*
-     * -----------------------------------------------
-     * ELIMINAR DUPLICADOS
-     * -----------------------------------------------
-     */
-    const mapa = new Map()
-
-    resultados.forEach(
-      (resultado) => {
-        ;(
-          resultado.data ?? []
-        ).forEach((item) => {
-          mapa.set(
-            item.cod_cc_pk,
-            item,
-          )
-        })
-      },
-    )
-
-    let datos = Array.from(
-      mapa.values(),
-    )
-
-    /*
-     * -----------------------------------------------
-     * APLICAR FILTROS RESTANTES
-     * -----------------------------------------------
-     */
-    if (empresaId !== null) {
-      datos = datos.filter(
-        (item) =>
-          Number(
-            item.id_empresa,
-          ) ===
-          Number(empresaId),
-      )
-    }
-
-    if (estado !== null) {
-      datos = datos.filter(
-        (item) =>
-          item.estado ===
-          convertirEstado(estado),
-      )
-    }
-
-    if (tipoCcId !== null) {
-      datos = datos.filter(
-        (item) =>
-          Number(
-            item.id_tip_cc,
-          ) ===
-          Number(tipoCcId),
-      )
-    }
-
-    if (tipoMaqId !== null) {
-      datos = datos.filter(
-        (item) =>
-          Number(
-            item.id_tipo_maq,
-          ) ===
-          Number(tipoMaqId),
-      )
-    }
-
-    if (comparativoId !== null) {
-      datos = datos.filter(
-        (item) =>
-          Number(
-            item.id_comparativo,
-          ) ===
-          Number(comparativoId),
-      )
-    }
-
-    if (variedadId !== null) {
-      datos = datos.filter(
-        (item) =>
-          Number(
-            item.id_variedad,
-          ) ===
-          Number(variedadId),
-      )
-    }
-
-    /*
-     * -----------------------------------------------
-     * ORDEN ALFABÉTICO
-     *
-     * 1. Empresa
-     * 2. Descripción Centro de Costo
-     * 3. Código
-     * -----------------------------------------------
-     */
-    datos.sort(
-      (a, b) => {
-        if (
-          Number(a.id_empresa) !==
-          Number(b.id_empresa)
-        ) {
-          return (
-            Number(a.id_empresa) -
-            Number(b.id_empresa)
-          )
-        }
-
-        const descripcionA =
-          String(
-            a.desc_cc ?? '',
-          ).toLocaleUpperCase('es')
-
-        const descripcionB =
-          String(
-            b.desc_cc ?? '',
-          ).toLocaleUpperCase('es')
-
-        const comparacion =
-          descripcionA.localeCompare(
-            descripcionB,
-            'es',
-            {
-              sensitivity: 'base',
-            },
-          )
-
-        if (comparacion !== 0) {
-          return comparacion
-        }
-
-        return (
-          Number(a.cod_cc) -
-          Number(b.cod_cc)
-        )
-      },
-    )
-
-    /*
-     * -----------------------------------------------
-     * TOTAL
-     * -----------------------------------------------
-     */
-    const total =
-      datos.length
-
-    /*
-     * -----------------------------------------------
-     * PAGINACIÓN
-     * -----------------------------------------------
-     */
-    const datosPaginados =
-      datos.slice(
-        desde,
-        hasta + 1,
-      )
-
-    return {
-      data: datosPaginados,
-      count: total,
-    }
+    query = query.or(condiciones.join(','))
   }
+
 
   /*
    * =======================================================
    * PAGINACIÓN DIRECTA EN SUPABASE
-   *
-   * Orden:
-   * 1. Empresa
-   * 2. Descripción
-   * 3. Código
    * =======================================================
    */
+
   query = query
-    .order('id_empresa')
-    .order('desc_cc')
-    .order('cod_cc')
+    .order(
+      'id_empresa',
+    )
+    .order(
+      'desc_cc',
+    )
+    .order(
+      'cod_cc',
+    )
     .range(
       desde,
       hasta,
     )
+
 
   const {
     data,
@@ -527,95 +257,268 @@ export async function obtenerCentrosCosto({
     count,
   } = await query
 
+
   if (error) {
     throw error
   }
 
+
   return {
-    data: data ?? [],
-    count: count ?? 0,
+    data:
+      data ?? [],
+
+    count:
+      count ?? 0,
   }
 }
+
 
 /*
  * =========================================================
  * OBTENER OPCIONES DE FILTROS
  * =========================================================
+ *
+ * REGLA:
+ *
+ * 1. Empresa + Estado
+ *    → determina los TIPOS DE CENTRO DE COSTO.
+ *
+ * 2. Empresa + Estado + Tipo CC
+ *    → determina los filtros dependientes:
+ *      - Tipo de maquinaria
+ *      - Comparativo
+ *      - Variedad
+ *
+ * IMPORTANTE:
+ *
+ * El Tipo CC NO se filtra por sí mismo.
+ * Esto permite cambiar de un tipo a otro
+ * sin tener que limpiar todos los filtros.
+ * =========================================================
  */
+
 export async function obtenerOpcionesFiltros({
   empresaId = null,
   estado = null,
   tipoCcId = null,
 }) {
-  let query = supabase
-    .from('dim_centro_costo')
-    .select(
-      `
-        id_empresa,
-        id_tip_cc,
-        id_tipo_maq,
-        id_comparativo,
-        id_variedad,
-        estado
-      `,
-    )
+
+  /*
+   * =======================================================
+   * CONSULTA BASE
+   *
+   * Empresa + Estado
+   *
+   * Esta consulta determina qué Tipos CC
+   * están disponibles.
+   * =======================================================
+   */
+
+  let queryTipos =
+    supabase
+      .from(
+        'dim_centro_costo',
+      )
+      .select(
+        `
+          id_tip_cc
+        `,
+      )
+
 
   /*
    * FILTRO EMPRESA
    */
+
   if (empresaId !== null) {
-    query = query.eq(
-      'id_empresa',
-      empresaId,
-    )
+
+    queryTipos =
+      queryTipos.eq(
+        'id_empresa',
+        empresaId,
+      )
+
   }
+
 
   /*
    * FILTRO ESTADO
    */
+
   if (estado !== null) {
-    query = query.eq(
-      'estado',
-      convertirEstado(estado),
-    )
+
+    queryTipos =
+      queryTipos.eq(
+        'estado',
+        convertirEstado(
+          estado,
+        ),
+      )
+
   }
+
+
+  const {
+    data: datosTipos,
+    error: errorTipos,
+  } = await queryTipos
+
+
+  if (errorTipos) {
+    throw errorTipos
+  }
+
+
+  /*
+   * =======================================================
+   * TIPOS DE CENTRO DE COSTO
+   * =======================================================
+   */
+
+  const tiposCentroCosto = [
+    ...new Set(
+      (datosTipos ?? [])
+        .map(
+          (item) =>
+            item.id_tip_cc,
+        )
+        .filter(
+          (item) =>
+            item !== null,
+        ),
+    ),
+  ]
+
+
+  /*
+   * =======================================================
+   * SI NO HAY TIPO CC SELECCIONADO
+   *
+   * No necesitamos buscar todavía
+   * los filtros dependientes.
+   * =======================================================
+   */
+
+  if (
+    tipoCcId === null
+  ) {
+
+    return {
+      tiposCentroCosto,
+
+      tiposMaquinaria: [],
+
+      comparativos: [],
+
+      variedades: [],
+    }
+
+  }
+
+
+  /*
+   * =======================================================
+   * CONSULTA DEPENDIENTE
+   *
+   * Empresa + Estado + Tipo CC
+   *
+   * Esta consulta solamente determina
+   * las opciones de los filtros secundarios.
+   * =======================================================
+   */
+
+  let queryDependientes =
+    supabase
+      .from(
+        'dim_centro_costo',
+      )
+      .select(
+        `
+          id_tipo_maq,
+          id_comparativo,
+          id_variedad
+        `,
+      )
+
+
+  /*
+   * FILTRO EMPRESA
+   */
+
+  if (empresaId !== null) {
+
+    queryDependientes =
+      queryDependientes.eq(
+        'id_empresa',
+        empresaId,
+      )
+
+  }
+
+
+  /*
+   * FILTRO ESTADO
+   */
+
+  if (estado !== null) {
+
+    queryDependientes =
+      queryDependientes.eq(
+        'estado',
+        convertirEstado(
+          estado,
+        ),
+      )
+
+  }
+
 
   /*
    * FILTRO TIPO CC
    */
-  if (tipoCcId !== null) {
-    query = query.eq(
+
+  queryDependientes =
+    queryDependientes.eq(
       'id_tip_cc',
       tipoCcId,
     )
-  }
+
 
   const {
-    data,
-    error,
-  } = await query
+    data: datosDependientes,
+    error: errorDependientes,
+  } =
+    await queryDependientes
 
-  if (error) {
-    throw error
+
+  if (errorDependientes) {
+    throw errorDependientes
   }
 
-  const registros = data ?? []
+
+  const registros =
+    datosDependientes ?? []
+
+
+  /*
+   * =======================================================
+   * RETORNAR OPCIONES
+   * =======================================================
+   */
 
   return {
-    tiposCentroCosto: [
-      ...new Set(
-        registros
-          .map(
-            (item) =>
-              item.id_tip_cc,
-          )
-          .filter(
-            (item) =>
-              item !== null,
-          ),
-      ),
-    ],
 
+    /*
+     * Siempre conserva todos
+     * los tipos disponibles
+     * según Empresa + Estado.
+     */
+    tiposCentroCosto,
+
+    /*
+     * Opciones dependientes
+     * del Tipo CC seleccionado.
+     */
     tiposMaquinaria: [
       ...new Set(
         registros
@@ -660,11 +563,13 @@ export async function obtenerOpcionesFiltros({
   }
 }
 
+
 /*
  * =========================================================
  * CREAR CENTRO DE COSTO
  * =========================================================
  */
+
 export async function crearCentroCosto({
   id_empresa,
   cod_cc,
@@ -675,11 +580,38 @@ export async function crearCentroCosto({
   id_variedad = null,
   estado = true,
 }) {
+
   const empresa =
     Number(id_empresa)
 
   const codigo =
     Number(cod_cc)
+
+  if (!Number.isSafeInteger(empresa) || empresa <= 0) {
+    throw new Error(
+      'La empresa seleccionada no tiene un identificador válido.',
+    )
+  }
+
+  if (
+    !Number.isSafeInteger(codigo) ||
+    codigo < 0 ||
+    codigo > MAX_COD_CC
+  ) {
+    throw new Error(
+      `El código del Centro de Costo debe estar entre 0 y ${MAX_COD_CC}.`,
+    )
+  }
+
+  if (
+    typeof descripcionBase !== 'string' ||
+    !descripcionBase.trim()
+  ) {
+    throw new Error(
+      'La descripción del Centro de Costo es obligatoria.',
+    )
+  }
+
 
   /*
    * Regla:
@@ -687,12 +619,16 @@ export async function crearCentroCosto({
    * cod_cc_pk =
    * (id_empresa * 100000) + cod_cc
    */
+
   const codCcPk =
-    empresa * 100000 +
+    empresa * BASE_COD_CC_PK +
     codigo
 
+
   const registro = {
-    cod_cc_pk: codCcPk,
+
+    cod_cc_pk:
+      codCcPk,
 
     id_empresa:
       empresa,
@@ -728,11 +664,14 @@ export async function crearCentroCosto({
       Boolean(estado),
   }
 
+
   const {
     data,
     error,
   } = await supabase
-    .from('dim_centro_costo')
+    .from(
+      'dim_centro_costo',
+    )
     .insert(registro)
     .select(
       `
@@ -751,25 +690,28 @@ export async function crearCentroCosto({
     )
     .single()
 
+
   if (error) {
     throw error
   }
 
+
   return data
 }
+
 
 /*
  * =========================================================
  * ACTUALIZAR CENTRO DE COSTO
  * =========================================================
  *
- * CAMPOS QUE NO SE MODIFICAN:
+ * NO SE MODIFICAN:
  *
  * - cod_cc_pk
  * - id_empresa
  * - cod_cc
  *
- * CAMPOS QUE SÍ SE MODIFICAN:
+ * SÍ SE MODIFICAN:
  *
  * - desc_cc
  * - id_tip_cc
@@ -777,11 +719,9 @@ export async function crearCentroCosto({
  * - id_comparativo
  * - id_variedad
  * - estado
- *
- * El registro se identifica mediante
- * el cod_cc_pk original.
  * =========================================================
  */
+
 export async function actualizarCentroCosto({
   codCcPk,
   codCc,
@@ -792,63 +732,70 @@ export async function actualizarCentroCosto({
   id_variedad = null,
   estado = true,
 }) {
+
   /*
    * =======================================================
    * VALIDACIONES
    * =======================================================
    */
+
   if (
     codCcPk === null ||
     codCcPk === undefined
   ) {
+
     throw new Error(
       'No se recibió el cod_cc_pk del Centro de Costo.',
     )
+
   }
+
 
   if (
     codCc === null ||
     codCc === undefined
   ) {
+
     throw new Error(
       'No se recibió el cod_cc del Centro de Costo.',
     )
+
   }
+
 
   if (
     !descripcionBase ||
     !descripcionBase.trim()
   ) {
+
     throw new Error(
       'La descripción del Centro de Costo es obligatoria.',
     )
+
   }
+
 
   if (
     id_tip_cc === null ||
     id_tip_cc === undefined ||
     id_tip_cc === ''
   ) {
+
     throw new Error(
       'El Tipo de Centro de Costo es obligatorio.',
     )
+
   }
+
 
   /*
    * =======================================================
-   * REGISTRO A ACTUALIZAR
+   * REGISTRO
    * =======================================================
-   *
-   * NO enviamos:
-   *
-   * - cod_cc_pk
-   * - id_empresa
-   * - cod_cc
-   *
-   * Por lo tanto esos campos permanecen
-   * intactos en la BD.
    */
+
   const registro = {
+
     desc_cc:
       `${descripcionBase.trim()} (${Number(codCc)})`,
 
@@ -880,16 +827,20 @@ export async function actualizarCentroCosto({
       new Date().toISOString(),
   }
 
+
   /*
    * =======================================================
    * UPDATE
    * =======================================================
    */
+
   const {
     data,
     error,
   } = await supabase
-    .from('dim_centro_costo')
+    .from(
+      'dim_centro_costo',
+    )
     .update(registro)
     .eq(
       'cod_cc_pk',
@@ -912,25 +863,453 @@ export async function actualizarCentroCosto({
     )
     .single()
 
-  /*
-   * =======================================================
-   * MANEJO DE ERROR
-   * =======================================================
-   */
+
   if (error) {
     throw error
   }
 
-  /*
-   * =======================================================
-   * VALIDAR QUE REALMENTE SE ACTUALIZÓ
-   * =======================================================
-   */
+
   if (!data) {
+
     throw new Error(
       'No se encontró el Centro de Costo que se intenta actualizar.',
     )
+
   }
 
+
   return data
+}
+
+
+/*
+ * =========================================================
+ * OBTENER CENTROS DE COSTO PARA EXPORTACIÓN
+ * =========================================================
+ *
+ * IMPORTANTE:
+ *
+ * - No utiliza la paginación de la tabla.
+ * - Respeta todos los filtros actuales.
+ * - Consulta Supabase en bloques de 1000 registros.
+ * - Permite exportar más de 1000 registros.
+ * - Respeta las políticas RLS de Supabase.
+ * =========================================================
+ */
+
+export async function obtenerCentrosCostoParaExportar({
+  empresaId = null,
+  tipoCcId = null,
+  tipoMaqId = null,
+  comparativoId = null,
+  variedadId = null,
+  estado = null,
+  busqueda = '',
+}) {
+
+  /*
+   * =======================================================
+   * CONFIGURACIÓN DE BLOQUES
+   * =======================================================
+   */
+
+  const TAMANO_BLOQUE =
+    1000
+
+  let todosLosDatos =
+    []
+
+  let desde =
+    0
+
+
+  /*
+   * =======================================================
+   * CONSULTAR POR BLOQUES
+   * =======================================================
+   */
+
+  while (true) {
+
+    const hasta =
+      desde +
+      TAMANO_BLOQUE -
+      1
+
+
+    /*
+     * =====================================================
+     * CONSULTA BASE
+     * =====================================================
+     */
+
+    let query =
+      supabase
+        .from(
+          'dim_centro_costo',
+        )
+        .select(
+          `
+            cod_cc_pk,
+            id_empresa,
+            cod_cc,
+            desc_cc,
+            id_tip_cc,
+            id_tipo_maq,
+            id_comparativo,
+            id_variedad,
+            estado,
+
+            empresa:Dim_Empresa(
+              id_empresa,
+              descripcion,
+              nombre_comercial
+            ),
+
+            tipo_cc:Dim_TipoCC(
+              id_tip_cc,
+              des_tip_cc
+            ),
+
+            tipo_maq:dim_tipo_maq(
+              id_tipo_maq,
+              des_tipo_maquinaria
+            ),
+
+            comparativo:dim_comparativo(
+              id_comparativo,
+              descripcion
+            ),
+
+            variedad:dim_variedad(
+              id_variedad,
+              descripcion
+            )
+          `,
+        )
+
+
+    /*
+     * =====================================================
+     * FILTRO EMPRESA
+     * =====================================================
+     */
+
+    if (empresaId !== null) {
+
+      query =
+        query.eq(
+          'id_empresa',
+          empresaId,
+        )
+
+    }
+
+
+    /*
+     * =====================================================
+     * FILTRO ESTADO
+     * =====================================================
+     */
+
+    if (estado !== null) {
+
+      query =
+        query.eq(
+          'estado',
+          convertirEstado(
+            estado,
+          ),
+        )
+
+    }
+
+
+    /*
+     * =====================================================
+     * FILTRO TIPO CENTRO DE COSTO
+     * =====================================================
+     */
+
+    if (tipoCcId !== null) {
+
+      query =
+        query.eq(
+          'id_tip_cc',
+          tipoCcId,
+        )
+
+    }
+
+
+    /*
+     * =====================================================
+     * FILTRO TIPO MAQUINARIA
+     * =====================================================
+     */
+
+    if (tipoMaqId !== null) {
+
+      query =
+        query.eq(
+          'id_tipo_maq',
+          tipoMaqId,
+        )
+
+    }
+
+
+    /*
+     * =====================================================
+     * FILTRO COMPARATIVO
+     * =====================================================
+     */
+
+    if (comparativoId !== null) {
+
+      query =
+        query.eq(
+          'id_comparativo',
+          comparativoId,
+        )
+
+    }
+
+
+    /*
+     * =====================================================
+     * FILTRO VARIEDAD
+     * =====================================================
+     */
+
+    if (variedadId !== null) {
+
+      query =
+        query.eq(
+          'id_variedad',
+          variedadId,
+        )
+
+    }
+
+
+    /*
+     * =====================================================
+     * ORDEN Y BLOQUE
+     * =====================================================
+     */
+
+    query =
+      query
+        .order(
+          'id_empresa',
+        )
+        .order(
+          'desc_cc',
+        )
+        .order(
+          'cod_cc',
+        )
+        .range(
+          desde,
+          hasta,
+        )
+
+
+    /*
+     * =====================================================
+     * EJECUTAR CONSULTA
+     * =====================================================
+     */
+
+    const {
+      data,
+      error,
+    } = await query
+
+
+    if (error) {
+      throw error
+    }
+
+
+    const registros =
+      data ?? []
+
+
+    /*
+     * =====================================================
+     * ACUMULAR REGISTROS
+     * =====================================================
+     */
+
+    todosLosDatos.push(
+      ...registros,
+    )
+
+
+    /*
+     * =====================================================
+     * DETERMINAR SI TERMINAMOS
+     * =====================================================
+     *
+     * Si recibimos menos de 1000 registros,
+     * ya no existen más registros para consultar.
+     * =====================================================
+     */
+
+    if (
+      registros.length <
+      TAMANO_BLOQUE
+    ) {
+      break
+    }
+
+
+    /*
+     * =====================================================
+     * SIGUIENTE BLOQUE
+     * =====================================================
+     */
+
+    desde +=
+      TAMANO_BLOQUE
+  }
+
+
+  /*
+   * =======================================================
+   * BÚSQUEDA
+   *
+   * Busca por:
+   * - descripción
+   * - código
+   * =======================================================
+   */
+
+  let datos =
+    todosLosDatos
+
+
+  if (busqueda?.trim()) {
+
+    const texto =
+      busqueda
+        .trim()
+        .toLocaleUpperCase(
+          'es',
+        )
+
+
+    datos =
+      datos.filter(
+        (item) => {
+
+          const descripcion =
+            String(
+              item.desc_cc ?? '',
+            )
+              .toLocaleUpperCase(
+                'es',
+              )
+
+
+          const codigo =
+            String(
+              item.cod_cc ?? '',
+            )
+
+
+          return (
+            descripcion.includes(
+              texto,
+            ) ||
+            codigo.includes(
+              texto,
+            )
+          )
+
+        },
+      )
+  }
+
+
+  /*
+   * =======================================================
+   * ORDEN FINAL
+   *
+   * 1. Empresa
+   * 2. Descripción
+   * 3. Código
+   * =======================================================
+   */
+
+  datos.sort(
+    (a, b) => {
+
+      if (
+        Number(a.id_empresa) !==
+        Number(b.id_empresa)
+      ) {
+
+        return (
+          Number(a.id_empresa) -
+          Number(b.id_empresa)
+        )
+
+      }
+
+
+      const descripcionA =
+        String(
+          a.desc_cc ?? '',
+        ).toLocaleUpperCase(
+          'es',
+        )
+
+
+      const descripcionB =
+        String(
+          b.desc_cc ?? '',
+        ).toLocaleUpperCase(
+          'es',
+        )
+
+
+      const comparacion =
+        descripcionA.localeCompare(
+          descripcionB,
+          'es',
+          {
+            sensitivity:
+              'base',
+          },
+        )
+
+
+      if (
+        comparacion !== 0
+      ) {
+
+        return comparacion
+
+      }
+
+
+      return (
+        Number(a.cod_cc) -
+        Number(b.cod_cc)
+      )
+
+    },
+  )
+
+
+  /*
+   * =======================================================
+   * RESULTADO FINAL
+   * =======================================================
+   */
+
+  return datos
 }

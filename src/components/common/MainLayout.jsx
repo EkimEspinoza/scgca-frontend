@@ -57,31 +57,46 @@ function MainLayout({ children, onLogout }) {
 
 
       <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          minWidth: 0,
-          width: '100%',
+  component="main"
+  sx={{
+    flex: '1 1 0%',
+    minWidth: 0,
+    maxWidth: '100%',
 
-          p: {
-            xs: 2,
-            sm: 2.5,
-            md: 3,
-          },
+    /*
+     * El área principal ocupa exactamente
+     * el alto disponible de la ventana.
+     */
+    height: '100vh',
+    maxHeight: '100vh',
 
-          pt: {
-            xs: 9,
-            sm: 9,
-            md: 10,
-          },
+    /*
+     * Evita que el módulo genere
+     * un segundo scrollbar.
+     */
+    overflow: 'hidden',
 
-          backgroundColor: 'background.default',
+    boxSizing: 'border-box',
 
-          minHeight: '100vh',
+    p: {
+      xs: 2,
+      sm: 2.5,
+      md: 3,
+    },
 
-          overflowX: 'hidden',
-        }}
-      >
+    /*
+     * Espacio reservado para el Header.
+     */
+    pt: {
+      xs: 9,
+      sm: 9,
+      md: 10,
+    },
+
+    backgroundColor:
+      'background.default',
+  }}
+>
         {children}
       </Box>
     </Box>
