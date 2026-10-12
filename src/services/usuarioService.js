@@ -246,6 +246,35 @@ export async function obtenerUsuarioPorId(
 }
 
 // ============================================================
+// ACTUALIZAR USUARIO Y EMPRESAS EN UNA SOLA TRANSACCIÓN
+// ============================================================
+
+export async function actualizarUsuarioConEmpresas(idUsuario, datos) {
+  const empresas = Array.isArray(datos.empresas)
+    ? datos.empresas.map(Number)
+    : []
+
+  const { data, error } = await supabase.rpc(
+    'actualizar_usuario_con_empresas',
+    {
+      p_id_usuario: Number(idUsuario),
+      p_nombre: datos.nombre?.trim() || '',
+      p_apellido: datos.apellido?.trim() || '',
+      p_id_permiso: Number(datos.id_permiso),
+      p_estado: datos.estado,
+      p_empresas: empresas,
+    },
+  )
+
+  if (error) {
+    console.error('Error actualizando usuario y empresas:', error)
+    throw new Error(error.message || 'No se pudo actualizar el usuario y sus empresas.')
+  }
+
+  return data
+}
+
+// ============================================================
 // ACTUALIZAR USUARIO
 // ============================================================
 
