@@ -245,8 +245,8 @@ function CampanaForm({
                     required
                     type="number"
                     inputProps={{
-                        min: 1,
-                        setp: '1',
+                        min: 0.0001,
+                        step: 0.0001,
                     }}
                     sx={{
                         '& input[type=number]::-webkit-inner-spin-button, & input[type=number]::-webkit-outer-spin-button': {
@@ -256,9 +256,8 @@ function CampanaForm({
                         '& input[type=number]': {
                             MozAppearance: 'textfield',
                         },
-                    }} helperText={
-                        'Puede registrar hasta 4 decimales.'
-                    }
+                    }}
+                    helperText="Obligatorio: las hectáreas deben ser mayores que 0. Puede registrar hasta 4 decimales."
                 />
 
                 <Box
