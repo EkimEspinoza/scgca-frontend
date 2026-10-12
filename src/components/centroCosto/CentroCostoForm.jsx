@@ -18,7 +18,6 @@ import {
 import {
   crearCentroCosto,
   actualizarCentroCosto,
-  MAX_COD_CC,
 } from '../../services/centroCostoService'
 
 function CentroCostoForm({
@@ -302,7 +301,7 @@ function CentroCostoForm({
       event.target.value.replace(
         /\D/g,
         '',
-      ).slice(0, String(MAX_COD_CC).length)
+      )
 
     setCodCc(valor)
 
@@ -454,11 +453,10 @@ function CentroCostoForm({
           'Ingrese el código del Centro de Costo.'
       } else if (
         !Number.isSafeInteger(codigo) ||
-        codigo < 0 ||
-        codigo > MAX_COD_CC
+        codigo < 0
       ) {
         nuevosErrores.codCc =
-          `El código debe estar entre 0 y ${MAX_COD_CC}.`
+          'Ingrese un código numérico entero mayor o igual a cero.'
       }
     }
 
@@ -805,11 +803,11 @@ function CentroCostoForm({
               )}
               helperText={
                 errores.codCc ||
-                `Solo números, máximo ${MAX_COD_CC}.`
+                'Ingrese un código numérico sin límite fijo de dígitos.'
               }
               inputProps={{
                 inputMode: 'numeric',
-                maxLength: String(MAX_COD_CC).length,
+
               }}
             />
           )}
