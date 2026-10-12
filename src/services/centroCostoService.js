@@ -1,7 +1,5 @@
 import { supabase } from '../lib/supabase'
 
-const BASE_COD_CC_PK = 100000
-export const MAX_COD_CC = BASE_COD_CC_PK - 1
 
 
 /*
@@ -217,10 +215,7 @@ export async function obtenerCentrosCosto({
 
     if (/^\d+$/.test(texto)) {
       const codigo = Number(texto)
-      if (
-        Number.isSafeInteger(codigo) &&
-        codigo <= MAX_COD_CC
-      ) {
+      if (Number.isSafeInteger(codigo)) {
         condiciones.push(`cod_cc.eq.${codigo}`)
       }
     }
@@ -593,13 +588,9 @@ export async function crearCentroCosto({
     )
   }
 
-  if (
-    !Number.isSafeInteger(codigo) ||
-    codigo < 0 ||
-    codigo > MAX_COD_CC
-  ) {
+  if (!Number.isSafeInteger(codigo) || codigo < 0) {
     throw new Error(
-      `El código del Centro de Costo debe estar entre 0 y ${MAX_COD_CC}.`,
+      'El código del Centro de Costo debe ser un número entero mayor o igual a cero.',
     )
   }
 
@@ -616,13 +607,17 @@ export async function crearCentroCosto({
   /*
    * Regla:
    *
-   * cod_cc_pk =
-   * (id_empresa * 100000) + cod_cc
+   * cod_cc_pk se genera concatenando id_empresa + cod_cc.
+   * Se conserva la regla histórica; no se modifican claves ya guardadas.
    */
 
-  const codCcPk =
-    empresa * BASE_COD_CC_PK +
-    codigo
+  const codCcPk = Number(`${empresa}${codigo}`)
+
+  if (!Number.isSafeInteger(codCcPk)) {
+    throw new Error(
+      'No se pudo generar una clave válida para el Centro de Costo.',
+    )
+  }
 
 
   const registro = {
