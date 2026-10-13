@@ -35,16 +35,17 @@ Esto es un **riesgo plausible, no una vulnerabilidad reproducida**. No se ejecut
 
 No se debe agregar mecánicamente el mismo advisory lock al trigger de centro de costo: los triggers de fila de UPDATE se ejecutan después de que la sentencia obtiene el bloqueo de la fila, mientras que el trigger de campaña actualmente adquiere el advisory lock antes de consultar el centro. Esa inversión potencial del orden de bloqueo puede crear un deadlock.
 
-## 3. Diseño de corrección pendiente
+## 3. Estrategia técnica candidata (requiere prueba en desarrollo)
 
-Antes de escribir una migración, resolver en un entorno desechable/de desarrollo:
+La alternativa preferida para evaluar es coordinar la validación de campaña y la modificación del centro mediante el **bloqueo de la fila del Centro de Costo**, en lugar de añadir el advisory lock actual al trigger `BEFORE UPDATE` del centro:
 
-1. Elegir un orden único de bloqueos entre centro de costo y campañas.
-2. Asegurar que una inserción o actualización de campaña y una modificación de atributos protegidos del centro se serialicen sin inversión de bloqueos.
-3. Respetar la decisión funcional vigente: `id_variedad`, `id_comparativo` e `id_tipo_maq` siguen siendo modificables aun cuando existan campañas. La semántica de `desc_cc` y `estado` sigue pendiente y no debe alterarse incidentalmente.
-4. Revisar cómo se comprueba la pertenencia de `Dim_Campana.id_empresa` al centro al insertar/actualizar, teniendo en cuenta la FK actual a `cod_cc_pk` y la FK separada a `Dim_Empresa`.
+1. En `validar_campana()`, adquirir el bloqueo de fila del Centro de Costo con `SELECT ... FOR UPDATE` antes de validar empresa, estado y tipo. Esto hace que la campaña y la modificación del centro se coordinen sobre el mismo recurso.
+2. Evaluar retirar `pg_advisory_xact_lock(NEW.cod_cc_pk)` solo después de confirmar que el bloqueo de fila cubre los casos de INSERT y UPDATE de campaña.
+3. Para UPDATE de campaña que cambia `cod_cc_pk`, diseñar y probar el bloqueo de centro anterior y nuevo en orden determinista; no bloquear solo el nuevo sin analizar el centro anterior.
+4. Mantener en `proteger_centro_costo_con_campanas()` las restricciones actuales sobre `id_empresa`, `cod_cc`, `id_tip_cc` y `cod_cc_pk`. No agregar `id_variedad`, `id_comparativo` ni `id_tipo_maq` a la protección.
+5. Probar la visibilidad de campañas después de una espera por bloqueo bajo el aislamiento real de producción. Confirmar también la integridad de `Dim_Campana.id_empresa` contra la empresa del centro.
 
-No aplicar una migración a producción hasta que la estrategia de bloqueo esté reproducida y probada.
+**Esto es un diseño candidato, no una corrección validada.** El bloqueo de fila puede cambiar el orden de espera, pero todavía hay que reproducir en desarrollo los escenarios concurrentes, revisar actualizaciones que cambian `cod_cc_pk` y comprobar ausencia de deadlocks antes de redactar una migración. No aplicar una migración a producción hasta superar esas pruebas.
 
 ## 4. Matriz mínima de pruebas
 
