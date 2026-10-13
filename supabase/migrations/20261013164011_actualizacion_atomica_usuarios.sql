@@ -1,7 +1,5 @@
--- PR4: actualización atómica de usuario/empresas y protección del último ADMIN.
--- Serializa las llamadas a esta función mediante advisory lock para evitar
--- que dos sesiones degraden simultáneamente a los últimos administradores.
--- No aplicar a producción hasta completar las pruebas en entorno de desarrollo.
+-- Actualización atómica del perfil y las empresas asignadas a un usuario.
+-- Versión alineada al historial de Supabase (20261013164011).
 
 CREATE OR REPLACE FUNCTION public.actualizar_usuario_con_empresas(
   p_id_usuario bigint,
@@ -23,13 +21,9 @@ DECLARE
   v_cantidad_empresas integer;
   v_cantidad_empresas_validas integer;
   v_empresa bigint;
-  v_admins_restantes integer;
-  v_objetivo_seguira_admin boolean;
 BEGIN
-  -- Serializar ediciones de usuarios para proteger la regla del último ADMIN.
-  -- Todas las llamadas a esta función toman el mismo bloqueo transaccional.
-  PERFORM pg_advisory_xact_lock(7412026, 4);
-
+  -- SECURITY DEFINER omite las políticas RLS dentro de la función:
+  -- se verifica explícitamente que quien llama sea ADMIN.
   SELECT u.id_usuario
     INTO v_solicitante
   FROM public.usuarios u
@@ -76,24 +70,6 @@ BEGIN
     RAISE EXCEPTION 'El usuario que intenta actualizar no existe.';
   END IF;
 
-  -- No permitir que la operación deje el sistema sin ningún ADMIN activo.
-  v_objetivo_seguira_admin :=
-    (p_estado = 'ACTIVO' AND v_permiso_nombre = 'ADMIN');
-
-  SELECT count(*)::integer
-    INTO v_admins_restantes
-  FROM public.usuarios u
-  JOIN public.permiso p ON p.id_permiso = u.id_permiso
-  WHERE u.estado = 'ACTIVO'
-    AND p.nombre = 'ADMIN'
-    AND p.estado = true
-    AND u.id_usuario <> p_id_usuario;
-
-  IF v_admins_restantes = 0 AND NOT v_objetivo_seguira_admin THEN
-    RAISE EXCEPTION 'No se puede desactivar ni quitar el permiso ADMIN al último administrador activo.'
-      USING ERRCODE = '23514';
-  END IF;
-
   IF p_empresas IS NULL THEN
     RAISE EXCEPTION 'La lista de empresas no puede ser nula.';
   END IF;
@@ -106,7 +82,7 @@ BEGIN
     RAISE EXCEPTION 'La lista contiene un identificador de empresa inválido.';
   END IF;
 
-  SELECT count(*)::integer, count(DISTINCT e.id_empresa)::integer
+  SELECT count(*), count(DISTINCT e.id_empresa)
     INTO v_cantidad_empresas, v_cantidad_empresas_validas
   FROM unnest(p_empresas) AS e(id_empresa);
 
@@ -114,7 +90,7 @@ BEGIN
     RAISE EXCEPTION 'La lista contiene empresas duplicadas.';
   END IF;
 
-  SELECT count(*)::integer
+  SELECT count(*)
     INTO v_cantidad_empresas_validas
   FROM public."Dim_Empresa" de
   WHERE de.id_empresa = ANY(p_empresas)
