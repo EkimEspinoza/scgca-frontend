@@ -1,14 +1,26 @@
--- Seguridad: centralizar las modificaciones de usuarios en la función
--- public.actualizar_usuario_con_empresas().
+-- Seguridad: centralizar las modificaciones de usuarios y sus asignaciones
+-- de empresas en flujos autorizados.
 --
--- Hallazgo de auditoría:
--- authenticated tiene privilegios SQL de INSERT/UPDATE/DELETE sobre public.usuarios.
--- Aunque RLS limita algunas operaciones, la política de UPDATE para ADMIN permite
--- modificar columnas sensibles como auth_user_id directamente, evitando las
--- validaciones de la función transaccional.
+-- Trazabilidad:
+-- - El usuario confirmó que ejecutó manualmente estas dos revocaciones en
+--   el proyecto Supabase de producción "Central" el 2026-10-13.
+-- - El usuario reportó que las pruebas posteriores fueron satisfactorias.
+-- - Este archivo se actualiza para reflejar el SQL aplicado manualmente.
+-- - NO volver a ejecutar este SQL en producción como parte de esta
+--   reconciliación documental.
+-- - La migración no aparece en el historial de migraciones aplicado observado.
+--   Después de revisar este PR y verificar que el estado live coincide, la
+--   reconciliación del historial debe hacerse por separado con el mecanismo
+--   de repair de Supabase CLI en modo "applied"; esa operación no debe ejecutar
+--   el contenido SQL. No se ha realizado aquí.
 --
--- Esta migración no se ha aplicado a producción. Revisar en PR y verificar que
--- el frontend use actualizar_usuario_con_empresas() para guardar usuarios.
+-- Alcance:
+-- authenticated conserva SELECT sujeto a las políticas RLS existentes.
+-- Los flujos autorizados siguen siendo la Edge Function crear-usuario
+-- (cliente administrativo) y la RPC actualizar_usuario_con_empresas
+-- (SECURITY DEFINER con validación explícita).
+-- service_role conserva sus privilegios actuales. No se modifican políticas
+-- RLS ni se cambian funciones o triggers.
 
 BEGIN;
 
@@ -16,17 +28,8 @@ REVOKE INSERT, UPDATE, DELETE
 ON TABLE public.usuarios
 FROM authenticated;
 
-COMMIT;
+REVOKE INSERT, UPDATE, DELETE
+ON TABLE public.usuario_empresa
+FROM authenticated;
 
--- Validación posterior en Supabase:
--- 1. authenticated conserva SELECT sujeto a las políticas RLS existentes.
--- 2. authenticated ya no puede hacer INSERT/UPDATE/DELETE directo en usuarios.
--- 3. Un ADMIN activo puede seguir guardando usuarios mediante
---    actualizar_usuario_con_empresas().
--- 4. La creación de usuarios desde Supabase Auth sigue generando la fila
---    pendiente mediante handle_new_user() (SECURITY DEFINER).
--- 5. Un usuario no ADMIN no puede ejecutar con éxito la función de actualización.
--- 6. La protección del último ADMIN sigue funcionando.
---
--- Nota: service_role conserva sus privilegios actuales. No se modifican las
--- políticas RLS ni se cambia la función de actualización en esta migración.
+COMMIT;
