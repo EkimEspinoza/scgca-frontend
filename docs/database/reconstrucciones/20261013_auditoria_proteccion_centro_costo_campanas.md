@@ -16,7 +16,7 @@ La función busca campañas existentes por `cod_cc_pk`. Si encuentra alguna, blo
 - `id_tip_cc`
 - `cod_cc_pk`
 
-No contiene validaciones para `id_variedad`, `id_comparativo`, `id_tipo_maq`, `desc_cc` ni `estado`. Esto no implica que todos deban ser inmutables; la decisión debe seguir las reglas funcionales. En particular, el requisito funcional conocido del SCGCA dice que un centro de costo pertenece permanentemente a una variedad. **Decisión funcional confirmada por el usuario (opción B):** cuando el centro ya tenga campañas registradas, `id_variedad` será inmutable; `id_comparativo` e `id_tipo_maq` podrán modificarse. La comparación debe tratar `NULL` como un valor real de la regla: cambiar de `NULL` a un ID, de un ID a `NULL` o de un ID a otro ID también constituye cambio de variedad.
+No contiene validaciones para `id_variedad`, `id_comparativo`, `id_tipo_maq`, `desc_cc` ni `estado`. Esto no implica que todos deban ser inmutables; la decisión debe seguir las reglas funcionales. **Decisión funcional más reciente del usuario:** no incluir `id_variedad` en el bloqueo. Cuando el Centro de Costo tenga campañas registradas, `id_variedad`, `id_comparativo` e `id_tipo_maq` podrán modificarse. Esta decisión reemplaza cualquier propuesta previa de hacer inmutable la variedad.
 
 La función `public.validar_campana()` es también `SECURITY DEFINER`, con `search_path = public`. Ejecuta `pg_advisory_xact_lock(NEW.cod_cc_pk)` y valida pertenencia del centro a la empresa, tipo permitido, estado en inserción, solapamiento de fechas y continuidad de campañas.
 
@@ -41,7 +41,7 @@ Antes de escribir una migración, resolver en un entorno desechable/de desarroll
 
 1. Elegir un orden único de bloqueos entre centro de costo y campañas.
 2. Asegurar que una inserción o actualización de campaña y una modificación de atributos protegidos del centro se serialicen sin inversión de bloqueos.
-3. Aplicar la decisión funcional confirmada: `id_variedad` es inmutable cuando ya existen campañas; `id_comparativo` e `id_tipo_maq` siguen siendo modificables. La semántica de `desc_cc` y `estado` sigue pendiente y no debe alterarse incidentalmente.
+3. Respetar la decisión funcional vigente: `id_variedad`, `id_comparativo` e `id_tipo_maq` siguen siendo modificables aun cuando existan campañas. La semántica de `desc_cc` y `estado` sigue pendiente y no debe alterarse incidentalmente.
 4. Revisar cómo se comprueba la pertenencia de `Dim_Campana.id_empresa` al centro al insertar/actualizar, teniendo en cuenta la FK actual a `cod_cc_pk` y la FK separada a `Dim_Empresa`.
 
 No aplicar una migración a producción hasta que la estrategia de bloqueo esté reproducida y probada.
@@ -49,10 +49,9 @@ No aplicar una migración a producción hasta que la estrategia de bloqueo esté
 ## 4. Matriz mínima de pruebas
 
 ### Integridad funcional
-- Con campañas existentes, intentar cambiar `id_variedad` de ID a otro ID, de ID a `NULL` y de `NULL` a ID: debe fallar.
-- Con campañas existentes, cambiar `id_comparativo` e `id_tipo_maq`: debe seguir funcionando.
-- Sin campañas existentes, verificar el comportamiento permitido para cambiar `id_variedad` conforme a la regla aprobada.
-- Con campañas existentes, intentar cambiar cada atributo definido como inmutable: debe fallar.
+- Con campañas existentes, cambiar `id_variedad` (incluidos cambios hacia/desde `NULL`), `id_comparativo` e `id_tipo_maq`: debe seguir funcionando.
+- Con campañas existentes, intentar cambiar `id_empresa`, `cod_cc`, `id_tip_cc` y `cod_cc_pk`: debe fallar.
+- Verificar que los demás atributos no incluidos expresamente en esta regla mantienen el comportamiento actual.
 - Insertar una campaña para un centro inactivo: debe fallar.
 - Insertar una campaña cuyo `id_empresa` no corresponde al centro: debe fallar.
 - Confirmar que las reglas de continuidad y no solapamiento siguen funcionando.
@@ -72,5 +71,5 @@ El hallazgo se cierra únicamente cuando la regla de inmutabilidad aprobada est�
 ## 6. Acciones realizadas
 
 - Lectura de definiciones de funciones, triggers, políticas RLS, permisos directos y restricciones/FK en Supabase.
-- Se registró la decisión funcional del usuario: proteger `id_variedad`; permitir cambios de `id_comparativo` e `id_tipo_maq`.
+- Se registró la decisión funcional más reciente del usuario: no bloquear `id_variedad`; permitir cambios de `id_variedad`, `id_comparativo` e `id_tipo_maq`.
 - No se ejecutaron escrituras SQL ni cambios de esquema en producción.
