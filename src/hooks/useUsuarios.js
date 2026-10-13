@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
-  actualizarUsuario as actualizarUsuarioService,
+  actualizarUsuarioConEmpresas as actualizarUsuarioConEmpresasService,
   crearUsuario as crearUsuarioService,
-  guardarEmpresasUsuario as guardarEmpresasUsuarioService,
   obtenerEmpresasParaUsuario as obtenerEmpresasParaUsuarioService,
   obtenerPermisos as obtenerPermisosService,
   obtenerUsuarios as obtenerUsuariosService,
@@ -218,14 +217,10 @@ export function useUsuarios() {
         // ========================================================
 
         if (usuarioEditar) {
-          await actualizarUsuarioService(
+          await actualizarUsuarioConEmpresasService(
             usuarioEditar.id_usuario,
-            datos)
-          if (Array.isArray(datos.empresas)) {
-            await guardarEmpresasUsuarioService(
-              usuarioEditar.id_usuario,
-              datos.empresas)
-          }
+            datos,
+          )
 
           setNotificacion({
             open: true,
