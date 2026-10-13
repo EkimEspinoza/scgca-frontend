@@ -58,7 +58,8 @@ export default {
             estado,
             permiso:permiso(
               id_permiso,
-              nombre
+              nombre,
+              estado
             )
           `)
           .eq("auth_user_id", authUserId)
@@ -91,12 +92,13 @@ export default {
 
         const permisoActual =
           Array.isArray(usuarioActual.permiso)
-            ? usuarioActual.permiso[0]?.nombre
-            : usuarioActual.permiso?.nombre;
+            ? usuarioActual.permiso[0]
+            : usuarioActual.permiso;
 
         if (
           usuarioActual.estado !== "ACTIVO" ||
-          permisoActual !== "ADMIN"
+          permisoActual?.nombre !== "ADMIN" ||
+          permisoActual?.estado !== true
         ) {
           return Response.json(
             {
