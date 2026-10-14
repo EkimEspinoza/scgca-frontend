@@ -14,9 +14,18 @@ DECLARE
     v_fecha_inicio_siguiente date;
 BEGIN
     /*
-      Serializa la validación con los cambios del Centro de Costo.
-      En UPDATE que cambia de centro, bloquea ambos centros en orden
-      ascendente para reducir el riesgo de inversión de bloqueos.
+      Regla de negocio: una campaña creada no puede cambiar de Centro de Costo.
+      El modal de actualización del Centro de Costo no cambia esta regla.
+    */
+    IF TG_OP = 'UPDATE'
+       AND NEW.cod_cc_pk IS DISTINCT FROM OLD.cod_cc_pk THEN
+        RAISE EXCEPTION
+            'No se puede cambiar el Centro de Costo de una campaña ya creada.';
+    END IF;
+
+    /*
+      Serializa la validación de la campaña con los cambios del Centro de Costo.
+      El bloqueo se solicita antes de leer y validar el Centro de Costo.
     */
     IF TG_OP = 'UPDATE' THEN
         PERFORM cc.cod_cc_pk
