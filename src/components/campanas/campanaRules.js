@@ -84,10 +84,10 @@ export function validarFormularioCampana(
         formulario.hectareas,
     )
     if (
-        Number.isNaN(hectareas) ||
-        hectareas < 0
+        !Number.isFinite(hectareas) ||
+        hectareas <= 0
     ) {
-        return 'Las hectáreas deben ser un número mayor o igual a 0.'
+        return 'Las hectáreas deben ser un número mayor que 0.'
     }
     return ''
 }
