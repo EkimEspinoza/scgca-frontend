@@ -1,211 +1,204 @@
 -- RECONSTRUCCIÓN DOCUMENTAL: validar_campana()
--- Fecha de documentación: 2026-10-13.
+-- Estado verificado: 2026-10-15.
 --
--- El archivo original que creó esta función no fue localizado en el historial
--- de GitHub. Esta definición se reconstruyó a partir de pg_get_functiondef()
--- y de la definición del trigger consultadas en Supabase.
+-- Fuente de esta definición:
+--   pg_get_functiondef('public.validar_campana()'::regprocedure)
+-- consultado en el proyecto Supabase de SCGCA el 2026-10-15.
 --
 -- IMPORTANTE:
--- - Este archivo es una evidencia documental del estado observado en Supabase.
--- - No es una copia confirmada del SQL histórico original.
--- - Se almacena fuera de supabase/migrations para evitar que Supabase CLI lo
---   ejecute automáticamente como una migración pendiente.
--- - No ejecutar en producción como parte de una sincronización rutinaria.
+-- - Este archivo documenta la función observada en Supabase en la fecha indicada.
+-- - No es el SQL histórico original que creó la función.
+-- - Se mantiene fuera de supabase/migrations para evitar su ejecución automática
+--   por Supabase CLI.
+-- - NO ejecutar este archivo en producción ni usarlo como migración rutinaria.
+-- - La migración versionada relacionada es:
+--   supabase/migrations/20261014100000_serializar_validacion_campanas_centros_costo.sql
+-- - La función activa fue comparada con esa migración y coincide en sus reglas
+--   principales de validación y bloqueo por filas.
 --
 -- Objeto observado:
 --   public.validar_campana()
 --   Trigger trg_validar_campana en public."Dim_Campana"
 --   BEFORE INSERT OR UPDATE
 --
--- La función observada en producción:
+-- Definición observada en Supabase:
 CREATE OR REPLACE FUNCTION public.validar_campana()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
 AS $function$
 DECLARE
     v_id_empresa_cc bigint;
     v_estado_cc boolean;
     v_tipo_cc text;
-
     v_fecha_fin_anterior date;
     v_fecha_inicio_siguiente date;
-
 BEGIN
+    /*
+      Regla de negocio: una campaña creada no puede cambiar de Centro de Costo.
+      El modal de actualización del Centro de Costo no cambia esta regla.
+    */
+    IF TG_OP = 'UPDATE'
+       AND NEW.cod_cc_pk IS DISTINCT FROM OLD.cod_cc_pk THEN
+        RAISE EXCEPTION
+            'No se puede cambiar el Centro de Costo de una campaña ya creada.';
+    END IF;
 
-    perform pg_advisory_xact_lock(NEW.cod_cc_pk);
+    /*
+      Serializa la validación de la campaña con los cambios del Centro de Costo.
+      El bloqueo se solicita antes de leer y validar el Centro de Costo.
+    */
+    IF TG_OP = 'UPDATE' THEN
+        PERFORM cc.cod_cc_pk
+        FROM public.dim_centro_costo cc
+        WHERE cc.cod_cc_pk IN (OLD.cod_cc_pk, NEW.cod_cc_pk)
+        ORDER BY cc.cod_cc_pk
+        FOR UPDATE;
+    ELSE
+        PERFORM cc.cod_cc_pk
+        FROM public.dim_centro_costo cc
+        WHERE cc.cod_cc_pk = NEW.cod_cc_pk
+        FOR UPDATE;
+    END IF;
 
-    select
+    SELECT
         cc.id_empresa,
         cc.estado,
         upper(trim(t.des_tip_cc))
-    into
+    INTO
         v_id_empresa_cc,
         v_estado_cc,
         v_tipo_cc
-    from public.dim_centro_costo cc
-    inner join public."Dim_TipoCC" t
-        on t.id_tip_cc = cc.id_tip_cc
-    where cc.cod_cc_pk = NEW.cod_cc_pk;
+    FROM public.dim_centro_costo cc
+    INNER JOIN public."Dim_TipoCC" t
+        ON t.id_tip_cc = cc.id_tip_cc
+    WHERE cc.cod_cc_pk = NEW.cod_cc_pk;
 
-    if not found then
-        raise exception
-            'El Centro de Costo indicado no existe.';
-    end if;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'El Centro de Costo indicado no existe.';
+    END IF;
 
-    if v_id_empresa_cc <> NEW.id_empresa then
-        raise exception
+    IF v_id_empresa_cc <> NEW.id_empresa THEN
+        RAISE EXCEPTION
             'El Centro de Costo % no pertenece a la empresa seleccionada.',
             NEW.cod_cc_pk;
-    end if;
+    END IF;
 
-    /*
-        TIPOS DE CENTRO DE COSTO PERMITIDOS
-    */
-    if v_tipo_cc not in (
+    IF v_tipo_cc NOT IN (
         'LEVANTE Y MANTENIMIENTO',
         'INVERSIÓN E INSTALACIÓN CAMPO',
         'INVERSIÓN E INSTALACIÓN INFRAESTRUCTURA',
         'OTROS COSTOS',
         'VIVEROS'
-    ) then
-
-        raise exception
+    ) THEN
+        RAISE EXCEPTION
             'El Centro de Costo % no permite registrar campañas. Tipo de Centro de Costo: %.',
             NEW.cod_cc_pk,
             v_tipo_cc;
+    END IF;
 
-    end if;
-
-    if TG_OP = 'INSERT' and v_estado_cc <> true then
-        raise exception
+    IF TG_OP = 'INSERT' AND v_estado_cc IS DISTINCT FROM true THEN
+        RAISE EXCEPTION
             'No se puede crear una campaña para un Centro de Costo inactivo.';
-    end if;
+    END IF;
 
-    if exists (
-        select 1
-        from public."Dim_Campana" c
-        where c.cod_cc_pk = NEW.cod_cc_pk
-          and not (
+    IF EXISTS (
+        SELECT 1
+        FROM public."Dim_Campana" c
+        WHERE c.cod_cc_pk = NEW.cod_cc_pk
+          AND NOT (
               c.id_empresa = NEW.id_empresa
-              and c.id_campana_emp = NEW.id_campana_emp
+              AND c.id_campana_emp = NEW.id_campana_emp
           )
-          and NEW.fecha_inicio <= c.fecha_fin
-          and NEW.fecha_fin >= c.fecha_inicio
-    ) then
-
-        raise exception
+          AND NEW.fecha_inicio <= c.fecha_fin
+          AND NEW.fecha_fin >= c.fecha_inicio
+    ) THEN
+        RAISE EXCEPTION
             'El periodo de la campaña se superpone con otra campaña existente para el Centro de Costo %.',
             NEW.cod_cc_pk;
+    END IF;
 
-    end if;
-
-    if exists (
-        select 1
-        from public."Dim_Campana" c
-        where c.cod_cc_pk = NEW.cod_cc_pk
-          and not (
+    IF EXISTS (
+        SELECT 1
+        FROM public."Dim_Campana" c
+        WHERE c.cod_cc_pk = NEW.cod_cc_pk
+          AND NOT (
               c.id_empresa = NEW.id_empresa
-              and c.id_campana_emp = NEW.id_campana_emp
+              AND c.id_campana_emp = NEW.id_campana_emp
           )
-          and NEW.fecha_inicio_ctb <= c.fecha_fin_ctb
-          and NEW.fecha_fin_ctb >= c.fecha_inicio_ctb
-    ) then
-
-        raise exception
+          AND NEW.fecha_inicio_ctb <= c.fecha_fin_ctb
+          AND NEW.fecha_fin_ctb >= c.fecha_inicio_ctb
+    ) THEN
+        RAISE EXCEPTION
             'El periodo CTB se superpone con otro periodo CTB existente para el Centro de Costo %.',
             NEW.cod_cc_pk;
+    END IF;
 
-    end if;
-
-    select c.fecha_fin
-    into v_fecha_fin_anterior
-    from public."Dim_Campana" c
-    where c.cod_cc_pk = NEW.cod_cc_pk
-      and not (
+    SELECT c.fecha_fin
+    INTO v_fecha_fin_anterior
+    FROM public."Dim_Campana" c
+    WHERE c.cod_cc_pk = NEW.cod_cc_pk
+      AND NOT (
           c.id_empresa = NEW.id_empresa
-          and c.id_campana_emp = NEW.id_campana_emp
+          AND c.id_campana_emp = NEW.id_campana_emp
       )
-      and c.fecha_fin < NEW.fecha_inicio
-    order by c.fecha_fin desc
-    limit 1;
+      AND c.fecha_fin < NEW.fecha_inicio
+    ORDER BY c.fecha_fin DESC
+    LIMIT 1;
 
-    if v_fecha_fin_anterior is not null then
+    IF v_fecha_fin_anterior IS NOT NULL
+       AND NEW.fecha_inicio <> v_fecha_fin_anterior + 1 THEN
+        RAISE EXCEPTION
+            'La campaña debe iniciar el día siguiente al término de la campaña anterior. Fecha esperada: %.',
+            v_fecha_fin_anterior + 1;
+    END IF;
 
-        if NEW.fecha_inicio <> v_fecha_fin_anterior + 1 then
-            raise exception
-                'La campaña debe iniciar el día siguiente al término de la campaña anterior. Fecha esperada: %.',
-                v_fecha_fin_anterior + 1;
-        end if;
-
-    end if;
-
-    select c.fecha_inicio
-    into v_fecha_inicio_siguiente
-    from public."Dim_Campana" c
-    where c.cod_cc_pk = NEW.cod_cc_pk
-      and not (
+    SELECT c.fecha_inicio
+    INTO v_fecha_inicio_siguiente
+    FROM public."Dim_Campana" c
+    WHERE c.cod_cc_pk = NEW.cod_cc_pk
+      AND NOT (
           c.id_empresa = NEW.id_empresa
-          and c.id_campana_emp = NEW.id_campana_emp
+          AND c.id_campana_emp = NEW.id_campana_emp
       )
-      and c.fecha_inicio > NEW.fecha_fin
-    order by c.fecha_inicio asc
-    limit 1;
+      AND c.fecha_inicio > NEW.fecha_fin
+    ORDER BY c.fecha_inicio ASC
+    LIMIT 1;
 
-    if v_fecha_inicio_siguiente is not null then
-
-        if v_fecha_inicio_siguiente <> NEW.fecha_fin + 1 then
-            raise exception
-                'La campaña debe terminar el día anterior al inicio de la siguiente campaña. Fecha esperada de término: %.',
-                v_fecha_inicio_siguiente - 1;
-        end if;
-
-    end if;
+    IF v_fecha_inicio_siguiente IS NOT NULL
+       AND v_fecha_inicio_siguiente <> NEW.fecha_fin + 1 THEN
+        RAISE EXCEPTION
+            'La campaña debe terminar el día anterior al inicio de la siguiente campaña. Fecha esperada de término: %.',
+            v_fecha_inicio_siguiente - 1;
+    END IF;
 
     NEW.nombre_campana :=
         'Camp ' ||
-        case
-            when extract(year from NEW.fecha_inicio)
-               = extract(year from NEW.fecha_fin)
-            then
-                extract(year from NEW.fecha_inicio)::text
-            else
-                extract(year from NEW.fecha_inicio)::text
-                || '-'
-                || extract(year from NEW.fecha_fin)::text
-        end
-        ||
-        ' -- Inicio '
-        || to_char(NEW.fecha_inicio, 'DD/MM/YYYY')
-        ||
-        ' - Final '
-        || to_char(NEW.fecha_fin, 'DD/MM/YYYY')
-        ||
-        case
-            when NEW.hectareas >= 1 then
-                ' - ('
-                ||
-                trim(
-                    to_char(
-                        NEW.hectareas,
-                        'FM999999990.####'
-                    )
-                )
-                || ' ha)'
-            else
-                ''
-        end;
+        CASE
+            WHEN extract(year FROM NEW.fecha_inicio) = extract(year FROM NEW.fecha_fin)
+            THEN extract(year FROM NEW.fecha_inicio)::text
+            ELSE extract(year FROM NEW.fecha_inicio)::text
+                 || '-' || extract(year FROM NEW.fecha_fin)::text
+        END ||
+        ' -- Inicio ' || to_char(NEW.fecha_inicio, 'DD/MM/YYYY') ||
+        ' - Final ' || to_char(NEW.fecha_fin, 'DD/MM/YYYY') ||
+        CASE
+            WHEN NEW.hectareas >= 1 THEN
+                ' - (' ||
+                trim(to_char(NEW.hectareas, 'FM999999990.####')) ||
+                ' ha)'
+            ELSE ''
+        END;
 
     NEW.updated_at := now();
-
-    return NEW;
-
+    RETURN NEW;
 END;
 $function$;
 
 -- Definición observada del trigger asociado en Supabase.
--- No se ha vuelto a crear ni modificar el trigger en producción.
+-- El trigger ya existía en producción; este bloque es solo documental.
+-- NO ejecutar este archivo para recrear o modificar el trigger.
 CREATE TRIGGER trg_validar_campana
 BEFORE INSERT OR UPDATE ON public."Dim_Campana"
 FOR EACH ROW
