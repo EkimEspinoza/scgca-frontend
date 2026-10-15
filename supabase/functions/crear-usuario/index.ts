@@ -116,12 +116,28 @@ export default {
         let body: CrearUsuarioRequest;
 
         try {
-          body = await req.json();
+          const parsedBody: unknown = await req.json();
+
+          if (
+            parsedBody === null ||
+            typeof parsedBody !== "object" ||
+            Array.isArray(parsedBody)
+          ) {
+            return Response.json(
+              {
+                error:
+                  "El cuerpo de la solicitud debe ser un objeto JSON.",
+              },
+              { status: 400 },
+            );
+          }
+
+          body = parsedBody as CrearUsuarioRequest;
         } catch {
           return Response.json(
             {
               error:
-                "El cuerpo de la solicitud no es válido.",
+                "El cuerpo de la solicitud no es un JSON válido.",
             },
             { status: 400 },
           );
@@ -131,33 +147,50 @@ export default {
         // NORMALIZAR DATOS
         // ============================================================
 
-        const email =
-          body.email?.trim().toLowerCase();
+        if (
+          typeof body.email !== "string" ||
+          typeof body.nombre !== "string" ||
+          (body.apellido !== undefined &&
+            typeof body.apellido !== "string")
+        ) {
+          return Response.json(
+            {
+              error:
+                "Email, nombre y apellido deben tener formato de texto válido.",
+            },
+            { status: 400 },
+          );
+        }
 
-        const nombre =
-          body.nombre?.trim();
+        const email = body.email.trim().toLowerCase();
+        const nombre = body.nombre.trim();
+        const apellido = body.apellido?.trim() || "";
+        const idPermiso = Number(body.id_permiso);
 
-        const apellido =
-          body.apellido?.trim() || "";
+        // Si se envía la lista, se valida completa: no se descartan
+        // silenciosamente identificadores inválidos.
+        if (
+          body.empresas !== undefined &&
+          (!Array.isArray(body.empresas) ||
+            body.empresas.some(
+              (id) =>
+                typeof id !== "number" ||
+                !Number.isInteger(id) ||
+                id <= 0,
+            ))
+        ) {
+          return Response.json(
+            {
+              error:
+                "La lista de empresas contiene identificadores inválidos. Envía únicamente IDs enteros positivos.",
+            },
+            { status: 400 },
+          );
+        }
 
-        const idPermiso =
-          Number(body.id_permiso);
-
-        const empresas = Array.isArray(
-          body.empresas,
-        )
-          ? [
-              ...new Set(
-                body.empresas
-                  .map(Number)
-                  .filter(
-                    (id) =>
-                      Number.isInteger(id) &&
-                      id > 0,
-                  ),
-              ),
-            ]
-          : [];
+        const empresas = [
+          ...new Set(body.empresas ?? []),
+        ];
 
         // ============================================================
         // VALIDAR EMAIL
@@ -582,41 +615,97 @@ export default {
         // ============================================================
 
         if (authUserIdCreado) {
+          // Cada operación verifica el error devuelto por Supabase.
+          // Un fallo en una etapa no impide intentar las siguientes.
+          let idUsuarioRollback: number | null = null;
+
           try {
-            await ctx.supabaseAdmin
-              .from("usuario_empresa")
-              .delete()
-              .eq(
-                "id_usuario",
-                (
-                  await ctx.supabaseAdmin
-                    .from("usuarios")
-                    .select(
-                      "id_usuario",
-                    )
-                    .eq(
-                      "auth_user_id",
-                      authUserIdCreado,
-                    )
-                    .maybeSingle()
-                ).data?.id_usuario ?? -1,
-              );
-
-            await ctx.supabaseAdmin
+            const {
+              data: usuarioRollback,
+              error: errorBusquedaRollback,
+            } = await ctx.supabaseAdmin
               .from("usuarios")
-              .delete()
-              .eq(
-                "auth_user_id",
-                authUserIdCreado,
-              );
+              .select("id_usuario")
+              .eq("auth_user_id", authUserIdCreado)
+              .maybeSingle();
 
-            await ctx.supabaseAdmin.auth.admin
-              .deleteUser(
-                authUserIdCreado,
+            if (errorBusquedaRollback) {
+              console.error(
+                "Rollback: no se pudo buscar el usuario SCGCA:",
+                errorBusquedaRollback,
               );
+            } else {
+              idUsuarioRollback =
+                usuarioRollback?.id_usuario ?? null;
+            }
           } catch (rollbackError) {
             console.error(
-              "Error realizando rollback:",
+              "Rollback: excepción buscando usuario SCGCA:",
+              rollbackError,
+            );
+          }
+
+          if (idUsuarioRollback !== null) {
+            try {
+              const { error: errorEliminarAsignaciones } =
+                await ctx.supabaseAdmin
+                  .from("usuario_empresa")
+                  .delete()
+                  .eq("id_usuario", idUsuarioRollback);
+
+              if (errorEliminarAsignaciones) {
+                console.error(
+                  "Rollback: falló la eliminación de asignaciones:",
+                  errorEliminarAsignaciones,
+                );
+              }
+            } catch (rollbackError) {
+              console.error(
+                "Rollback: excepción eliminando asignaciones:",
+                rollbackError,
+              );
+            }
+
+            try {
+              const { error: errorEliminarUsuario } =
+                await ctx.supabaseAdmin
+                  .from("usuarios")
+                  .delete()
+                  .eq("id_usuario", idUsuarioRollback);
+
+              if (errorEliminarUsuario) {
+                console.error(
+                  "Rollback: falló la eliminación del usuario SCGCA:",
+                  errorEliminarUsuario,
+                );
+              }
+            } catch (rollbackError) {
+              console.error(
+                "Rollback: excepción eliminando usuario SCGCA:",
+                rollbackError,
+              );
+            }
+          } else {
+            console.error(
+              "Rollback: no se encontró el ID del usuario SCGCA; se continuará intentando eliminar el usuario de Auth.",
+            );
+          }
+
+          try {
+            const { error: errorEliminarAuth } =
+              await ctx.supabaseAdmin.auth.admin.deleteUser(
+                authUserIdCreado,
+              );
+
+            if (errorEliminarAuth) {
+              console.error(
+                "Rollback: falló la eliminación del usuario de Auth:",
+                errorEliminarAuth,
+              );
+            }
+          } catch (rollbackError) {
+            console.error(
+              "Rollback: excepción eliminando usuario de Auth:",
               rollbackError,
             );
           }
