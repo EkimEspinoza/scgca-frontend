@@ -11,14 +11,22 @@
 --   histórico original que lo creó.
 -- - Se almacena fuera de supabase/migrations para evitar ejecución automática.
 -- - NO ejecutar este archivo en producción ni usarlo como migración rutinaria.
--- - La migración versionada en GitHub relacionada es:
+-- - La migración versionada relacionada es:
 --   supabase/migrations/20261015013000_sincronizar_proteccion_centro_costo_con_campanas.sql
--- - A la fecha de la revisión, esa migración no figuraba en el historial de
---   migraciones aplicado de Supabase. La función y el trigger sí existen allí.
--- - La migración del repositorio usa IS DISTINCT FROM; la función observada en
---   producción usa <>. No son equivalentes si alguno de los valores comparados
---   puede ser NULL. Esta diferencia debe revisarse antes de aplicar/reconciliar
---   la migración desde la terminal; no ejecutar a ciegas.
+-- - En la consulta del 2026-10-15, esa migración no figuraba en el historial
+--   aplicado de Supabase; sin embargo, la función y el trigger sí existen y
+--   el trigger está habilitado.
+-- - La migración usa IS DISTINCT FROM y la función observada usa <>. En general
+--   estas expresiones difieren si hay NULL; los cuatro campos comparados
+--   (id_empresa, cod_cc, id_tip_cc y cod_cc_pk) están definidos NOT NULL en
+--   dim_centro_costo, por lo que esta diferencia sintáctica no cambia el
+--   resultado para esos campos bajo el esquema observado.
+-- - Los permisos observados para esta función muestran EXECUTE únicamente para
+--   postgres, coincidiendo con el objetivo de REVOKE de la migración.
+-- - La función y el trigger ya existen. No usar migration repair --status applied
+--   sin una verificación final del esquema y de la intención de registrar la
+--   migración como aplicada. La integración del historial debe hacerse desde la
+--   terminal del proyecto, según el flujo de trabajo acordado.
 --
 -- Objeto observado:
 --   public.proteger_centro_costo_con_campanas()
