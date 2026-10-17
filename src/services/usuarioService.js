@@ -254,21 +254,39 @@ export async function actualizarUsuarioConEmpresas(idUsuario, datos) {
     ? datos.empresas.map(Number)
     : []
 
-  const { data, error } = await supabase.rpc(
-    'actualizar_usuario_con_empresas',
+  const { data, error } = await supabase.functions.invoke(
+    'actualizar-usuario',
     {
-      p_id_usuario: Number(idUsuario),
-      p_nombre: datos.nombre?.trim() || '',
-      p_apellido: datos.apellido?.trim() || '',
-      p_id_permiso: Number(datos.id_permiso),
-      p_estado: datos.estado,
-      p_empresas: empresas,
+      body: {
+        id_usuario: Number(idUsuario),
+        nombre: datos.nombre?.trim() || '',
+        apellido: datos.apellido?.trim() || '',
+        id_permiso: Number(datos.id_permiso),
+        estado: datos.estado,
+        empresas,
+      },
     },
   )
 
   if (error) {
-    console.error('Error actualizando usuario y empresas:', error)
-    throw new Error(error.message || 'No se pudo actualizar el usuario y sus empresas.')
+    console.error('Error llamando Edge Function actualizar-usuario:', error)
+
+    let mensaje = error.message || 'No se pudo actualizar el usuario y sus empresas.'
+
+    try {
+      if (error.context && typeof error.context.json === 'function') {
+        const body = await error.context.json()
+        if (body?.error) mensaje = body.error
+      }
+    } catch (parseError) {
+      console.error('No se pudo interpretar el error de actualizar-usuario:', parseError)
+    }
+
+    throw new Error(mensaje)
+  }
+
+  if (data?.error) {
+    throw new Error(data.error)
   }
 
   return data
