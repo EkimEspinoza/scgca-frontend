@@ -94,6 +94,7 @@ export default {
             p_id_permiso: idPermiso,
             p_estado: estado,
             p_empresas: empresas,
+            p_actor_auth_user_id: authUserId,
           },
         );
 
