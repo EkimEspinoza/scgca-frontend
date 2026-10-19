@@ -8,11 +8,12 @@
 -- - Este archivo se actualiza para reflejar el SQL aplicado manualmente.
 -- - NO volver a ejecutar este SQL en producción como parte de esta
 --   reconciliación documental.
--- - La migración no aparece en el historial de migraciones aplicado observado.
---   Después de revisar este PR y verificar que el estado live coincide, la
---   reconciliación del historial debe hacerse por separado con el mecanismo
---   de repair de Supabase CLI en modo "applied"; esa operación no debe ejecutar
---   el contenido SQL. No se ha realizado aquí.
+-- - En la verificación de conciliación MIG-05, la migración sí aparece
+--   registrada en el historial remoto observado de Supabase.
+-- - Los privilegios live observados para authenticated en ambas tablas son
+--   SELECT; no se observaron privilegios INSERT, UPDATE ni DELETE.
+-- - Por tanto, esta nota histórica queda actualizada con la evidencia actual.
+--   No ejecutar repair ni volver a aplicar el SQL como parte de esta revisión.
 --
 -- Alcance:
 -- authenticated conserva SELECT sujeto a las políticas RLS existentes.
