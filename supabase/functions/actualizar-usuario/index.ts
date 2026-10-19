@@ -7,7 +7,7 @@ type ActualizarUsuarioRequest = {
   apellido?: string;
   id_permiso: number;
   estado: "PENDIENTE" | "ACTIVO" | "INACTIVO";
-  empresas?: number[];
+  empresas: number[];
 };
 
 export default {
@@ -53,11 +53,34 @@ export default {
           return Response.json({ error: "Solo un administrador activo puede actualizar usuarios." }, { status: 403 });
         }
 
-        let body: ActualizarUsuarioRequest;
+        let payload: unknown;
         try {
-          body = await req.json();
+          payload = await req.json();
         } catch {
           return Response.json({ error: "El cuerpo de la solicitud no es válido." }, { status: 400 });
+        }
+
+        // Rechazar null, primitivos y arreglos antes de leer propiedades del cuerpo.
+        if (
+          payload === null ||
+          typeof payload !== "object" ||
+          Array.isArray(payload)
+        ) {
+          return Response.json(
+            { error: "El cuerpo de la solicitud debe ser un objeto JSON." },
+            { status: 400 },
+          );
+        }
+
+        const body = payload as Partial<ActualizarUsuarioRequest> & Record<string, unknown>;
+
+        // No convertir campos mal formados en []: el arreglo vacío solo es válido
+        // cuando se envía explícitamente y la regla de negocio lo permite (p. ej., ADMIN).
+        if (!Object.prototype.hasOwnProperty.call(body, "empresas") || !Array.isArray(body.empresas)) {
+          return Response.json(
+            { error: "El campo empresas es obligatorio y debe ser un arreglo de identificadores." },
+            { status: 400 },
+          );
         }
 
         const idUsuario = Number(body.id_usuario);
@@ -65,7 +88,7 @@ export default {
         const nombre = typeof body.nombre === "string" ? body.nombre.trim() : "";
         const apellido = typeof body.apellido === "string" ? body.apellido.trim() : "";
         const estado = body.estado;
-        const empresas = Array.isArray(body.empresas) ? body.empresas.map(Number) : [];
+        const empresas = body.empresas;
 
         if (!Number.isSafeInteger(idUsuario) || idUsuario <= 0) {
           return Response.json({ error: "El usuario seleccionado no es válido." }, { status: 400 });
@@ -76,11 +99,18 @@ export default {
         if (!nombre) {
           return Response.json({ error: "El nombre es obligatorio." }, { status: 400 });
         }
-        if (!["PENDIENTE", "ACTIVO", "INACTIVO"].includes(estado)) {
+        if (!["PENDIENTE", "ACTIVO", "INACTIVO"].includes(estado as string)) {
           return Response.json({ error: "El estado del usuario no es válido." }, { status: 400 });
         }
-        if (empresas.some((id) => !Number.isSafeInteger(id) || id <= 0)) {
-          return Response.json({ error: "La lista contiene un identificador de empresa inválido." }, { status: 400 });
+        if (
+          empresas.some(
+            (id) => typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0,
+          )
+        ) {
+          return Response.json(
+            { error: "La lista contiene un identificador de empresa inválido." },
+            { status: 400 },
+          );
         }
 
         // La función SQL mantiene la validación de datos y toda la operación atómica.
