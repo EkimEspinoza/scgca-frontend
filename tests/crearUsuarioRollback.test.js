@@ -89,3 +89,36 @@ test("si la limpieza SCGCA se confirma, elimina Auth al final", async () => {
   assert.ok(scgcaVerificationIndex >= 0);
   assert.ok(authDeletionIndex > scgcaVerificationIndex);
 });
+
+test("si SCGCA confirma que la fila no existe, intenta eliminar Auth", async () => {
+  const calls = [];
+  const admin = {
+    from() {
+      const query = {
+        select() { return query; },
+        eq() { return query; },
+        maybeSingle: async () => ({ data: null, error: null }),
+      };
+      return query;
+    },
+    auth: { admin: { deleteUser: async (id) => { calls.push(id); return { error: null }; } } },
+  };
+  const result = await rollbackCrearUsuario(admin, "auth-2", logger);
+  assert.equal(result.authDeleted, true);
+  assert.deepEqual(calls, ["auth-2"]);
+});
+
+test("si falla la eliminación de Auth después de limpiar SCGCA, informa revisión manual", async () => {
+  const { admin } = makeAdmin({ authDeleteError: new Error("auth delete") });
+  const result = await rollbackCrearUsuario(admin, "auth-3", logger);
+  assert.equal(result.authDeleted, false);
+  assert.equal(result.reason, "delete-auth-failed");
+});
+
+test("si no hay identificador Auth, no ejecuta operaciones", async () => {
+  const { admin, calls } = makeAdmin();
+  const result = await rollbackCrearUsuario(admin, null, logger);
+  assert.equal(result.authDeleted, false);
+  assert.equal(result.reason, "no-auth-user");
+  assert.deepEqual(calls, []);
+});
