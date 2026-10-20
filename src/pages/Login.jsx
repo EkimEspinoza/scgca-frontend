@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/useAuth'
-import '../styles/login.css'
+import '../styles/Login.css'
 import { useNavigate } from 'react-router-dom'
 
 function Login() {
@@ -28,7 +28,7 @@ function Login() {
       setLoading(false)
     }
   }    
-
+    
    return (
     <div className="login-page">
             <div className="login-panel-left">
@@ -74,7 +74,6 @@ function Login() {
               />
             </div>
             
-
     
             {error && <p className="login-error">{error}</p>}
  
