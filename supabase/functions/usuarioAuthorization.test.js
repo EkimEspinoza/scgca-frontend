@@ -26,13 +26,11 @@ test('crear-usuario exige identidad autenticada y devuelve 401 si falta', () => 
 })
 
 test('crear-usuario requiere administrador y usuario actual activo antes de invitar', () => {
-  const guard = indexOfOrFail(crear, 'usuarioActual.estado !== "ACTIVO"', 'Debe validar el estado del actor')
-  const adminRole = indexOfOrFail(crear, 'permisoActual?.nombre !== "ADMIN"', 'Debe validar el rol ADMIN del actor')
-  const activePermission = indexOfOrFail(crear, 'permisoActual?.estado !== true', 'Debe validar que el permiso del actor esté activo')
+  const sharedRule = indexOfOrFail(crear, 'import { isActiveAdmin } from "../_shared/usuarioAuthorization.js"', 'Debe importar la regla de autorización compartida')
+  const guard = indexOfOrFail(crear, 'if (!isActiveAdmin(usuarioActual))', 'Debe exigir actor ADMIN activo mediante la regla compartida')
   const invite = indexOfOrFail(crear, 'inviteUserByEmail', 'Debe localizar la invitación')
+  assert.ok(sharedRule < guard)
   assert.ok(guard < invite)
-  assert.ok(adminRole < invite)
-  assert.ok(activePermission < invite)
 })
 
 test('crear-usuario valida el cuerpo JSON y campos obligatorios antes de invitar', () => {
@@ -66,11 +64,10 @@ test('crear-usuario valida empresas activas y exige empresa para no administrado
 test('actualizar-usuario exige POST, identidad autenticada y actor ADMIN activo antes del RPC', () => {
   const method = indexOfOrFail(actualizar, 'if (req.method !== "POST")', 'Debe rechazar métodos distintos de POST')
   const identity = indexOfOrFail(actualizar, 'const authUserId = ctx.userClaims?.id', 'Debe derivar identidad autenticada')
-  const role = indexOfOrFail(actualizar, 'permisoActual?.nombre !== "ADMIN"', 'Debe exigir rol ADMIN')
-  const active = indexOfOrFail(actualizar, 'usuarioActual.estado !== "ACTIVO"', 'Debe exigir actor activo')
-  const permissionActive = indexOfOrFail(actualizar, 'permisoActual?.estado !== true', 'Debe exigir permiso activo')
+  const sharedRule = indexOfOrFail(actualizar, 'import { isActiveAdmin } from "../_shared/usuarioAuthorization.js"', 'Debe importar la regla de autorización compartida')
+  const guard = indexOfOrFail(actualizar, 'if (!isActiveAdmin(usuarioActual))', 'Debe exigir actor ADMIN activo mediante la regla compartida')
   const rpc = indexOfOrFail(actualizar, '"actualizar_usuario_con_empresas"', 'Debe ejecutar la operación atómica mediante RPC')
-  assert.ok(method < rpc && identity < rpc && role < rpc && active < rpc && permissionActive < rpc)
+  assert.ok(method < rpc && identity < rpc && sharedRule < guard && guard < rpc)
 })
 
 test('actualizar-usuario rechaza cuerpo inválido y empresas ausentes o no-array antes del RPC', () => {
