@@ -7,6 +7,8 @@
 -- Esta migración no reemplaza ni modifica la migración histórica de validar_campana().
 -- La validación existente continúa bloqueando INSERT para Centros de Costo inactivos.
 -- Esta migración agrega la protección para UPDATE y DELETE.
+--
+-- Versión alineada con supabase_migrations.schema_migrations en producción.
 
 BEGIN;
 
