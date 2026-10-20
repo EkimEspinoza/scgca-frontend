@@ -1,5 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
+import { isActiveAdmin } from "../_shared/usuarioAuthorization.js";
 
 type ActualizarUsuarioRequest = {
   id_usuario: number;
@@ -40,16 +41,7 @@ export default {
           return Response.json({ error: "No se pudo verificar el usuario actual." }, { status: 500 });
         }
 
-        const permisoActual = Array.isArray(usuarioActual?.permiso)
-          ? usuarioActual.permiso[0]
-          : usuarioActual?.permiso;
-
-        if (
-          !usuarioActual ||
-          usuarioActual.estado !== "ACTIVO" ||
-          permisoActual?.nombre !== "ADMIN" ||
-          permisoActual?.estado !== true
-        ) {
+        if (!isActiveAdmin(usuarioActual)) {
           return Response.json({ error: "Solo un administrador activo puede actualizar usuarios." }, { status: 403 });
         }
 

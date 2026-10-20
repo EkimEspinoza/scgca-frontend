@@ -1,5 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
+import { isActiveAdmin } from "../_shared/usuarioAuthorization.js";
 
 type CrearUsuarioRequest = {
   email: string;
@@ -90,16 +91,7 @@ export default {
           );
         }
 
-        const permisoActual =
-          Array.isArray(usuarioActual.permiso)
-            ? usuarioActual.permiso[0]
-            : usuarioActual.permiso;
-
-        if (
-          usuarioActual.estado !== "ACTIVO" ||
-          permisoActual?.nombre !== "ADMIN" ||
-          permisoActual?.estado !== true
-        ) {
+        if (!isActiveAdmin(usuarioActual)) {
           return Response.json(
             {
               error:
