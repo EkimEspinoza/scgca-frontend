@@ -84,5 +84,8 @@ test("si la limpieza SCGCA se confirma, elimina Auth al final", async () => {
   assert.equal(result.authDeleted, true);
   assert.equal(result.reason, "cleanup-complete");
   assert.deepEqual(calls.filter(([name]) => name === "delete-auth"), [["delete-auth", "auth-1"]]);
-  assert.ok(calls.findIndex(([name]) => name === "select" && arguments.length) >= 0);
+  const scgcaVerificationIndex = calls.findIndex(([name, kind]) => name === "select" && kind === "verify");
+  const authDeletionIndex = calls.findIndex(([name]) => name === "delete-auth");
+  assert.ok(scgcaVerificationIndex >= 0);
+  assert.ok(authDeletionIndex > scgcaVerificationIndex);
 });
