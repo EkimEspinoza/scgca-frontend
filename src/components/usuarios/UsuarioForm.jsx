@@ -129,8 +129,7 @@ function UsuarioForm({
 
 
   const esAdmin =
-    permisoSeleccionado?.nombre ===
-    'ADMIN'
+    esPermisoAdministrador(permisoSeleccionado?.nombre)
 
 
   const manejarCambio = (
@@ -196,85 +195,13 @@ function UsuarioForm({
 
 
   const validar = () => {
-    const nuevosErrores = {}
-
-    /*
-     * =====================================================
-     * EMAIL
-     * =====================================================
-     *
-     * El email es obligatorio únicamente
-     * al crear un usuario.
-     *
-     * En edición no se modifica.
-     */
-    if (!esEdicion) {
-      const email =
-        formulario.email.trim()
-
-      if (!email) {
-        nuevosErrores.email =
-          'Ingresa el correo electrónico.'
-      } else {
-        const emailValido =
-          /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-        if (!emailValido.test(email)) {
-          nuevosErrores.email =
-            'Ingresa un correo electrónico válido.'
-        }
-      }
-    }
-
-
-    /*
-     * =====================================================
-     * NOMBRE
-     * =====================================================
-     */
-    if (
-      !formulario.nombre.trim()
-    ) {
-      nuevosErrores.nombre =
-        'Ingresa el nombre.'
-    }
-
-
-    /*
-     * =====================================================
-     * PERMISO
-     * =====================================================
-     */
-    if (
-      !formulario.id_permiso
-    ) {
-      nuevosErrores.id_permiso =
-        'Selecciona un permiso.'
-    }
-
-
-    /*
-     * =====================================================
-     * EMPRESAS
-     * =====================================================
-     */
-    if (
-      !esAdmin &&
-      formulario.empresas.length ===
-        0
-    ) {
-      nuevosErrores.empresas =
-        'Selecciona al menos una empresa.'
-    }
-
+    const nuevosErrores = validarFormularioUsuario(formulario, {
+      esEdicion,
+      esAdmin,
+    })
 
     setErrores(nuevosErrores)
-
-    return (
-      Object.keys(
-        nuevosErrores,
-      ).length === 0
-    )
+    return Object.keys(nuevosErrores).length === 0
   }
 
 
