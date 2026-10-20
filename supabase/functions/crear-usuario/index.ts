@@ -607,9 +607,11 @@ export default {
         // ============================================================
 
         if (authUserIdCreado) {
-          // Cada operación verifica el error devuelto por Supabase.
-          // Un fallo en una etapa no impide intentar las siguientes.
+          // La limpieza debe avanzar en orden: primero SCGCA y sus asignaciones,
+          // y solo después Auth. Si la consulta falla, no podemos afirmar que
+          // SCGCA esté limpio y conservamos la cuenta de Auth para investigar.
           let idUsuarioRollback: number | null = null;
+          let registroScgcaConfirmadoAusente = false;
 
           try {
             const {
@@ -623,40 +625,24 @@ export default {
 
             if (errorBusquedaRollback) {
               console.error(
-                "Rollback: no se pudo buscar el usuario SCGCA:",
+                "Rollback: no se pudo buscar el usuario SCGCA; se conserva la cuenta Auth para evitar dejar un registro residual:",
                 errorBusquedaRollback,
               );
+            } else if (usuarioRollback) {
+              idUsuarioRollback = usuarioRollback.id_usuario;
             } else {
-              idUsuarioRollback =
-                usuarioRollback?.id_usuario ?? null;
+              // La consulta terminó correctamente y confirmó que no hay fila.
+              registroScgcaConfirmadoAusente = true;
             }
           } catch (rollbackError) {
             console.error(
-              "Rollback: excepción buscando usuario SCGCA:",
+              "Rollback: excepción buscando usuario SCGCA; se conserva la cuenta Auth:",
               rollbackError,
             );
           }
 
           if (idUsuarioRollback !== null) {
-            try {
-              const { error: errorEliminarAsignaciones } =
-                await ctx.supabaseAdmin
-                  .from("usuario_empresa")
-                  .delete()
-                  .eq("id_usuario", idUsuarioRollback);
-
-              if (errorEliminarAsignaciones) {
-                console.error(
-                  "Rollback: falló la eliminación de asignaciones:",
-                  errorEliminarAsignaciones,
-                );
-              }
-            } catch (rollbackError) {
-              console.error(
-                "Rollback: excepción eliminando asignaciones:",
-                rollbackError,
-              );
-            }
+            let eliminacionScgcaCorrecta = false;
 
             try {
               const { error: errorEliminarUsuario } =
@@ -667,38 +653,71 @@ export default {
 
               if (errorEliminarUsuario) {
                 console.error(
-                  "Rollback: falló la eliminación del usuario SCGCA:",
+                  "Rollback: falló la eliminación del usuario SCGCA; se conserva la cuenta Auth:",
                   errorEliminarUsuario,
+                );
+              } else {
+                // usuario_empresa tiene FK ON DELETE CASCADE hacia usuarios.
+                // Verificamos el resultado antes de borrar la identidad Auth.
+                const {
+                  data: usuarioRestante,
+                  error: errorVerificacionRollback,
+                } = await ctx.supabaseAdmin
+                  .from("usuarios")
+                  .select("id_usuario")
+                  .eq("id_usuario", idUsuarioRollback)
+                  .maybeSingle();
+
+                if (errorVerificacionRollback) {
+                  console.error(
+                    "Rollback: no se pudo confirmar la eliminación de SCGCA; se conserva la cuenta Auth:",
+                    errorVerificacionRollback,
+                  );
+                } else if (usuarioRestante) {
+                  console.error(
+                    "Rollback: el registro SCGCA sigue existiendo; se conserva la cuenta Auth.",
+                  );
+                } else {
+                  eliminacionScgcaCorrecta = true;
+                  registroScgcaConfirmadoAusente = true;
+                }
+              }
+            } catch (rollbackError) {
+              console.error(
+                "Rollback: excepción eliminando/verificando usuario SCGCA; se conserva la cuenta Auth:",
+                rollbackError,
+              );
+            }
+
+            if (!eliminacionScgcaCorrecta) {
+              console.error(
+                "Rollback incompleto: revisar manualmente el usuario Auth y el registro SCGCA.",
+              );
+            }
+          }
+
+          if (registroScgcaConfirmadoAusente) {
+            try {
+              const { error: errorEliminarAuth } =
+                await ctx.supabaseAdmin.auth.admin.deleteUser(
+                  authUserIdCreado,
+                );
+
+              if (errorEliminarAuth) {
+                console.error(
+                  "Rollback: falló la eliminación del usuario de Auth; requiere revisión:",
+                  errorEliminarAuth,
                 );
               }
             } catch (rollbackError) {
               console.error(
-                "Rollback: excepción eliminando usuario SCGCA:",
+                "Rollback: excepción eliminando usuario de Auth; requiere revisión:",
                 rollbackError,
               );
             }
           } else {
             console.error(
-              "Rollback: no se encontró el ID del usuario SCGCA; se continuará intentando eliminar el usuario de Auth.",
-            );
-          }
-
-          try {
-            const { error: errorEliminarAuth } =
-              await ctx.supabaseAdmin.auth.admin.deleteUser(
-                authUserIdCreado,
-              );
-
-            if (errorEliminarAuth) {
-              console.error(
-                "Rollback: falló la eliminación del usuario de Auth:",
-                errorEliminarAuth,
-              );
-            }
-          } catch (rollbackError) {
-            console.error(
-              "Rollback: excepción eliminando usuario de Auth:",
-              rollbackError,
+              "Rollback incompleto: no se elimina Auth porque no se pudo confirmar que el registro SCGCA esté ausente.",
             );
           }
         }
