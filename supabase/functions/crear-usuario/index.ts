@@ -607,100 +607,14 @@ export default {
         // ============================================================
 
         if (authUserIdCreado) {
-          // Cada operación verifica el error devuelto por Supabase.
-          // Un fallo en una etapa no impide intentar las siguientes.
-          let idUsuarioRollback: number | null = null;
-
-          try {
-            const {
-              data: usuarioRollback,
-              error: errorBusquedaRollback,
-            } = await ctx.supabaseAdmin
-              .from("usuarios")
-              .select("id_usuario")
-              .eq("auth_user_id", authUserIdCreado)
-              .maybeSingle();
-
-            if (errorBusquedaRollback) {
-              console.error(
-                "Rollback: no se pudo buscar el usuario SCGCA:",
-                errorBusquedaRollback,
-              );
-            } else {
-              idUsuarioRollback =
-                usuarioRollback?.id_usuario ?? null;
-            }
-          } catch (rollbackError) {
-            console.error(
-              "Rollback: excepción buscando usuario SCGCA:",
-              rollbackError,
-            );
-          }
-
-          if (idUsuarioRollback !== null) {
-            try {
-              const { error: errorEliminarAsignaciones } =
-                await ctx.supabaseAdmin
-                  .from("usuario_empresa")
-                  .delete()
-                  .eq("id_usuario", idUsuarioRollback);
-
-              if (errorEliminarAsignaciones) {
-                console.error(
-                  "Rollback: falló la eliminación de asignaciones:",
-                  errorEliminarAsignaciones,
-                );
-              }
-            } catch (rollbackError) {
-              console.error(
-                "Rollback: excepción eliminando asignaciones:",
-                rollbackError,
-              );
-            }
-
-            try {
-              const { error: errorEliminarUsuario } =
-                await ctx.supabaseAdmin
-                  .from("usuarios")
-                  .delete()
-                  .eq("id_usuario", idUsuarioRollback);
-
-              if (errorEliminarUsuario) {
-                console.error(
-                  "Rollback: falló la eliminación del usuario SCGCA:",
-                  errorEliminarUsuario,
-                );
-              }
-            } catch (rollbackError) {
-              console.error(
-                "Rollback: excepción eliminando usuario SCGCA:",
-                rollbackError,
-              );
-            }
-          } else {
-            console.error(
-              "Rollback: no se encontró el ID del usuario SCGCA; se continuará intentando eliminar el usuario de Auth.",
-            );
-          }
-
-          try {
-            const { error: errorEliminarAuth } =
-              await ctx.supabaseAdmin.auth.admin.deleteUser(
-                authUserIdCreado,
-              );
-
-            if (errorEliminarAuth) {
-              console.error(
-                "Rollback: falló la eliminación del usuario de Auth:",
-                errorEliminarAuth,
-              );
-            }
-          } catch (rollbackError) {
-            console.error(
-              "Rollback: excepción eliminando usuario de Auth:",
-              rollbackError,
-            );
-          }
+          const { rollbackCrearUsuario } = await import(
+            "../_shared/crearUsuarioRollback.js"
+          );
+          await rollbackCrearUsuario(
+            ctx.supabaseAdmin,
+            authUserIdCreado,
+            console,
+          );
         }
 
         return Response.json(

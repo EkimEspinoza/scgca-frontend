@@ -1,0 +1,32 @@
+name: Crear usuario rollback tests
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/functions/crear-usuario/**"
+      - "supabase/functions/_shared/crearUsuarioRollback.js"
+      - "tests/crearUsuarioRollback.test.js"
+      - ".github/workflows/crear-usuario-rollback-tests.yml"
+  push:
+    branches:
+      - "fix/crear-usuario-rollback-verification"
+    paths:
+      - "supabase/functions/crear-usuario/**"
+      - "supabase/functions/_shared/crearUsuarioRollback.js"
+      - "tests/crearUsuarioRollback.test.js"
+      - ".github/workflows/crear-usuario-rollback-tests.yml"
+
+jobs:
+  rollback-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run rollback tests
+        run: node --test tests/crearUsuarioRollback.test.js
