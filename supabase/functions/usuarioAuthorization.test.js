@@ -13,14 +13,14 @@ function indexOfOrFail(source, fragment, message) {
 
 test('crear-usuario restringe el método a POST antes de operaciones privilegiadas', () => {
   const methodGuard = indexOfOrFail(crear, 'if (req.method !== "POST")', 'Debe rechazar métodos distintos de POST')
-  const privilegedInvite = indexOfOrFail(crear, 'ctx.supabaseAdmin.auth.admin', 'Debe localizar la operación privilegiada de invitación')
+  const privilegedInvite = indexOfOrFail(crear, 'inviteUserByEmail', 'Debe localizar la operación privilegiada de invitación')
   assert.ok(methodGuard < privilegedInvite)
 })
 
 test('crear-usuario exige identidad autenticada y devuelve 401 si falta', () => {
   const identity = indexOfOrFail(crear, 'const authUserId = ctx.userClaims?.id', 'Debe derivar identidad del contexto autenticado')
   const unauthenticated = indexOfOrFail(crear, '{ status: 401 }', 'Debe devolver 401 si no hay autenticación')
-  const privilegedInvite = indexOfOrFail(crear, 'ctx.supabaseAdmin.auth.admin', 'Debe localizar la operación privilegiada')
+  const privilegedInvite = indexOfOrFail(crear, 'inviteUserByEmail', 'Debe localizar la operación privilegiada')
   assert.ok(identity < unauthenticated)
   assert.ok(unauthenticated < privilegedInvite)
 })
@@ -29,7 +29,7 @@ test('crear-usuario requiere administrador y usuario actual activo antes de invi
   const guard = indexOfOrFail(crear, 'usuarioActual.estado !== "ACTIVO"', 'Debe validar el estado del actor')
   const adminRole = indexOfOrFail(crear, 'permisoActual?.nombre !== "ADMIN"', 'Debe validar el rol ADMIN del actor')
   const activePermission = indexOfOrFail(crear, 'permisoActual?.estado !== true', 'Debe validar que el permiso del actor esté activo')
-  const invite = indexOfOrFail(crear, 'ctx.supabaseAdmin.auth.admin', 'Debe localizar la invitación')
+  const invite = indexOfOrFail(crear, 'inviteUserByEmail', 'Debe localizar la invitación')
   assert.ok(guard < invite)
   assert.ok(adminRole < invite)
   assert.ok(activePermission < invite)
@@ -41,7 +41,7 @@ test('crear-usuario valida el cuerpo JSON y campos obligatorios antes de invitar
   const emailGuard = indexOfOrFail(crear, 'if (!email)', 'Debe validar el email')
   const nameGuard = indexOfOrFail(crear, 'if (!nombre)', 'Debe validar el nombre')
   const permissionGuard = indexOfOrFail(crear, '!Number.isInteger(idPermiso)', 'Debe validar el ID de permiso')
-  const invite = indexOfOrFail(crear, 'ctx.supabaseAdmin.auth.admin', 'Debe localizar la invitación')
+  const invite = indexOfOrFail(crear, 'inviteUserByEmail', 'Debe localizar la invitación')
   assert.ok(body < objectGuard && objectGuard < invite)
   assert.ok(emailGuard < invite && nameGuard < invite && permissionGuard < invite)
 })
@@ -50,7 +50,7 @@ test('crear-usuario valida que el permiso destino exista y esté activo', () => 
   const lookup = indexOfOrFail(crear, '.from("permiso")', 'Debe consultar el permiso en la base de datos')
   const exists = indexOfOrFail(crear, 'if (!permisoNuevo)', 'Debe rechazar permisos inexistentes')
   const active = indexOfOrFail(crear, 'if (!permisoNuevo.estado)', 'Debe rechazar permisos inactivos')
-  const invite = indexOfOrFail(crear, 'ctx.supabaseAdmin.auth.admin', 'Debe localizar la invitación')
+  const invite = indexOfOrFail(crear, 'inviteUserByEmail', 'Debe localizar la invitación')
   assert.ok(lookup < exists && exists < active && active < invite)
 })
 
@@ -59,7 +59,7 @@ test('crear-usuario valida empresas activas y exige empresa para no administrado
   const required = indexOfOrFail(crear, 'empresasFinales.length === 0', 'Debe exigir empresas a usuarios no ADMIN')
   const companyLookup = indexOfOrFail(crear, '.from("Dim_Empresa")', 'Debe consultar las empresas')
   const activeCheck = indexOfOrFail(crear, 'empresa.estado === true', 'Debe comprobar que las empresas estén activas')
-  const invite = indexOfOrFail(crear, 'ctx.supabaseAdmin.auth.admin', 'Debe localizar la invitación')
+  const invite = indexOfOrFail(crear, 'inviteUserByEmail', 'Debe localizar la invitación')
   assert.ok(adminRule < invite && required < invite && companyLookup < invite && activeCheck < invite)
 })
 
