@@ -69,7 +69,7 @@ test('actualizar-usuario exige POST, identidad autenticada y actor ADMIN activo 
   const role = indexOfOrFail(actualizar, 'permisoActual?.nombre !== "ADMIN"', 'Debe exigir rol ADMIN')
   const active = indexOfOrFail(actualizar, 'usuarioActual.estado !== "ACTIVO"', 'Debe exigir actor activo')
   const permissionActive = indexOfOrFail(actualizar, 'permisoActual?.estado !== true', 'Debe exigir permiso activo')
-  const rpc = indexOfOrFail(actualizar, '.rpc("actualizar_usuario_con_empresas"', 'Debe ejecutar la operación atómica mediante RPC')
+  const rpc = indexOfOrFail(actualizar, '"actualizar_usuario_con_empresas"', 'Debe ejecutar la operación atómica mediante RPC')
   assert.ok(method < rpc && identity < rpc && role < rpc && active < rpc && permissionActive < rpc)
 })
 
@@ -77,7 +77,7 @@ test('actualizar-usuario rechaza cuerpo inválido y empresas ausentes o no-array
   const parse = indexOfOrFail(actualizar, 'payload = await req.json()', 'Debe analizar el cuerpo')
   const objectGuard = indexOfOrFail(actualizar, 'Array.isArray(payload)', 'Debe rechazar arreglos como cuerpo')
   const companiesGuard = indexOfOrFail(actualizar, 'hasOwnProperty.call(body, "empresas")', 'Debe exigir el campo empresas explícitamente')
-  const rpc = indexOfOrFail(actualizar, '.rpc("actualizar_usuario_con_empresas"', 'Debe localizar el RPC')
+  const rpc = indexOfOrFail(actualizar, '"actualizar_usuario_con_empresas"', 'Debe localizar el RPC')
   assert.ok(parse < objectGuard && objectGuard < companiesGuard && companiesGuard < rpc)
 })
 
@@ -87,12 +87,12 @@ test('actualizar-usuario valida IDs, nombre y estado antes del RPC', () => {
   const name = indexOfOrFail(actualizar, 'if (!nombre)', 'Debe validar nombre')
   const state = indexOfOrFail(actualizar, 'includes(estado as string)', 'Debe limitar estados permitidos')
   const companies = indexOfOrFail(actualizar, 'empresas.some(', 'Debe validar cada ID de empresa')
-  const rpc = indexOfOrFail(actualizar, '.rpc("actualizar_usuario_con_empresas"', 'Debe localizar el RPC')
+  const rpc = indexOfOrFail(actualizar, '"actualizar_usuario_con_empresas"', 'Debe localizar el RPC')
   assert.ok(idUser < rpc && idRole < rpc && name < rpc && state < rpc && companies < rpc)
 })
 
 test('actualizar-usuario pasa el actor autenticado a la función SQL para validación del lado servidor', () => {
   const actor = indexOfOrFail(actualizar, 'p_actor_auth_user_id: authUserId', 'Debe pasar la identidad autenticada al RPC')
-  const rpc = indexOfOrFail(actualizar, '.rpc("actualizar_usuario_con_empresas"', 'Debe localizar el RPC')
+  const rpc = indexOfOrFail(actualizar, '"actualizar_usuario_con_empresas"', 'Debe localizar el RPC')
   assert.ok(actor > rpc)
 })
