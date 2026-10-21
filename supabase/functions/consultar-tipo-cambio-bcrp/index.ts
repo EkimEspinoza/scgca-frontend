@@ -221,7 +221,7 @@ Deno.serve(async (req: Request) => {
 
         const { data: perfil, error: perfilError } = await supabase
             .from("usuarios")
-            .select("estado, permiso:permiso(nombre)")
+            .select("estado, permiso:permiso(nombre, estado)")
             .eq("auth_user_id", user.id)
             .maybeSingle();
 
@@ -240,19 +240,22 @@ Deno.serve(async (req: Request) => {
             );
         }
 
-        // Obtener el nombre del permiso, contemplando una relación
-        // que pueda ser devuelta como objeto o como arreglo.
-        const permisoNombre = Array.isArray(perfil.permiso)
-            ? perfil.permiso[0]?.nombre
-            : perfil.permiso?.nombre;
+        // Obtener el permiso, contemplando una relación que pueda
+        // ser devuelta como objeto o como arreglo.
+        const permiso = Array.isArray(perfil.permiso)
+            ? perfil.permiso[0]
+            : perfil.permiso;
 
         const usuarioActivo =
             String(perfil.estado).toUpperCase() === "ACTIVO";
 
         const usuarioAdmin =
-            String(permisoNombre).toUpperCase() === "ADMIN";
+            String(permiso?.nombre ?? "").toUpperCase() === "ADMIN";
 
-        if (!usuarioActivo || !usuarioAdmin) {
+        // El rol ADMIN no basta: el permiso también debe estar activo.
+        const permisoActivo = permiso?.estado === true;
+
+        if (!usuarioActivo || !usuarioAdmin || !permisoActivo) {
             return respuesta(
                 {
                     error:
