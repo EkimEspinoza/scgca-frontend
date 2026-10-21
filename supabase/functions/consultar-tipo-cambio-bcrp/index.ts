@@ -1,5 +1,6 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isActiveAdminProfile } from "./authorization.js";
 
 
 // =========================================================
@@ -221,7 +222,7 @@ Deno.serve(async (req: Request) => {
 
         const { data: perfil, error: perfilError } = await supabase
             .from("usuarios")
-            .select("estado, permiso:permiso(nombre)")
+            .select("estado, permiso:permiso(nombre, estado)")
             .eq("auth_user_id", user.id)
             .maybeSingle();
 
@@ -240,19 +241,7 @@ Deno.serve(async (req: Request) => {
             );
         }
 
-        // Obtener el nombre del permiso, contemplando una relación
-        // que pueda ser devuelta como objeto o como arreglo.
-        const permisoNombre = Array.isArray(perfil.permiso)
-            ? perfil.permiso[0]?.nombre
-            : perfil.permiso?.nombre;
-
-        const usuarioActivo =
-            String(perfil.estado).toUpperCase() === "ACTIVO";
-
-        const usuarioAdmin =
-            String(permisoNombre).toUpperCase() === "ADMIN";
-
-        if (!usuarioActivo || !usuarioAdmin) {
+        if (!isActiveAdminProfile(perfil)) {
             return respuesta(
                 {
                     error:
