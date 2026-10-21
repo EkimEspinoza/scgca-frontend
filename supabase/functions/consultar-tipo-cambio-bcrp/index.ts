@@ -1,5 +1,6 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isActiveAdminProfile } from "./authorization.js";
 
 
 // =========================================================
@@ -240,22 +241,7 @@ Deno.serve(async (req: Request) => {
             );
         }
 
-        // Obtener el permiso, contemplando una relación que pueda
-        // ser devuelta como objeto o como arreglo.
-        const permiso = Array.isArray(perfil.permiso)
-            ? perfil.permiso[0]
-            : perfil.permiso;
-
-        const usuarioActivo =
-            String(perfil.estado).toUpperCase() === "ACTIVO";
-
-        const usuarioAdmin =
-            String(permiso?.nombre ?? "").toUpperCase() === "ADMIN";
-
-        // El rol ADMIN no basta: el permiso también debe estar activo.
-        const permisoActivo = permiso?.estado === true;
-
-        if (!usuarioActivo || !usuarioAdmin || !permisoActivo) {
+        if (!isActiveAdminProfile(perfil)) {
             return respuesta(
                 {
                     error:
