@@ -10,19 +10,21 @@ La configuración observada de privilegios predeterminados para funciones creada
 
 Esto no demuestra por sí mismo una vulnerabilidad en funciones existentes. La revisión de la lista actual encontró 11 funciones públicas, todas propiedad de `postgres`; no se identificaron funciones públicas actuales propiedad de `supabase_admin`.
 
-## Resultado de la verificación de mecanismo
+## Resultado de la verificación de mecanismo y estado actual
 
-La documentación oficial de Supabase describe `supabase_admin` como un rol interno que utiliza Supabase para tareas administrativas, actualizaciones y automatizaciones. También explica que en proyectos alojados no se proporciona superusuario al rol `postgres`, y que algunas operaciones que requieren privilegios de superusuario no están disponibles. La guía oficial de migraciones de Supabase documenta la revocación de privilegios predeterminados para el propietario `postgres`, pero no documenta un flujo soportado para cambiar los privilegios predeterminados del rol interno `supabase_admin` desde una migración de aplicación.
+La documentación oficial de Supabase confirma que los privilegios predeterminados para funciones nuevas incluyen `EXECUTE` para `anon`, `authenticated` y `service_role`, y explica que los privilegios predeterminados son parte del modelo estándar. También señala que `supabase_admin` es un rol interno de Supabase y que no puede autenticarse mediante la Data API. La guía de seguridad de API describe cómo ajustar privilegios predeterminados para objetos creados por `postgres`; no documenta un procedimiento para cambiar los default privileges del rol interno `supabase_admin` desde una migración de aplicación.
 
 Fuentes oficiales consultadas:
+- https://supabase.com/docs/guides/api/securing-your-api
 - https://supabase.com/docs/guides/database/postgres/roles-superuser
 - https://supabase.com/docs/guides/database/postgres/roles
-- https://supabase.com/docs/guides/deployment/branching/working-with-branches
-- Referencia PostgreSQL sobre alcance de `ALTER DEFAULT PRIVILEGES`: https://www.postgresql.org/docs/17/sql-alterdefaultprivileges.html
+- Referencia PostgreSQL sobre `ALTER DEFAULT PRIVILEGES`: https://www.postgresql.org/docs/17/sql-alterdefaultprivileges.html
 
-La conexión usada en la revisión reporta `current_user = postgres`, `postgres.rolsuper = false` y `supabase_admin.rolsuper = true`. Además, `postgres` no es miembro de `supabase_admin`. La documentación de PostgreSQL establece que los privilegios predeterminados de un rol solo pueden modificarse por ese rol o por un rol miembro autorizado; la conexión actual no satisface esa condición.
+La conexión usada en la revisión reporta `current_user = postgres`, `postgres.rolsuper = false` y `supabase_admin.rolsuper = true`; `postgres` no es miembro de `supabase_admin`. La consulta de privilegios predeterminados confirma el ACL de funciones en `public` para `supabase_admin`: `postgres=X`, `anon=X`, `authenticated=X` y `service_role=X`.
 
-**Conclusión:** no se ha encontrado un mecanismo de aplicación soportado y verificable para cambiar los default privileges del rol interno `supabase_admin` desde el flujo normal de migraciones de SCGCA. No debe ejecutarse ese cambio mediante `supabase db push` ni intentarse eludir la restricción con elevación de privilegios. La confirmación definitiva de si Supabase ofrece un procedimiento interno específico requiere respuesta de Supabase Support.
+Se volvió a ejecutar una consulta de solo lectura sobre funciones existentes en `public` buscando funciones propiedad de `supabase_admin` o con permiso efectivo `EXECUTE` para `anon`/`authenticated`; no devolvió filas. Esto significa que **la consulta no encontró funciones actuales que cumplan esos criterios**, aunque el ACL predeterminado siga configurado para objetos futuros. No demuestra por sí solo que no pueda existir exposición por otras vías.
+
+**Conclusión operativa:** la documentación pública revisada no confirma un procedimiento admitido para cambiar los default privileges del rol interno `supabase_admin` desde el flujo normal de migraciones de SCGCA. No ejecutar ese cambio mediante `supabase db push` ni intentar eludir la limitación con elevación de privilegios. Para confirmar si Supabase ofrece un procedimiento interno específico, debe consultarse a Supabase Support.
 
 ## Objetivo de seguridad
 
@@ -32,7 +34,7 @@ No se propone alterar ACL de funciones existentes, tablas, secuencias, RLS ni Ed
 
 ## Alternativas seguras
 
-Se añadió `docs/security/audits/audit_public_function_privileges.sql`, una consulta de solo lectura para detectar funciones en `public` propiedad de `supabase_admin` y funciones con `EXECUTE` efectivo para `anon` o `authenticated`. La consulta también lista los privilegios predeterminados observados. Es un control de detección, no un bloqueo preventivo.
+Se añadió `docs/security/audits/audit_public_function_privileges.sql`, una consulta de solo lectura para detectar funciones en `public` propiedad de `supabase_admin` y funciones con `EXECUTE` efectivo para `anon` o `authenticated`. En la comprobación de producción de esta revisión no se devolvieron filas para esos criterios; el ACL predeterminado de `supabase_admin` sigue concediendo `EXECUTE` a esos roles para funciones futuras. Es un control de detección, no un bloqueo preventivo.
 
 1. **Recomendada ahora:** conservar el estado actual y solicitar a Supabase Support confirmación escrita del mecanismo soportado, si existe.
 2. **Control de prevención en SCGCA:** mantener todas las funciones de aplicación bajo el propietario `postgres`, restringir sus privilegios predeterminados con las migraciones existentes y revisar cambios de ownership en auditorías futuras.
