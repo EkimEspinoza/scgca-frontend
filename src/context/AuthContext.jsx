@@ -14,14 +14,15 @@ export function AuthProvider({ children }) {
 
 
   /*
-   * Cargar perfil de SCGCA
+   * Cargar perfil de SCGCA y estado vigente del permiso.
+   * Ante cualquier error, se elimina el perfil de memoria:
+   * el frontend debe fallar cerrado y no conservar permisos antiguos.
    */
   const cargarPerfil = async (authUser) => {
     if (!authUser) {
       setPerfil(null)
       return null
     }
-
 
     const {
       data,
@@ -36,43 +37,35 @@ export function AuthProvider({ children }) {
           apellido,
           estado,
           id_permiso,
-
           permiso (
             id_permiso,
             nombre,
-            descripcion
+            descripcion,
+            estado
           )
         `,
       )
-      .eq(
-        'auth_user_id',
-        authUser.id,
-      )
+      .eq('auth_user_id', authUser.id)
       .single()
 
-
     if (error) {
-      console.error(
-        'Error cargando perfil:',
-        error,
-      )
-
+      console.error('Error cargando perfil:', error)
       setPerfil(null)
-
       return null
     }
 
-
     setPerfil(data)
-
     return data
   }
 
 
   /*
-   * Inicializar sesión
+   * Inicializar sesión y escuchar cambios de autenticación.
    */
   useEffect(() => {
+    let refreshInProgress = false
+    let mounted = true
+
     const iniciar = async () => {
       try {
         const {
@@ -80,21 +73,14 @@ export function AuthProvider({ children }) {
           error,
         } = await supabase.auth.getSession()
 
-
         if (error) {
-          console.error(
-            'Error obteniendo sesión:',
-            error,
-          )
+          throw error
         }
 
-
-        const authUser =
-          data.session?.user ?? null
-
+        const authUser = data.session?.user ?? null
+        if (!mounted) return
 
         setUser(authUser)
-
 
         if (authUser) {
           await cargarPerfil(authUser)
@@ -102,55 +88,89 @@ export function AuthProvider({ children }) {
           setPerfil(null)
         }
       } catch (error) {
-        console.error(
-          'Error inicializando autenticación:',
-          error,
-        )
-
-        setUser(null)
-        setPerfil(null)
+        console.error('Error inicializando autenticación:', error)
+        if (mounted) {
+          setUser(null)
+          setPerfil(null)
+        }
       } finally {
-        setLoading(false)
+        if (mounted) setLoading(false)
       }
     }
 
-
     iniciar()
 
-
-    /*
-     * Escuchar cambios de autenticación
-     */
     const {
       data: {
         subscription,
       },
-    } =
-      supabase.auth.onAuthStateChange(
-        async (
-          _event,
-          session,
-        ) => {
-          const authUser =
-            session?.user ?? null
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const authUser = session?.user ?? null
 
+      setUser(authUser)
 
-          setUser(authUser)
+      if (authUser) {
+        // Evitar llamadas innecesarias dentro del callback de Auth.
+        // El perfil se consulta después de que termine el evento.
+        Promise.resolve().then(() => cargarPerfil(authUser))
+      } else {
+        setPerfil(null)
+      }
+    })
 
+    /*
+     * Revalidar el perfil cuando el usuario vuelve a la pestaña
+     * o ventana. loading bloquea temporalmente las rutas protegidas
+     * mientras se consulta el estado actual en la base de datos.
+     */
+    const refrescarPerfilAlVolver = async () => {
+      if (
+        !mounted ||
+        refreshInProgress ||
+        document.visibilityState === 'hidden'
+      ) {
+        return
+      }
 
-          if (authUser) {
-            await cargarPerfil(
-              authUser,
-            )
-          } else {
-            setPerfil(null)
-          }
-        },
-      )
+      refreshInProgress = true
+      setLoading(true)
 
+      try {
+        const {
+          data,
+          error,
+        } = await supabase.auth.getSession()
+
+        if (error) throw error
+        if (!mounted) return
+
+        const authUser = data.session?.user ?? null
+        setUser(authUser)
+
+        if (authUser) {
+          await cargarPerfil(authUser)
+        } else {
+          setPerfil(null)
+        }
+      } catch (error) {
+        console.error('Error revalidando perfil al volver:', error)
+        if (mounted) {
+          setPerfil(null)
+        }
+      } finally {
+        if (mounted) setLoading(false)
+        refreshInProgress = false
+      }
+    }
+
+    window.addEventListener('focus', refrescarPerfilAlVolver)
+    document.addEventListener('visibilitychange', refrescarPerfilAlVolver)
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
+      window.removeEventListener('focus', refrescarPerfilAlVolver)
+      document.removeEventListener('visibilitychange', refrescarPerfilAlVolver)
     }
   }, [])
 
@@ -158,32 +178,18 @@ export function AuthProvider({ children }) {
   /*
    * Login
    */
-  const login = async (
-    email,
-    password,
-  ) => {
+  const login = async (email, password) => {
     const {
       data,
       error,
-    } =
-      await supabase.auth.signInWithPassword(
-        {
-          email,
-          password,
-        },
-      )
+    } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
+    if (error) throw error
 
-    if (error) {
-      throw error
-    }
-
-
-    const perfilCargado =
-      await cargarPerfil(
-        data.user,
-      )
-
+    const perfilCargado = await cargarPerfil(data.user)
 
     return {
       ...data,
@@ -198,14 +204,9 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     const {
       error,
-    } =
-      await supabase.auth.signOut()
+    } = await supabase.auth.signOut()
 
-
-    if (error) {
-      throw error
-    }
-
+    if (error) throw error
 
     setUser(null)
     setPerfil(null)
@@ -213,15 +214,15 @@ export function AuthProvider({ children }) {
 
 
   /*
-   * Usuario habilitado para entrar
+   * Usuario y permiso habilitados para entrar.
    */
-  const esUsuarioActivo =
-    Boolean(
-      user &&
-      perfil &&
-      perfil.estado === 'ACTIVO' &&
-      perfil.permiso,
-    )
+  const esUsuarioActivo = Boolean(
+    user &&
+    perfil &&
+    perfil.estado === 'ACTIVO' &&
+    perfil.permiso &&
+    perfil.permiso.estado === true,
+  )
 
 
   return (
