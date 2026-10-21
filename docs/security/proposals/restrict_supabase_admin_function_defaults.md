@@ -24,7 +24,7 @@ La conexión usada en la revisión reporta `current_user = postgres`, `postgres.
 
 Se volvió a ejecutar una consulta de solo lectura sobre funciones existentes en `public` buscando funciones propiedad de `supabase_admin` o con permiso efectivo `EXECUTE` para `anon`/`authenticated`; no devolvió filas. Esto significa que **la consulta no encontró funciones actuales que cumplan esos criterios**, aunque el ACL predeterminado siga configurado para objetos futuros. No demuestra por sí solo que no pueda existir exposición por otras vías.
 
-**Conclusión operativa:** la documentación pública revisada no confirma un procedimiento admitido para cambiar los default privileges del rol interno `supabase_admin` desde el flujo normal de migraciones de SCGCA. No ejecutar ese cambio mediante `supabase db push` ni intentar eludir la limitación con elevación de privilegios. Para confirmar si Supabase ofrece un procedimiento interno específico, debe consultarse a Supabase Support.
+**Conclusión operativa:** la documentación pública explica que el ACL predeterminado de `supabase_admin` forma parte del modelo estándar de permisos de Supabase y no documenta un procedimiento de proyecto para cambiarlo directamente. El flujo oficial de revocación documentado está dirigido a objetos creados por `postgres`. No ejecutar un `ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin` desde el flujo normal de migraciones ni intentar eludir la limitación con elevación de privilegios. Si se considera necesario cambiar el comportamiento del rol interno, debe consultarse a Supabase Support antes de cualquier acción.
 
 ## Objetivo de seguridad
 
@@ -58,8 +58,11 @@ Si se aprueba un cambio, guardar antes el estado exacto de los privilegios prede
 
 ## Evidencia y decisiones
 
-- Consultas de solo lectura realizadas en producción.
-- No se han modificado privilegios ni datos.
-- La propuesta SQL directa se retiró del PR porque no se ha confirmado que ese mecanismo sea soportado desde el flujo disponible.
-- El PR sigue siendo un borrador documental; no hay migración ejecutable ni despliegue.
-- La siguiente acción es consultar a Supabase Support si se necesita eliminar esa diferencia de privilegios internos. Mientras no exista respuesta, se recomienda el control preventivo y de detección descrito arriba.
+- Consultas de solo lectura realizadas en producción el 2026-10-21.
+- La consulta de funciones públicas no devolvió funciones propiedad de `supabase_admin` ni funciones con `EXECUTE` efectivo para `anon`/`authenticated` bajo los criterios consultados.
+- El ACL predeterminado de `supabase_admin` en `public` sigue incluyendo `anon`, `authenticated` y `service_role` para funciones futuras; esto coincide con el modelo estándar descrito por Supabase, no prueba exposición actual.
+- El Security Advisor actual solo devolvió la advertencia `auth_leaked_password_protection` deshabilitada. Esta decisión se mantiene según el criterio previo del proyecto y no se cambió.
+- No se han modificado privilegios, datos ni despliegues.
+- La propuesta SQL directa se retiró del PR porque no se ha confirmado que el cambio de privilegios del rol interno sea soportado desde el flujo disponible.
+- El PR sigue siendo un borrador documental; no hay migración ejecutable.
+- Siguiente acción opcional: abrir una consulta con Supabase Support si el proyecto desea pedir confirmación explícita sobre la posibilidad de modificar este comportamiento del rol interno. Mientras no exista respuesta, mantener el control de detección y revisar nuevas funciones públicas en las auditorías.
