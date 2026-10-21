@@ -360,6 +360,7 @@ function EstadoCuenta({
  * 1. Sesión de Supabase Auth.
  * 2. Perfil existente en SCGCA.
  * 3. Usuario ACTIVO.
+ * 4. Permiso existente y ACTIVO.
  *
  * No controla permisos específicos
  * de cada módulo.
@@ -466,6 +467,33 @@ function ProtectedRoute({
             />
           }
           mostrarCambiarContrasena
+        />
+      )
+    }
+
+
+    /*
+     * PERMISO INACTIVO
+     */
+    if (
+      perfil.estado === 'ACTIVO' &&
+      perfil.permiso &&
+      perfil.permiso.estado !== true
+    ) {
+      return (
+        <EstadoCuenta
+          tipo="PERMISO_INACTIVO"
+          titulo="Permiso inactivo"
+          descripcion="Tu cuenta está activa, pero el permiso asignado se encuentra inactivo."
+          detalle="Comunícate con un administrador para revisar el permiso asociado a tu cuenta."
+          color="error"
+          icono={
+            <LockOutlinedIcon
+              sx={{
+                fontSize: 38,
+              }}
+            />
+          }
         />
       )
     }
