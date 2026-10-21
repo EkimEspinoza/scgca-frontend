@@ -1,53 +1,53 @@
-# Propuesta de seguridad: privilegios predeterminados de funciones de supabase_admin
+# Revisión de privilegios predeterminados de funciones de supabase_admin
 
-**Estado:** propuesta en revisión; no aplicada a Supabase.  
+**Estado:** investigación y propuesta documental; no aplicada a Supabase.  
 **Proyecto:** SCGCA Central.  
 **Fecha:** 2026-10-21.
 
-## Hallazgo
+## Hallazgo confirmado
 
-La configuración observada de privilegios predeterminados para funciones creadas por `supabase_admin` en el esquema `public` concede `EXECUTE` a `anon`, `authenticated` y `service_role`. En cambio, las restricciones existentes cubren al propietario `postgres`, no a `supabase_admin`.
+La configuración observada de privilegios predeterminados para funciones creadas por `supabase_admin` en el esquema `public` concede `EXECUTE` a `anon`, `authenticated` y `service_role`. Las restricciones existentes cubren al propietario `postgres`, no a `supabase_admin`.
 
-Esto no demuestra por sí mismo una vulnerabilidad en funciones existentes. La revisión de la lista actual de funciones públicas encontró 11 funciones propiedad de `postgres`; no se identificaron funciones públicas actuales propiedad de `supabase_admin`.
+Esto no demuestra por sí mismo una vulnerabilidad en funciones existentes. La revisión de la lista actual encontró 11 funciones públicas, todas propiedad de `postgres`; no se identificaron funciones públicas actuales propiedad de `supabase_admin`.
 
-## Propuesta
+## Restricción operativa confirmada
 
-Ver `restrict_supabase_admin_function_defaults.sql`. La propuesta:
+La conexión usada en la revisión reporta `current_user = postgres`, `postgres.rolsuper = false` y `supabase_admin.rolsuper = true`. Además, `postgres` no es miembro de `supabase_admin`. Por tanto, no debe asumirse que una migración normal puede cambiar los privilegios predeterminados de ese propietario.
 
-1. Revoca el permiso predeterminado `EXECUTE` de `PUBLIC` para funciones nuevas creadas por `supabase_admin`.
-2. Revoca el permiso predeterminado `EXECUTE` de `anon` y `authenticated` para funciones nuevas en `public`.
-3. Conserva el permiso predeterminado de `service_role`.
-4. No cambia las ACL de funciones existentes ni modifica tablas, RLS, secuencias o Edge Functions.
+**No se debe intentar modificar estos privilegios desde la conexión actual ni conceder membresías/atributos elevados para sortear la limitación.** Tampoco se debe mover una instrucción `ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin` a una migración de producción hasta confirmar que Supabase admite y autoriza ese mecanismo en este proyecto.
 
-## Bloqueo operativo que debe resolverse antes de aplicar
+## Objetivo de seguridad
 
-La conexión usada en la revisión reporta `current_user = postgres`, `postgres.rolsuper = false` y `supabase_admin.rolsuper = true`. Además, `postgres` no es miembro de `supabase_admin`. Por tanto, no debe asumirse que una migración ejecutada por el flujo habitual `supabase db push` puede alterar los privilegios predeterminados de ese propietario.
+Para funciones futuras creadas por `supabase_admin` en `public`, evaluar si es posible retirar los privilegios predeterminados de ejecución a `PUBLIC`, `anon` y `authenticated`, conservando los accesos necesarios para `service_role` y los GRANT explícitos requeridos por las funciones legítimas.
 
-**No ejecutar esta propuesta mediante el flujo normal de migraciones hasta validar un mecanismo autorizado de ejecución como propietario o por un administrador con capacidad suficiente.** No ampliar privilegios a `postgres` ni otorgar membresías para sortear el bloqueo.
+No se propone alterar ACL de funciones existentes, tablas, secuencias, RLS ni Edge Functions.
 
-## Plan de implementación y validación
+## Próximos pasos seguros
 
-### Antes del cambio
-- [ ] Confirmar con documentación/soporte de Supabase cuál es el mecanismo admitido para alterar los default privileges de `supabase_admin`.
-- [ ] Confirmar el contexto efectivo de ejecución de migraciones en un entorno de prueba autorizado.
-- [ ] Guardar el estado previo de `pg_default_acl` para `supabase_admin`, tanto global como en `public`.
-- [ ] Revisar dependencias de funciones creadas por el proveedor y distinguirlas de funciones propias.
+1. Consultar documentación oficial o soporte de Supabase para determinar si el cliente permite administrar default privileges de `supabase_admin` y cuál es el mecanismo autorizado.
+2. Confirmar en un entorno de prueba administrado por el mismo proveedor qué rol ejecuta las migraciones y si la operación está soportada.
+3. Capturar el estado previo de `pg_default_acl` y el inventario de funciones antes de cualquier cambio.
+4. Si existe un mecanismo oficialmente soportado, preparar una migración apropiada para ese mecanismo, con revisión por pares y aprobación explícita.
+5. Si no existe un mecanismo admitido, registrar el límite y evaluar alternativas soportadas; no intentar elevar privilegios desde la aplicación.
+6. Validar que los permisos predeterminados deseados se aplican solo a funciones nuevas y que las funciones actuales no cambian.
 
-### Después de la aplicación autorizada
-- [ ] Consultar `pg_default_acl` y comprobar que `PUBLIC`, `anon` y `authenticated` no reciben `EXECUTE` predeterminado según el alcance acordado.
-- [ ] Confirmar que `service_role` conserva el permiso predeterminado acordado.
-- [ ] Verificar que las ACL de funciones existentes no cambiaron.
-- [ ] Probar login y flujos principales del frontend.
-- [ ] Probar `crear-usuario` y `actualizar-usuario` con ADMIN activo.
-- [ ] Probar el rechazo de ambas Edge Functions con sesiones ALMACEN y CONSULTA, confirmando 403 y ausencia de escrituras.
-- [ ] Probar que las RPC necesarias conservan los GRANT explícitos esperados.
-- [ ] Revisar logs y asesores de seguridad después del cambio.
+## Pruebas posteriores, solo si el cambio llega a autorizarse
+
+- Verificar el estado de los privilegios predeterminados.
+- Confirmar que las ACL de funciones existentes no cambiaron.
+- Probar inicio de sesión y los flujos principales del frontend.
+- Probar `crear-usuario` y `actualizar-usuario` con ADMIN activo.
+- Probar el rechazo de ambas Edge Functions con sesiones ALMACEN y CONSULTA, verificando ausencia de escrituras.
+- Confirmar los GRANT explícitos de las RPC necesarias.
+- Revisar logs y asesores de Supabase.
 
 ## Reversión
 
-La reversión debe restaurar exactamente los privilegios predeterminados previos documentados antes del cambio. No aplicar un `GRANT EXECUTE TO PUBLIC` genérico sin revisar el estado previo, ya que podría ampliar privilegios globalmente más allá de `public`.
+Antes de cualquier cambio, guardar el estado exacto de los privilegios predeterminados. La reversión debe restaurar ese estado, no conceder `EXECUTE` a `PUBLIC` de forma genérica.
 
 ## Evidencia y decisiones
-- Consultas de solo lectura realizadas en producción; no se han modificado privilegios ni datos.
-- No se ha ejecutado la propuesta ni se ha desplegado código.
-- La decisión de aplicar el cambio requiere aprobación posterior y confirmación del mecanismo autorizado.
+
+- Consultas de solo lectura realizadas en producción.
+- No se han modificado privilegios ni datos.
+- La propuesta SQL que intentaba cambiar directamente los privilegios de `supabase_admin` se retiró del PR porque no se ha confirmado que el mecanismo sea soportado desde el flujo disponible.
+- El PR sigue siendo un borrador documental; no hay migración ejecutable ni despliegue.
