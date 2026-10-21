@@ -32,6 +32,8 @@ No se propone alterar ACL de funciones existentes, tablas, secuencias, RLS ni Ed
 
 ## Alternativas seguras
 
+Se añadió `docs/security/audits/audit_public_function_privileges.sql`, una consulta de solo lectura para detectar funciones en `public` propiedad de `supabase_admin` y funciones con `EXECUTE` efectivo para `anon` o `authenticated`. La consulta también lista los privilegios predeterminados observados. Es un control de detección, no un bloqueo preventivo.
+
 1. **Recomendada ahora:** conservar el estado actual y solicitar a Supabase Support confirmación escrita del mecanismo soportado, si existe.
 2. **Control de prevención en SCGCA:** mantener todas las funciones de aplicación bajo el propietario `postgres`, restringir sus privilegios predeterminados con las migraciones existentes y revisar cambios de ownership en auditorías futuras.
 3. **Control de detección:** añadir una consulta de auditoría periódica que detecte funciones nuevas en `public` propiedad de `supabase_admin` o con `EXECUTE` efectivo para `anon`/`authenticated`, y revisar cada resultado antes de actuar. Esto detecta posibles cambios; no modifica privilegios ni bloquea la creación.
