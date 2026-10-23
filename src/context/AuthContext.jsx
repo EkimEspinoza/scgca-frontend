@@ -88,8 +88,10 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let refreshInProgress = false
     let mounted = true
+    let authEventVersion = 0
 
     const iniciar = async () => {
+      const versionAtStart = authEventVersion
       try {
         const {
           data,
@@ -97,14 +99,14 @@ export function AuthProvider({ children }) {
         } = await supabase.auth.getSession()
 
         if (error) throw error
-        if (!mounted) return
+        if (!mounted || versionAtStart !== authEventVersion) return
 
         const authUser = data.session?.user ?? null
         setUser(authUser)
         await cargarPerfil(authUser)
       } catch (error) {
         console.error('Error inicializando autenticación:', error)
-        if (mounted) {
+        if (mounted && versionAtStart === authEventVersion) {
           profileRequestGuard.invalidate()
           setUser(null)
           setPerfil(null)
@@ -120,6 +122,7 @@ export function AuthProvider({ children }) {
         subscription,
       },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      authEventVersion += 1
       const authUser = session?.user ?? null
 
       setUser(authUser)
@@ -137,6 +140,7 @@ export function AuthProvider({ children }) {
       }
 
       refreshInProgress = true
+      const versionAtStart = authEventVersion
 
       try {
         const {
@@ -145,7 +149,7 @@ export function AuthProvider({ children }) {
         } = await supabase.auth.getSession()
 
         if (error) throw error
-        if (!mounted) return
+        if (!mounted || versionAtStart !== authEventVersion) return
 
         const authUser = data.session?.user ?? null
         setUser(authUser)
