@@ -156,7 +156,7 @@ export function AuthProvider({ children }) {
         await cargarPerfil(authUser)
       } catch (error) {
         console.error('Error revalidando perfil al volver:', error)
-        if (mounted) {
+        if (mounted && versionAtStart === authEventVersion) {
           profileRequestGuard.invalidate()
           setPerfil(null)
           setLoading(false)
