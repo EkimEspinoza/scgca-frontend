@@ -1,6 +1,6 @@
 import {
+  useCallback,
   useEffect,
-  useRef,
   useState,
 } from 'react'
 
@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [perfil, setPerfil] = useState(null)
   const [loading, setLoading] = useState(true)
-  const profileRequestGuard = useRef(createLatestRequestGuard()).current
+  const [profileRequestGuard] = useState(() => createLatestRequestGuard())
 
 
   /*
@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
    * modificar el perfil o finalizar el estado de carga. Esto evita que
    * una respuesta antigua restaure permisos tras cambiar de usuario/logout.
    */
-  const cargarPerfil = async (authUser) => {
+  const cargarPerfil = useCallback(async (authUser) => {
     const requestVersion = profileRequestGuard.next()
 
     if (!authUser) {
@@ -79,7 +79,7 @@ export function AuthProvider({ children }) {
         setLoading(false)
       }
     }
-  }
+  }, [profileRequestGuard])
 
 
   /*
@@ -176,7 +176,7 @@ export function AuthProvider({ children }) {
       window.removeEventListener('focus', refrescarPerfilAlVolver)
       document.removeEventListener('visibilitychange', refrescarPerfilAlVolver)
     }
-  }, [])
+  }, [cargarPerfil, profileRequestGuard])
 
 
   /*
