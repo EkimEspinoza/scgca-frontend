@@ -29,29 +29,10 @@ function CampanaForm({
     const centroCostoBloqueado =
         modoContextual || guardando
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 2,
-            }}
-        >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {error && (
- 
- 
-        <Box
-                    sx={{
-                        border: '1px solid',
-                        borderColor: 'error.main',
-                        backgroundColor:
-                            'rgba(211, 47, 47, 0.06)',
-                        borderRadius: 1,
-                        px: 2,
-                        py: 1.25,
-                    }}
-                >
- 
- 
+                <Box
+                    sx={{ border: '1px solid', borderColor: 'error.main', backgroundColor: 'rgba(211, 47, 47, 0.06)', borderRadius: 1, px: 2, py: 1.25, }}>
                     <Typography
                         variant="body2"
                         color="error.main"
@@ -60,7 +41,7 @@ function CampanaForm({
                     </Typography>
                 </Box>
             )}
- 
+
             <Box
                 sx={{
                     display: 'grid',
@@ -71,7 +52,7 @@ function CampanaForm({
                     gap: 2,
                 }}
             >
-  
+
 
                 <TextField
                     fullWidth
@@ -142,12 +123,8 @@ function CampanaForm({
                         </MenuItem>
                         {empresas.map((empresa) => (
                             <MenuItem
-                                key={
-                                    empresa.id_empresa
-                                }
-                                value={String(
-                                    empresa.id_empresa,
-                                )}
+                                key={empresa.id_empresa}
+                                value={String(empresa.id_empresa)}
                             >
                                 {empresa.descripcion}
                             </MenuItem>
@@ -165,10 +142,7 @@ function CampanaForm({
                         </FormHelperText>
                     )}
                 </FormControl>
-                
-                
-                
-                
+
                 <FormControl
                     fullWidth
                     size="small"
@@ -268,7 +242,7 @@ function CampanaForm({
                         },
                         border: '1px solid',
                         borderColor: '#E0E5E2',
-                        borderRadius: 1.5,
+                        borderRadius: 1,
                         p: 2,
                         backgroundColor: '#FAFBFA',
                     }}
@@ -359,7 +333,7 @@ function CampanaForm({
                         },
                         border: '1px solid',
                         borderColor: '#E0E5E2',
-                        borderRadius: 1.5,
+                        borderRadius: 1,
                         p: 2,
                         backgroundColor: '#FAFBFA',
                     }}

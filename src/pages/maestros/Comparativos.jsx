@@ -278,7 +278,6 @@ function Comparativos() {
             key: 'estado',
             label: 'Estado',
             width: '20%',
-
             render: (comparativo) => (
                 <StatusChip estado={comparativo.estado} activoLabel="Activo" inactivoLabel="Inactivo" />
             )
@@ -340,7 +339,7 @@ function Comparativos() {
                     overflow: 'hidden', backgroundColor: 'background.paper', marginBottom: 1
                 }}>
 
-                <Box sx={{ p: 2, flexShrink: 0, backgroundColor: 'background.paper' }}>
+                <Box sx={{ p: 2,  flexShrink: 0, backgroundColor: 'background.paper' }}>
 
                     <SearchInput
                         value={busqueda.toUpperCase()}
