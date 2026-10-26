@@ -1,59 +1,23 @@
-import {
-    Box,
-    CircularProgress,
-    IconButton,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Tooltip,
-    Typography,
-} from '@mui/material'
-import {
-    Edit as EditIcon,
-} from '@mui/icons-material'
+import { Box, CircularProgress, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography } from '@mui/material'
+import { Edit as EditIcon } from '@mui/icons-material'
 import StatusChip from '../common/StatusChip'
 function formatearFecha(fecha) {
-    if (!fecha) {
-        return ''
-    }
+    if (!fecha) { return '' }
     const partes = fecha.split('-')
-    if (partes.length !== 3) {
-        return fecha
-    }
+    if (partes.length !== 3) { return fecha }
     return `${partes[2]}/${partes[1]}/${partes[0]}`
 }
-function obtenerColorEmpresa(
+const obtenerColorEmpresa = (
     nombreComercial,
-) {
-    const nombre = (
-        nombreComercial || ''
-    ).toUpperCase()
-    if (
-        nombre.includes('RANCHO')
-    ) {
-        return '#1976D2'
-    }
-    if (
-        nombre.includes('MOCHE') ||
-        nombre.includes('SAMNSA')
-    ) {
-        return '#2E7D32'
-    }
-    if (
-        nombre.includes('MCR')
-    ) {
-        return '#9C27B0'
-    }
-    if (
-        nombre.includes('CANTERA')
-    ) {
-        return '#ED6C02'
-    }
+) => {
+    const nombre = (nombreComercial || '').toUpperCase()
+    if (nombre.includes('RANCHO')) { return '#1976D2' }
+    if (nombre.includes('MOCHE') || nombre.includes('SAMNSA')) { return '#2E7D32' }
+    if (nombre.includes('MCR')) { return '#9C27B0' }
+    if (nombre.includes('CANTERA')) { return '#ED6C02' }
     return '#BDBDBD'
 }
+
 function mostrarValor(valor) {
     return valor || '-'
 }
@@ -61,10 +25,8 @@ function CampanaTable({
     campanas = [],
     loading = false,
     eliminando = false,
-    emptyMessage =
-    'No existen campañas registradas.',
-    emptySearchMessage =
-    'No se encontraron campañas para la búsqueda.',
+    emptyMessage = 'No existen campañas registradas.',
+    emptySearchMessage = 'No se encontraron campañas para la búsqueda.',
     hasSearch = false,
     onEditar,
 }) {
@@ -75,8 +37,13 @@ function CampanaTable({
                 height: '100%',
                 minWidth: 0,
                 minHeight: 0,
-                overflowX: 'auto',
-                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                overflow: 'hidden',
+                backgroundColor: 'background.paper',
             }}
         >
             <Table
@@ -85,12 +52,8 @@ function CampanaTable({
                 sx={{
                     width: '100%',
                     tableLayout: 'fixed',
-                    '& .MuiTableCell-root': {
-                        fontSize: '13px',
-                    },
-                    '& .MuiTypography-root': {
-                        fontSize: '13px',
-                    },
+                    '& .MuiTableCell-root': { fontSize: '13px' },
+                    '& .MuiTypography-root': { fontSize: '13px' },
                 }}
             >
                 <TableHead>
@@ -217,13 +180,7 @@ function CampanaTable({
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell
-                                colSpan={9}
-                                align="center"
-                                sx={{
-                                    py: 6,
-                                }}
-                            >
+                            <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
                                 <CircularProgress
                                     size={28}
                                 />
@@ -231,17 +188,8 @@ function CampanaTable({
                         </TableRow>
                     ) : campanas.length === 0 ? (
                         <TableRow>
-                            <TableCell
-                                colSpan={9}
-                                align="center"
-                                sx={{
-                                    py: 6,
-                                }}
-                            >
-                                <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                >
+                            <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                                <Typography variant="body2" color="text.secondary">
                                     {hasSearch
                                         ? emptySearchMessage
                                         : emptyMessage}
@@ -251,161 +199,65 @@ function CampanaTable({
                     ) : (
                         campanas.map(
                             (campana) => {
-                                const colorEmpresa =
-                                    obtenerColorEmpresa(
-                                        campana
-                                            .empresa
-                                            ?.nombre_comercial,
-                                    )
+                                const colorEmpresa = obtenerColorEmpresa(campana.empresa?.nombre_comercial)
                                 return (
                                     <TableRow
-                                        key={
-                                            campana.id_campana_emp
-                                        }
+                                        key={campana.id_campana_emp}
                                         hover
                                         sx={{
-                                            backgroundColor:
-                                                '#FFFFFF',
-                                            '&:hover': {
-                                                backgroundColor:
-                                                    '#F8FAF9',
-                                            },
-                                            '& td': {
-                                                borderBottom:
-                                                    '1px solid #E8ECEA',
-                                            },
-                                            '&:last-child td':
-                                            {
-                                                borderBottom:
-                                                    'none',
-                                            },
-                                            /*
-                                             * Barra lateral
-                                             * de empresa.
-                                             */
-                                            '& td:first-of-type':
-                                            {
-                                                borderLeft:
-                                                    `4px solid ${colorEmpresa}`,
-                                            },
+                                            backgroundColor: '#FFFFFF',
+                                            '&:hover': { backgroundColor: '#F8FAF9' },
+                                            '& td': { borderBottom: '1px solid #E8ECEA' },
+                                            '&:last-child td': { borderBottom: 'none' },
+                                            // Barra lateralde empresa
+                                            '& td:first-of-type':{ borderLeft: `4px solid ${colorEmpresa}` },
                                         }}
                                     >
                                         {/* ======================================
                                             EMPRESA
                                         ======================================= */}
                                         <TableCell
-                                            sx={{
-                                                fontWeight: 500,
-                                                whiteSpace:
-                                                    'nowrap',
-                                                overflow:
-                                                    'hidden',
-                                                textOverflow:
-                                                    'ellipsis',
-                                                py: 1.15,
-                                                pl: 1.5,
-                                            }}
-                                        >
+                                            sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 0.5, pl: 1.5, }}>
                                             <Typography
                                                 variant="body2"
-                                                sx={{
-                                                    fontWeight: 500,
-                                                    overflow:
-                                                        'hidden',
-                                                    textOverflow:
-                                                        'ellipsis',
-                                                    whiteSpace:
-                                                        'nowrap',
-                                                }}
-                                                title={
-                                                    campana
-                                                        .empresa
-                                                        ?.nombre_comercial
-                                                }
-                                            >
-                                                {mostrarValor(
-                                                    campana
-                                                        .empresa
-                                                        ?.nombre_comercial,
-                                                )}
+                                                sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', }}
+                                                title={campana.empresa?.nombre_comercial}>
+                                                {mostrarValor(campana.empresa?.nombre_comercial)}
                                             </Typography>
                                         </TableCell>
                                         {/* ======================================
                                             ID CAMPAÑA
                                         ======================================= */}
                                         <TableCell
-                                            align="center"
-                                            sx={{
-                                                whiteSpace:
-                                                    'nowrap',
-                                                fontVariantNumeric:
-                                                    'tabular-nums',
-                                                fontWeight: 600,
-                                                py: 1.15,
-                                            }}
-                                        >
-                                            {
-                                                campana.id_campana_emp
-                                            }
+                                            align='center'
+                                            sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 0.5, pl: 1.5, }}>
+                                            {campana.id_campana_emp}
                                         </TableCell>
                                         {/* ======================================
                                             NOMBRE DE CENTRO DE COSTO
                                         ======================================= */}
                                         <TableCell
-                                            sx={{
-                                                fontWeight: 500,
-                                                py: 1.15,
-                                            }}
-                                        >
+                                            sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 0.5, pl: 1.5, }}>
                                             <Typography
                                                 variant="body2"
-                                                sx={{
-                                                    fontWeight: 500,
-                                                    overflow:
-                                                        'hidden',
-                                                    textOverflow:
-                                                        'ellipsis',
-                                                    whiteSpace:
-                                                        'nowrap',
-                                                }}
-                                                title={
-                                                    campana
-                                                        .centro_costo
-                                                        ?.desc_cc
-                                                }
+                                                sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', }}
+                                                title={campana.centro_costo?.desc_cc}
                                             >
-                                                {mostrarValor(
-                                                    campana
-                                                        .centro_costo
-                                                        ?.desc_cc,
-                                                )}
+                                                {mostrarValor(campana.centro_costo?.desc_cc)}
                                             </Typography>
                                         </TableCell>
                                         {/* ======================================
                                             PERIODO
                                         ======================================= */}
                                         <TableCell
-                                            sx={{
-                                                py: 1.15,
-                                                whiteSpace:
-                                                    'nowrap',
-                                            }}
-                                        >
+                                            sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 0.5, pl: 1.5, }}>
                                             <Typography
                                                 variant="body2"
-                                                sx={{
-                                                    fontWeight: 500,
-                                                    whiteSpace:
-                                                        'nowrap',
-                                                }}
+                                                sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', }}
                                             >
-                                                {formatearFecha(
-                                                    campana.fecha_inicio,
-                                                )}
+                                                {formatearFecha(campana.fecha_inicio)}
                                                 {' → '}
-                                                {formatearFecha(
-                                                    campana.fecha_fin,
-                                                )}
+                                                {formatearFecha(campana.fecha_fin)}
                                             </Typography>
                                         </TableCell>
                                         {/* ======================================
@@ -413,32 +265,17 @@ function CampanaTable({
                                         ======================================= */}
                                         <TableCell
                                             align="right"
-                                            sx={{
-                                                py: 1.15,
-                                                whiteSpace:
-                                                    'nowrap',
-                                                fontVariantNumeric:
-                                                    'tabular-nums',
-                                                fontWeight: 600,
-                                            }}
-                                        >
-                                            {mostrarValor(
-                                                Number(campana.hectareas ?? 0).toFixed(4)
-                                            )}
+                                            sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 0.5, pl: 1.5, }}>
+                                            {mostrarValor(Number(campana.hectareas ?? 0).toFixed(4))}
                                         </TableCell>
                                         {/* ======================================
                                             ESTADO
                                         ======================================= */}
                                         <TableCell
                                             align="center"
-                                            sx={{
-                                                py: 1.15,
-                                            }}
-                                        >
+                                            sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 0.5, pl: 1.5, }}>
                                             <StatusChip
-                                                estado={
-                                                    campana.estado
-                                                }
+                                                estado={campana.estado}
                                                 activoLabel="Activo"
                                                 inactivoLabel="Inactivo"
                                             />
@@ -448,10 +285,8 @@ function CampanaTable({
                                         ======================================= */}
                                         <TableCell
                                             align="center"
-                                            sx={{
-                                                py: 1.15,
-                                            }}
-                                        >
+                                            sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 0.5, pl: 1.5, }}>
+
                                             <StatusChip
                                                 estado={campana.cierre_camp}
                                                 cerrado={campana.cierre_camp}
@@ -464,44 +299,17 @@ function CampanaTable({
                                         ======================================= */}
                                         <TableCell
                                             align="center"
-                                            sx={{
-                                                py: 1.15,
-                                            }}
-                                        >
-                                            <Box
-                                                sx={{
-                                                    display:
-                                                        'inline-flex',
-                                                    alignItems:
-                                                        'center',
-                                                    justifyContent:
-                                                        'center',
-                                                    gap: 0.25,
-                                                }}
-                                            >
-                                                <Tooltip
-                                                    title="Editar campaña"
-                                                    arrow
-                                                >
+                                            sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 0.5, pl: 1.5, }}>
+                                            <Box sx={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
+                                                <Tooltip title="Editar campaña" arrow >
                                                     <IconButton
                                                         size="small"
-                                                        disabled={
-                                                            eliminando
-                                                        }
-                                                        onClick={() =>
-                                                            onEditar(
-                                                                campana,
-                                                            )
-                                                        }
+                                                        disabled={eliminando}
+                                                        onClick={() =>onEditar(campana)}
                                                         aria-label="Editar campaña"
-                                                        sx={{
-                                                            width: 32,
-                                                            height: 32,
-                                                        }}
+                                                        sx={{width: 32,height: 32}}
                                                     >
-                                                        <EditIcon
-                                                            fontSize="small"
-                                                        />
+                                                        <EditIcon fontSize="small"/>
                                                     </IconButton>
                                                 </Tooltip>
                                             </Box>

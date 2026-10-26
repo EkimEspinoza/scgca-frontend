@@ -37,7 +37,7 @@ function DataTable({
                                 sx={{
                                     fontWeight: 700,
                                     color: 'text.secondary',
-                                    py: 1.5,
+                                    py: 1,
                                     width: column.width,
                                     ...(column.headerSx || {}),
                                 }}
@@ -64,7 +64,7 @@ function DataTable({
                             <TableCell
                                 colSpan={columns.length || 1}
                                 align="center"
-                                sx={{ py: 6, borderBottom: 0 }}
+                                sx={{ py: 6, borderBottom: 0}}
                             >
                                 <Typography color="text.secondary">
                                     {hasSearch
@@ -89,7 +89,7 @@ function DataTable({
                                         key={column.key}
                                         align={column.align || 'left'}
                                         sx={{
-                                            py: 1.5,
+                                            py: 1,
                                             borderBottom: '1px solid',
                                             borderColor: 'divider',
                                             ...(column.cellSx || {}),
