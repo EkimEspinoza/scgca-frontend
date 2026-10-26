@@ -291,7 +291,7 @@ function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina,
 
                                                 <Typography
                                                     variant="body2"
-                                                    sx={{ fontWeight: 600, color: colorTipoCC, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', }}
+                                                    sx={{ fontWeight: 600,  color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', }}
                                                     title={centro.tipo_maq?.des_tipo_maquinaria}>
                                                     {mostrarValor(centro.tipo_maq?.des_tipo_maquinaria,)}
                                                 </Typography>
@@ -307,7 +307,7 @@ function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina,
 
                                                 <Typography
                                                     variant="body2"
-                                                    sx={{ fontWeight: 600, color: colorTipoCC, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', }}
+                                                    sx={{ fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', }}
                                                     title={centro.comparativo?.descripcion}>
                                                     {mostrarValor(centro.comparativo?.descripcion)}
                                                 </Typography>
@@ -323,7 +323,7 @@ function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina,
 
                                                 <Typography
                                                     variant="body2"
-                                                    sx={{ fontWeight: 600, color: colorTipoCC, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', }}
+                                                    sx={{ fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', }}
                                                     title={centro.variedad?.descripcion}>
                                                     {mostrarValor(centro.variedad?.descripcion)}
                                                 </Typography>
