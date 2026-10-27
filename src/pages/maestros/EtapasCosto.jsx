@@ -199,6 +199,7 @@ function EtapasCosto() {
         {
             key: 'etapa_costo',
             label: 'Etapa de Costo',
+            
             width: '55%',
             cellSx: {
                 position: 'relative',

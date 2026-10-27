@@ -28,11 +28,7 @@ function SearchInput({
             InputProps={{
                 startAdornment: (
                     <InputAdornment position="start">
-                        <Search
-                            fontSize="small"
-                            sx={{
-                                color: 'text.secondary',
-                            }}
+                        <Search fontSize ="small"sx={{color: 'text.secondary'}}
                         />
                     </InputAdornment>
                 ),
@@ -40,7 +36,7 @@ function SearchInput({
             sx={{
                 maxWidth,
                 '& .MuiOutlinedInput-root': {
-                    borderRadius: 1,
+                    borderRadius: 0.5,
                     backgroundColor: '#FAFBFA',
                 },
             }}

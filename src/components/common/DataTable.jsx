@@ -27,7 +27,10 @@ function DataTable({
                 backgroundColor: 'background.paper',
             }}
         >
-            <Table>
+            <Table
+            stickyHeader
+            
+            >
                 <TableHead>
                     <TableRow sx={{ backgroundColor: '#F8FAF9' }}>
                         {columns.map((column) => (
@@ -78,11 +81,7 @@ function DataTable({
                             <TableRow
                                 key={getRowKey(row, index)}
                                 hover
-                                sx={{
-                                    '&:last-child td, &:last-child th': {
-                                        borderBottom: 0,
-                                    },
-                                }}
+                                sx={{'&:last-child td, &:last-child th': {borderBottom: 0}}}
                             >
                                 {columns.map((column) => (
                                     <TableCell

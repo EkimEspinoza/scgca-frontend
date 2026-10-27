@@ -79,12 +79,12 @@ function Empresas() {
   const empresasFiltrados =
     useMemo(() => {
       const texto = busqueda.trim().toLowerCase()
-      if (!texto) 
-        {return empresas}
+      if (!texto) { return empresas }
       return empresas.filter(
         (empresas) =>
-          empresas.descripcion ?.toLowerCase().includes(texto))},
-        [empresas, busqueda])
+          empresas.descripcion?.toLowerCase().includes(texto))
+    },
+      [empresas, busqueda])
 
   // =========================================================
   // DATOS PAGINADOS 
@@ -94,7 +94,7 @@ function Empresas() {
     useMemo(() => {
       const inicio = pagina * registrosPorPagina
       const fin = inicio + registrosPorPagina
-      return empresasFiltrados.slice(inicio,fin)
+      return empresasFiltrados.slice(inicio, fin)
     }, [empresasFiltrados, pagina, registrosPorPagina])
 
   // =========================================================
@@ -251,12 +251,12 @@ function Empresas() {
   // =========================================================
 
   const columnas = [
-
     {
       key: 'descripcion',
       label: 'Empresa',
       height: '100%',
-      width: '40%',
+      width: 'auto',
+      whiteSpace: 'nowrap',
       cellSx: {
         position: 'relative', pl: 1.5,
         '&::before': { content: '""', position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, borderRadius: '0 0px 0px 0', backgroundColor: '#2E7D32' }
@@ -273,7 +273,8 @@ function Empresas() {
     {
       key: 'nombre_comercial',
       label: 'Nombre comercial',
-      width: '20%',
+      width: 'auto',
+      whiteSpace: 'nowrap',
       render: (empresa) => (
         <Typography color="text.primary">
           {empresa.nombre_comercial}
@@ -284,7 +285,8 @@ function Empresas() {
     {
       key: 'estado',
       label: 'Estado',
-      width: '20%',
+      width: 'auto',
+      whiteSpace: 'nowrap',
       render: (empresa) => (
         <StatusChip estado={empresa.estado} activoLabel="Activo" inactivoLabel="Inactivo" />
       )
@@ -293,7 +295,8 @@ function Empresas() {
     {
       key: 'acciones',
       label: 'Acciones',
-      width: '20%',
+      width: 'auto',
+      whiteSpace: 'nowrap',
       align: 'center',
       render: (empresa) => (
         <Tooltip title="Editar empresa">
@@ -393,11 +396,15 @@ function Empresas() {
                 ================================================= */}
 
         <Pagination
+
+
           total={totalRegistros}
           pagina={pagina}
           registrosPorPagina={registrosPorPagina}
           onPageChange={handleChangePagina}
           onRowsPerPageChange={handleChangeRegistrosPorPagina}
+
+
         />
       </Paper>
 
