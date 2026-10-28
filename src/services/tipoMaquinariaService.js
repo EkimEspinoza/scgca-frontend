@@ -146,3 +146,27 @@ export async function actualizarTipoMaquinaria(
 
   return data
 }
+export async function cambiarEstadoTipoMaquinaria(idTipoMaquinaria, estado) {
+  const { data, error } = await supabase
+    .from('dim_tipo_maq')
+    .update({
+      estado,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id_tipo_maq', idTipoMaquinaria)
+    .select(`
+      id_tipo_maq,
+      des_tipo_maquinaria,
+      estado,
+      created_at,
+      updated_at
+    `)
+    .single()
+
+  if (error) {
+    console.error('Error cambiando estado del tipo de maquinaria:', error)
+    throw error
+  }
+
+  return data
+}

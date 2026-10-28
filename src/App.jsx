@@ -380,7 +380,7 @@ function ProtectedRoute({
    * Mientras se determina la sesión
    * y se carga el perfil.
    */
-  if (loading) {
+  if (loading && !perfil) {
     return (
       <Box
         sx={{

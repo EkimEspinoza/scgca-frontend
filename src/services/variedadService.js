@@ -94,3 +94,23 @@ export async function actualizarVariedad(
 
   return data
 }
+// Cambia el estado activo/inactivo de una variedad sin eliminarla.
+export async function cambiarEstadoVariedad(idVariedad, estado) {
+  const { data, error } = await supabase
+    .from('dim_variedad')
+    .update({ estado })
+    .eq('id_variedad', idVariedad)
+    .select(`
+      id_variedad,
+      descripcion,
+      estado
+    `)
+    .single()
+
+  if (error) {
+    console.error('Error cambiando estado de variedad:', error)
+    throw error
+  }
+
+  return data
+}

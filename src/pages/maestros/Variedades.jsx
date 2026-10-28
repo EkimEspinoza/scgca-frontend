@@ -6,12 +6,13 @@ import { useEffect, useRef, useMemo, useState } from 'react'
 
 import {
     Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
-    DialogTitle, IconButton, Paper, Snackbar, TextField, Typography
+    DialogTitle, IconButton, MenuItem, Paper, Snackbar, Switch, TextField, Tooltip, Typography
 } from '@mui/material'
 
 import { Add, Close, Edit, Save } from '@mui/icons-material'
+import useMediaQuery from '@mui/material/useMediaQuery'
 
-import { obtenerVariedades, crearVariedad, actualizarVariedad } from '../../services/variedadService'
+import { obtenerVariedades, crearVariedad, actualizarVariedad, cambiarEstadoVariedad } from '../../services/variedadService'
 
 import SearchInput from '../../components/common/SearchInput'
 import StatusChip from '../../components/common/StatusChip'
@@ -22,9 +23,12 @@ import DataTable from '../../components/common/DataTable'
 const formularioInicial = { descripcion: '', estado: true }
 
 function Variedades() {
+    const esVistaMovil = useMediaQuery('(max-width:760px)')
 
     const [variedades, setVariedades] = useState([])
     const [variedadSeleccionada, setVariedadSeleccionada] = useState(null)
+    const [variedadCambioEstado, setVariedadCambioEstado] = useState(null)
+    const [cambiandoEstado, setCambiandoEstado] = useState(false)
     // =========================================================
     // DATOS - DIÁLOGO - FORMULARIO - BÚSQUEDA - PAGINACIÓN&& NO EDITABLE
     // =========================================================
@@ -41,6 +45,7 @@ function Variedades() {
     const [erroresFormulario, setErroresFormulario] = useState({})
 
     const [busqueda, setBusqueda] = useState('')
+    const [filtroEstado, setFiltroEstado] = useState('todos')
 
     const [pagina, setPagina] = useState(0)
     const [registrosPorPagina, setRegistrosPorPagina] = useState(10)
@@ -68,18 +73,59 @@ function Variedades() {
     }, [])
 
     // =========================================================
+    // CAMBIO DE ESTADO
+    // =========================================================
+    const handleSolicitarCambioEstado = (variedad) => {
+        setVariedadCambioEstado({ ...variedad, nuevoEstado: !Boolean(variedad.estado) })
+    }
+
+    const handleCerrarConfirmacionEstado = () => {
+        if (cambiandoEstado) return
+        setVariedadCambioEstado(null)
+    }
+
+    const handleConfirmarCambioEstado = async () => {
+        if (!variedadCambioEstado) return
+        const { id_variedad, nuevoEstado } = variedadCambioEstado
+
+        try {
+            setCambiandoEstado(true)
+            setError('')
+            const variedadActualizada = await cambiarEstadoVariedad(id_variedad, nuevoEstado)
+            setVariedades((actuales) => actuales.map((variedad) =>
+                variedad.id_variedad === id_variedad ? variedadActualizada : variedad,
+            ))
+            setMensaje(
+                nuevoEstado
+                    ? 'Variedad reactivada correctamente.'
+                    : 'Variedad desactivada correctamente.',
+            )
+            setVariedadCambioEstado(null)
+            setPagina(0)
+        } catch (err) {
+            console.error('Error cambiando estado de variedad:', err)
+            setError(err?.message || 'No se pudo cambiar el estado de la variedad.')
+        } finally {
+            setCambiandoEstado(false)
+        }
+    }
     // DATOS FILTRADOS
     // =========================================================
 
 
     const variedadesFiltradas = useMemo(() => {
-        const texto = busqueda.trim().toLowerCase()
-        if (!texto) { return variedades }
-        return variedades.filter((variedad) =>
-            variedad.descripcion?.toLowerCase().includes(texto),
-        )
-    }, [variedades, busqueda])
+        const texto = busqueda.trim().toLocaleLowerCase('es')
 
+        return variedades.filter((variedad) => {
+            const coincideTexto = variedad.descripcion?.toLocaleLowerCase('es').includes(texto)
+            const coincideEstado =
+                filtroEstado === 'todos' ||
+                (filtroEstado === 'activos' && Boolean(variedad.estado)) ||
+                (filtroEstado === 'inactivos' && !Boolean(variedad.estado))
+
+            return coincideTexto && coincideEstado
+        })
+    }, [variedades, busqueda, filtroEstado])
     // =========================================================
     // DATOS PAGINADOS
     // =========================================================
@@ -235,8 +281,8 @@ function Variedades() {
 
     const columnas = [
         {
-            key: 'des_tip_cc',
-            label: 'Tipo de Centro de Costo',
+            key: 'descripcion',
+            label: 'Variedad',
             height: '100%',
             width: '60%',
             cellSx: {
@@ -255,7 +301,22 @@ function Variedades() {
             label: 'Estado',
             width: '20%',
             render: (variedad) => (
-                <StatusChip estado={variedad.estado} activoLabel="Activo" inactivoLabel="Inactivo" />
+                                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                    <Tooltip title={variedad.estado ? 'Desactivar variedad' : 'Reactivar variedad'}>
+                        <span>
+                            <Switch
+                                checked={Boolean(variedad.estado)}
+                                onChange={() => handleSolicitarCambioEstado(variedad)}
+                                disabled={cambiandoEstado}
+                                size="small"
+                                inputProps={{
+                                    'aria-label': `${variedad.estado ? 'Desactivar' : 'Reactivar'} ${variedad.descripcion}`,
+                                }}
+                            />
+                        </span>
+                    </Tooltip>
+                    <StatusChip estado={variedad.estado} activoLabel="Activo" inactivoLabel="Inactivo" />
+                </Box>
             )
         },
         {
@@ -284,51 +345,87 @@ function Variedades() {
 
     return (
 
-        <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflowX: 'hidden', overflowY: 'auto' }}>
 
             {/* =====================================================
             ENCABEZADO
                     ====================================================== */}
 
-            <PageHeader
-                title="Variedades"
-                description="Administración de variedades agrícolas"
-                actionLabel="Nueva variedad"
-                onAction={handleNuevaVariedad}
-                actionIcon={<Add />}
-            />
+            <Box
+                sx={{
+                    '& > .MuiBox-root': {
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: { xs: 'stretch', sm: 'center' },
+                    },
+                    '& > .MuiBox-root > .MuiButton-root': {
+                        width: { xs: '100%', sm: 'auto' },
+                    },
+                }}
+            >
+                <PageHeader
+                    title="Variedades"
+                    description="Administración de variedades agrícolas"
+                    actionLabel="Nueva variedad"
+                    onAction={handleNuevaVariedad}
+                    actionIcon={<Add />}
+                />
+            </Box>
 
 
             <Paper
                 elevation={0}
                 sx={{
-                    width: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', border: '1px solid', borderColor: 'divider', borderRadius: 1,
-                    overflow: 'hidden', backgroundColor: 'background.paper', marginBottom: 1
-                }}>
-
-                {/* =====================================================
-                    BUSCADOR
-                ====================================================== */}
-                <Box sx={{ p: 2, flexShrink: 0, backgroundColor: 'background.paper' }}>
-
-                    <SearchInput
-                        value={busqueda.toLocaleUpperCase()}
-                        onChange={handleCambioBusqueda}
-                        placeholder="Buscar variedad..."
-                        ariaLabel="Buscar variedad"
-                    />
-
+                    width: '100%', minWidth: 0, flex: '0 0 auto', display: 'flex', flexDirection: 'column',
+                    border: '1px solid', borderColor: 'divider', borderRadius: 1,
+                    overflow: 'hidden', backgroundColor: 'background.paper', marginBottom: 1,
+                }}
+            >
+                <Box
+                    sx={{
+                        p: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        flexWrap: 'wrap',
+                        backgroundColor: 'background.paper',
+                    }}
+                >
+                    <Box sx={{ flex: '1 1 280px', minWidth: { xs: '100%', sm: 240 } }}>
+                        <SearchInput
+                            value={busqueda.toLocaleUpperCase()}
+                            onChange={handleCambioBusqueda}
+                            placeholder="Buscar variedad..."
+                            ariaLabel="Buscar variedad"
+                            maxWidth="none"
+                        />
+                    </Box>
+                    <TextField
+                        select
+                        size="small"
+                        label="Estado"
+                        value={filtroEstado}
+                        onChange={(event) => {
+                            setFiltroEstado(event.target.value)
+                            setPagina(0)
+                        }}
+                        sx={{ width: { xs: '100%', sm: 190 }, flexShrink: 0 }}
+                    >
+                        <MenuItem value="todos">Todas</MenuItem>
+                        <MenuItem value="activos">Activo</MenuItem>
+                        <MenuItem value="inactivos">Inactivo</MenuItem>
+                    </TextField>
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        aria-live="polite"
+                        sx={{ ml: { xs: 'auto', sm: 0 }, whiteSpace: 'nowrap', fontWeight: 500 }}
+                    >
+                        {totalRegistros} {totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}
+                    </Typography>
                 </Box>
-
-                {/* =================================================
-                    ERROR && NO EDITABLE
-                ================================================= */}
-
                 {error && (
                     <Box sx={{ px: 2, pb: 2 }}>
-                        <Alert severity="error" sx={{ borderRadius: 1 }} >
-                            {error}
-                        </Alert>
+                        <Alert severity="error" sx={{ borderRadius: 1 }}>{error}</Alert>
                     </Box>
                 )}
             </Paper>
@@ -338,7 +435,7 @@ function Variedades() {
             <Paper
                 elevation={0}
                 sx={{
-                    width: '100%', minWidth: 0, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column',
+                    width: '100%', minWidth: 0, minHeight: 0, flex: esVistaMovil ? '0 0 auto' : 1, display: 'flex', flexDirection: 'column',
                     border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden', backgroundColor: 'background.paper'
                 }}>
 
@@ -348,15 +445,82 @@ function Variedades() {
             TABLA
         ==================================================== */}
 
-                <DataTable
-                    columns={columnas}
-                    rows={variedadesPaginadas}
-                    loading={loading}
-                    emptyMessage={'No existen variedades registradas.'}
-                    emptySearchMessage={'No se encontraron variedades para la búsqueda.'}
-                    hasSearch={Boolean(busqueda.trim())}
-                    getRowKey={(variedad) => variedad.id_variedad}
-                />
+                {esVistaMovil ? (
+                    <Box
+                        component="ul"
+                        aria-label="Lista de variedades"
+                        sx={{ listStyle: 'none', m: 0, p: 0, flex: '0 1 auto', maxHeight: 420, overflowY: 'auto' }}
+                    >
+                        {loading ? (
+                            <Box component="li" sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
+                                <CircularProgress size={28} />
+                            </Box>
+                        ) : variedadesPaginadas.length === 0 ? (
+                            <Box component="li" sx={{ p: 3 }}>
+                                <Typography color="text.secondary" align="center">
+                                    {Boolean(busqueda.trim()) || filtroEstado !== 'todos'
+                                        ? 'No se encontraron variedades.'
+                                        : 'No existen variedades registradas.'}
+                                </Typography>
+                            </Box>
+                        ) : variedadesPaginadas.map((variedad) => (
+                            <Box
+                                component="li"
+                                key={variedad.id_variedad}
+                                sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'minmax(0, 1fr) auto',
+                                    columnGap: 1,
+                                    alignItems: 'center',
+                                    px: 1.5,
+                                    py: 1.25,
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
+                                    '&:last-child': { borderBottom: 0 },
+                                }}
+                            >
+                                <Box sx={{ minWidth: 0 }}>
+                                    <Typography fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
+                                        {variedad.descripcion}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.75 }}>
+                                        <Tooltip title={variedad.estado ? 'Desactivar variedad' : 'Reactivar variedad'}>
+                                            <span>
+                                                <Switch
+                                                    checked={Boolean(variedad.estado)}
+                                                    onChange={() => handleSolicitarCambioEstado(variedad)}
+                                                    disabled={cambiandoEstado}
+                                                    size="small"
+                                                    inputProps={{
+                                                        'aria-label': `${variedad.estado ? 'Desactivar' : 'Reactivar'} ${variedad.descripcion}`,
+                                                    }}
+                                                />
+                                            </span>
+                                        </Tooltip>
+                                        <StatusChip estado={variedad.estado} activoLabel="Activo" inactivoLabel="Inactivo" />
+                                    </Box>
+                                </Box>
+                                <IconButton
+                                    aria-label={`Editar ${variedad.descripcion}`}
+                                    onClick={() => handleEditarVariedad(variedad)}
+                                    sx={{ minWidth: 44, minHeight: 44 }}
+                                >
+                                    <Edit fontSize="small" />
+                                </IconButton>
+                            </Box>
+                        ))}
+                    </Box>
+                ) : (
+                    <DataTable
+                        columns={columnas}
+                        rows={variedadesPaginadas}
+                        loading={loading}
+                        emptyMessage={'No existen variedades registradas.'}
+                        emptySearchMessage={'No se encontraron variedades.'}
+                        hasSearch={Boolean(busqueda.trim()) || filtroEstado !== 'todos'}
+                        getRowKey={(variedad) => variedad.id_variedad}
+                    />
+                )}
 
                 {/* =================================================
                     PAGINACIÓN
@@ -417,21 +581,6 @@ function Variedades() {
                             inputProps={{ style: { textTransform: 'uppercase' } }}
                         />
 
-                        {/* =====================================================
-                ESTADO
-            ====================================================== */}
-
-                        <Box>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
-                                Estado
-                            </Typography>
-
-                            <StatusChip
-                                estado={formulario.estado}
-                                onClick={!guardando ? handleCambiarEstadoFormulario : undefined}
-                                disabled={guardando}
-                            />
-                        </Box>
                     </Box>
 
                 </DialogContent>
@@ -473,6 +622,43 @@ function Variedades() {
           MENSAJE DE ÉXITO && NO EDITABLE
       ====================================================== */}
 
+            <Dialog
+                open={Boolean(variedadCambioEstado)}
+                onClose={handleCerrarConfirmacionEstado}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle>
+                    {variedadCambioEstado?.nuevoEstado
+                        ? 'Reactivar variedad'
+                        : 'Desactivar variedad'}
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        {variedadCambioEstado?.nuevoEstado
+                            ? `¿Deseas reactivar "${variedadCambioEstado?.descripcion}"?`
+                            : `¿Deseas desactivar "${variedadCambioEstado?.descripcion}"? El registro se conservará en la base de datos.`}
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCerrarConfirmacionEstado} disabled={cambiandoEstado}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color={variedadCambioEstado?.nuevoEstado ? 'success' : 'warning'}
+                        onClick={handleConfirmarCambioEstado}
+                        disabled={cambiandoEstado}
+                        startIcon={cambiandoEstado ? <CircularProgress size={16} color="inherit" /> : undefined}
+                    >
+                        {cambiandoEstado
+                            ? 'Guardando...'
+                            : variedadCambioEstado?.nuevoEstado
+                                ? 'Reactivar'
+                                : 'Desactivar'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
             <Snackbar
                 open={Boolean(mensaje)}
                 autoHideDuration={3500}

@@ -6,12 +6,13 @@ import { useEffect, useRef, useMemo, useState } from 'react'
 
 import {
   Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
-  DialogTitle, IconButton, Paper, Snackbar, TextField, Typography
+  DialogTitle, IconButton, MenuItem, Paper, Snackbar, Switch, TextField, Tooltip, Typography
 } from '@mui/material'
 
 import { Add, Close as CloseIcon, Edit as EditIcon, Save } from '@mui/icons-material'
+import useMediaQuery from '@mui/material/useMediaQuery'
 
-import { obtenerTiposCentroCosto, crearTipoCentroCosto, actualizarTipoCentroCosto } from '../../services/tipoCentroCostoService'
+import { obtenerTiposCentroCosto, crearTipoCentroCosto, actualizarTipoCentroCosto, cambiarEstadoTipoCentroCosto } from '../../services/tipoCentroCostoService'
 
 import SearchInput from '../../components/common/SearchInput'
 import StatusChip from '../../components/common/StatusChip'
@@ -23,9 +24,12 @@ import DataTable from '../../components/common/DataTable'
 const formularioInicial = { des_tip_cc: '', estado: true }
 
 function TiposCentroCosto() {
+  const esVistaMovil = useMediaQuery('(max-width:760px)')
 
   const [tipos, setTipos] = useState([])
   const [tipoSeleccionado, setTipoSeleccionado] = useState(null)
+  const [tipoCambioEstado, setTipoCambioEstado] = useState(null)
+  const [cambiandoEstado, setCambiandoEstado] = useState(false)
 
   // =========================================================
   // DATOS - DIÁLOGO - FORMULARIO - BÚSQUEDA - PAGINACIÓN&& NO EDITABLE
@@ -43,6 +47,7 @@ function TiposCentroCosto() {
   const [erroresFormulario, setErroresFormulario] = useState({})
 
   const [busqueda, setBusqueda] = useState('')
+  const [filtroEstado, setFiltroEstado] = useState('todos')
 
   const [pagina, setPagina] = useState(0)
   const [registrosPorPagina, setRegistrosPorPagina] = useState(10)
@@ -77,19 +82,65 @@ function TiposCentroCosto() {
   }, [])
 
   // =========================================================
+  // CAMBIO DE ESTADO
+  // =========================================================
+  const handleSolicitarCambioEstado = (tipo) => {
+    setTipoCambioEstado({
+      ...tipo,
+      nuevoEstado: !Boolean(tipo.estado),
+    })
+  }
+
+  const handleCerrarConfirmacionEstado = () => {
+    if (cambiandoEstado) return
+    setTipoCambioEstado(null)
+  }
+
+  const handleConfirmarCambioEstado = async () => {
+    if (!tipoCambioEstado) return
+
+    const { id_tip_cc, nuevoEstado } = tipoCambioEstado
+
+    try {
+      setCambiandoEstado(true)
+      setError('')
+
+      const tipoActualizado = await cambiarEstadoTipoCentroCosto(id_tip_cc, nuevoEstado)
+      setTipos((actuales) => actuales.map((tipo) =>
+        tipo.id_tip_cc === id_tip_cc ? tipoActualizado : tipo,
+      ))
+      setMensaje(
+        nuevoEstado
+          ? 'Tipo de centro de costo reactivado correctamente.'
+          : 'Tipo de centro de costo desactivado correctamente.',
+      )
+      setTipoCambioEstado(null)
+      setPagina(0)
+    } catch (err) {
+      console.error('Error cambiando estado del tipo de centro de costo:', err)
+      setError(err?.message || 'No se pudo cambiar el estado del tipo de centro de costo.')
+    } finally {
+      setCambiandoEstado(false)
+    }
+  }
   // DATOS FILTRADOS
   // =========================================================
 
-  const tiposFiltrados =
-    useMemo(() => {
-      const texto = busqueda.trim().toLowerCase()
-      if (!texto) { return tipos }
-      return tipos.filter((tipo) => String(tipo.des_tip_cc ?? '').toLowerCase().includes(texto))
-    },
-      [tipos, busqueda])
+  const tiposFiltrados = useMemo(() => {
+    const texto = busqueda.trim().toLocaleLowerCase('es')
 
+    return tipos.filter((tipo) => {
+      const coincideTexto = String(tipo.des_tip_cc ?? '').toLocaleLowerCase('es').includes(texto)
+      const coincideEstado =
+        filtroEstado === 'todos' ||
+        (filtroEstado === 'activos' && Boolean(tipo.estado)) ||
+        (filtroEstado === 'inactivos' && !Boolean(tipo.estado))
+
+      return coincideTexto && coincideEstado
+    })
+  }, [tipos, busqueda, filtroEstado])
   // =========================================================
-  // DATOS PAGINADOS 
+  // DATOS PAGINADOS
   // =========================================================
 
 
@@ -155,7 +206,7 @@ function TiposCentroCosto() {
 
 
   // =========================================================
-  // CERRAR DIÁLOGO 
+  // CERRAR DIÁLOGO
   // =========================================================
 
   const handleCerrarDialog = () => {
@@ -291,7 +342,22 @@ function TiposCentroCosto() {
       label: 'Estado',
       width: '20%',
       render: (tipo) => (
-        <StatusChip estado={tipo.estado} activoLabel="Activo" inactivoLabel="Inactivo" />
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+          <Tooltip title={tipo.estado ? 'Desactivar tipo de centro de costo' : 'Reactivar tipo de centro de costo'}>
+            <span>
+              <Switch
+                checked={Boolean(tipo.estado)}
+                onChange={() => handleSolicitarCambioEstado(tipo)}
+                disabled={cambiandoEstado}
+                size="small"
+                inputProps={{
+                  'aria-label': `${tipo.estado ? 'Desactivar' : 'Reactivar'} ${tipo.des_tip_cc}`,
+                }}
+              />
+            </span>
+          </Tooltip>
+          <StatusChip estado={tipo.estado} activoLabel="Activo" inactivoLabel="Inactivo" />
+        </Box>
       )
     },
     {
@@ -315,65 +381,101 @@ function TiposCentroCosto() {
   const totalRegistros = tiposFiltrados.length
 
   // =========================================================
-  // RENDER 
+  // RENDER
   // =========================================================
 
   return (
 
-    <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflowX: 'hidden', overflowY: 'auto' }}>
 
       {/* =====================================================
             ENCABEZADO
                     ====================================================== */}
 
-      <PageHeader
-        title="Tipos de Centro de Costo"
-        description="Administra los tipos utilizados para clasificar los Centros de Costo"
-        actionLabel="Nuevo tipo de Centro de Costo"
-        onAction={handleNuevoTipoCentroCosto}
-        actionIcon={<Add />}
-      />
+      <Box
+        sx={{
+          '& > .MuiBox-root': {
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' },
+          },
+          '& > .MuiBox-root > .MuiButton-root': {
+            width: { xs: '100%', sm: 'auto' },
+          },
+        }}
+      >
+        <PageHeader
+          title="Tipos de Centro de Costo"
+          description="Administra los tipos utilizados para clasificar los Centros de Costo"
+          actionLabel="Nuevo tipo de Centro de Costo"
+          onAction={handleNuevoTipoCentroCosto}
+          actionIcon={<Add />}
+        />
+      </Box>
 
       <Paper
         elevation={0}
         sx={{
-          width: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', border: '1px solid', borderColor: 'divider', borderRadius: 1,
-          overflow: 'hidden', backgroundColor: 'background.paper', marginBottom: 1
-        }}>
-
-        {/* =====================================================
-                    BUSCADOR
-                ====================================================== */}
-        <Box sx={{ p: 2, flexShrink: 0, backgroundColor: 'background.paper' }}>
-
-          <SearchInput
-            value={busqueda.toLocaleUpperCase()}
-            onChange={handleCambioBusqueda}
-            placeholder="Buscar tipo de centro de costo.."
-            ariaLabel="Buscar tipo de centro de costo"
-          />
-
+          width: '100%', minWidth: 0, flex: '0 0 auto', display: 'flex', flexDirection: 'column',
+          border: '1px solid', borderColor: 'divider', borderRadius: 1,
+          overflow: 'hidden', backgroundColor: 'background.paper', marginBottom: 1,
+        }}
+      >
+        <Box
+          sx={{
+            p: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            flexWrap: 'wrap',
+            backgroundColor: 'background.paper',
+          }}
+        >
+          <Box sx={{ flex: '1 1 280px', minWidth: { xs: '100%', sm: 240 } }}>
+            <SearchInput
+              value={busqueda.toLocaleUpperCase()}
+              onChange={handleCambioBusqueda}
+              placeholder="Buscar tipo de centro de costo..."
+              ariaLabel="Buscar tipo de centro de costo"
+              maxWidth="none"
+            />
+          </Box>
+          <TextField
+            select
+            size="small"
+            label="Estado"
+            value={filtroEstado}
+            onChange={(event) => {
+              setFiltroEstado(event.target.value)
+              setPagina(0)
+            }}
+            sx={{ width: { xs: '100%', sm: 190 }, flexShrink: 0 }}
+          >
+            <MenuItem value="todos">Todos</MenuItem>
+            <MenuItem value="activos">Activo</MenuItem>
+            <MenuItem value="inactivos">Inactivo</MenuItem>
+          </TextField>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            aria-live="polite"
+            sx={{ ml: { xs: 'auto', sm: 0 }, whiteSpace: 'nowrap', fontWeight: 500 }}
+          >
+            {totalRegistros} {totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}
+          </Typography>
         </Box>
-
-        {/* =================================================
-                    ERROR && NO EDITABLE
-                ================================================= */}
-
         {error && (
           <Box sx={{ px: 2, pb: 2 }}>
-            <Alert severity="error" sx={{ borderRadius: 1 }} >
-              {error}
-            </Alert>
+            <Alert severity="error" sx={{ borderRadius: 1 }}>{error}</Alert>
           </Box>
         )}
       </Paper>
       {/* =================================================
-                    TABLA 
+                    TABLA
                 ================================================= */}
       <Paper
         elevation={0}
         sx={{
-          width: '100%', minWidth: 0, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column',
+          width: '100%', minWidth: 0, minHeight: 0, flex: esVistaMovil ? '0 0 auto' : 1, display: 'flex', flexDirection: 'column',
           border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden', backgroundColor: 'background.paper'
         }}>
 
@@ -383,15 +485,82 @@ function TiposCentroCosto() {
             TABLA
         ==================================================== */}
 
-        <DataTable
-          columns={columnas}
-          rows={tiposPaginados}
-          loading={loading}
-          emptyMessage={'No existen tipos de centro de costo registrados.'}
-          emptySearchMessage={'No se encontraron tipos de centro de costo para la búsqueda.'}
-          hasSearch={Boolean(busqueda.trim())}
-          getRowKey={(tipo) => tipo.id_tip_cc}
-        />
+        {esVistaMovil ? (
+          <Box
+            component="ul"
+            aria-label="Lista de tipos de centro de costo"
+            sx={{ listStyle: 'none', m: 0, p: 0, flex: '0 1 auto', maxHeight: 420, overflowY: 'auto' }}
+          >
+            {loading ? (
+              <Box component="li" sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
+                <CircularProgress size={28} />
+              </Box>
+            ) : tiposPaginados.length === 0 ? (
+              <Box component="li" sx={{ p: 3 }}>
+                <Typography color="text.secondary" align="center">
+                  {Boolean(busqueda.trim()) || filtroEstado !== 'todos'
+                    ? 'No se encontraron tipos de centro de costo.'
+                    : 'No existen tipos de centro de costo registrados.'}
+                </Typography>
+              </Box>
+            ) : tiposPaginados.map((tipo) => (
+              <Box
+                component="li"
+                key={tipo.id_tip_cc}
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) auto',
+                  columnGap: 1,
+                  alignItems: 'center',
+                  px: 1.5,
+                  py: 1.25,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  '&:last-child': { borderBottom: 0 },
+                }}
+              >
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
+                    {tipo.des_tip_cc}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.75 }}>
+                    <Tooltip title={tipo.estado ? 'Desactivar tipo de centro de costo' : 'Reactivar tipo de centro de costo'}>
+                      <span>
+                        <Switch
+                          checked={Boolean(tipo.estado)}
+                          onChange={() => handleSolicitarCambioEstado(tipo)}
+                          disabled={cambiandoEstado}
+                          size="small"
+                          inputProps={{
+                            'aria-label': `${tipo.estado ? 'Desactivar' : 'Reactivar'} ${tipo.des_tip_cc}`,
+                          }}
+                        />
+                      </span>
+                    </Tooltip>
+                    <StatusChip estado={tipo.estado} activoLabel="Activo" inactivoLabel="Inactivo" />
+                  </Box>
+                </Box>
+                <IconButton
+                  aria-label={`Editar ${tipo.des_tip_cc}`}
+                  onClick={() => handleEditar(tipo)}
+                  sx={{ minWidth: 44, minHeight: 44 }}
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <DataTable
+            columns={columnas}
+            rows={tiposPaginados}
+            loading={loading}
+            emptyMessage={'No existen tipos de centro de costo registrados.'}
+            emptySearchMessage={'No se encontraron tipos de centro de costo para la búsqueda.'}
+            hasSearch={Boolean(busqueda.trim()) || filtroEstado !== 'todos'}
+            getRowKey={(tipo) => tipo.id_tip_cc}
+          />
+        )}
         {/* =================================================
                     PAGINACIÓN
                 ================================================= */}
@@ -456,17 +625,7 @@ function TiposCentroCosto() {
                 ESTADO
             ====================================================== */}
 
-            <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
-                Estado
-              </Typography>
 
-              <StatusChip
-                estado={formulario.estado}
-                onClick={!guardando ? handleCambiarEstadoFormulario : undefined}
-                disabled={guardando}
-              />
-            </Box>
           </Box>
 
         </DialogContent>
@@ -508,6 +667,43 @@ function TiposCentroCosto() {
           MENSAJE DE ÉXITO && NO EDITABLE
       ====================================================== */}
 
+      <Dialog
+        open={Boolean(tipoCambioEstado)}
+        onClose={handleCerrarConfirmacionEstado}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          {tipoCambioEstado?.nuevoEstado
+            ? 'Reactivar tipo de centro de costo'
+            : 'Desactivar tipo de centro de costo'}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            {tipoCambioEstado?.nuevoEstado
+              ? `¿Deseas reactivar "${tipoCambioEstado?.des_tip_cc}"?`
+              : `¿Deseas desactivar "${tipoCambioEstado?.des_tip_cc}"? El registro se conservará en la base de datos.`}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCerrarConfirmacionEstado} disabled={cambiandoEstado}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            color={tipoCambioEstado?.nuevoEstado ? 'success' : 'warning'}
+            onClick={handleConfirmarCambioEstado}
+            disabled={cambiandoEstado}
+            startIcon={cambiandoEstado ? <CircularProgress size={16} color="inherit" /> : undefined}
+          >
+            {cambiandoEstado
+              ? 'Guardando...'
+              : tipoCambioEstado?.nuevoEstado
+                ? 'Reactivar'
+                : 'Desactivar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Snackbar
         open={Boolean(mensaje)}
         autoHideDuration={3500}

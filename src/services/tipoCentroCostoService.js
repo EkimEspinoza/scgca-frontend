@@ -100,3 +100,30 @@ export async function actualizarTipoCentroCosto(idTipoCc, datos) {
 
   return data
 }
+/**
+ * Cambia el estado activo/inactivo de un tipo de centro de costo.
+ */
+export async function cambiarEstadoTipoCentroCosto(idTipoCc, estado) {
+  const { data, error } = await supabase
+    .from('Dim_TipoCC')
+    .update({
+      estado,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id_tip_cc', idTipoCc)
+    .select(`
+      id_tip_cc,
+      des_tip_cc,
+      estado,
+      created_at,
+      updated_at
+    `)
+    .single()
+
+  if (error) {
+    console.error('Error cambiando estado del tipo de centro de costo:', error)
+    throw error
+  }
+
+  return data
+}

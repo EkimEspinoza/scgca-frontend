@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react'
 
@@ -8,20 +9,39 @@ import { supabase } from '../lib/supabase'
 import { AuthContext } from './authContextStore'
 import { createLatestRequestGuard } from './latestRequestGuard'
 
+function perfilesIguales(a, b) {
+  return Boolean(
+    a &&
+    b &&
+    a.id_usuario === b.id_usuario &&
+    a.auth_user_id === b.auth_user_id &&
+    a.nombre === b.nombre &&
+    a.apellido === b.apellido &&
+    a.estado === b.estado &&
+    a.id_permiso === b.id_permiso &&
+    a.permiso?.id_permiso === b.permiso?.id_permiso &&
+    a.permiso?.nombre === b.permiso?.nombre &&
+    a.permiso?.descripcion === b.permiso?.descripcion &&
+    a.permiso?.estado === b.permiso?.estado
+  )
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [perfil, setPerfil] = useState(null)
   const [loading, setLoading] = useState(true)
   const [profileRequestGuard] = useState(() => createLatestRequestGuard())
-
+  const authUserIdRef = useRef(null)
 
   /*
-   * Cargar el perfil vigente. Solo la solicitud más reciente puede
-   * modificar el perfil o finalizar el estado de carga. Esto evita que
-   * una respuesta antigua restaure permisos tras cambiar de usuario/logout.
+   * Carga inicial o revalidación del perfil.
+   * background=true evita desmontar las rutas durante la revalidación
+   * de la misma cuenta al volver a la pestaña.
    */
-  const cargarPerfil = useCallback(async (authUser) => {
+  const cargarPerfil = useCallback(async (
+    authUser,
+    { background = false } = {},
+  ) => {
     const requestVersion = profileRequestGuard.next()
 
     if (!authUser) {
@@ -30,60 +50,62 @@ export function AuthProvider({ children }) {
       return null
     }
 
-    setPerfil(null)
-    setLoading(true)
+    if (!background) {
+      setPerfil(null)
+      setLoading(true)
+    }
 
     try {
-      const {
-        data,
-        error,
-      } = await supabase
+      const { data, error } = await supabase
         .from('usuarios')
         .select(
-          `
-            id_usuario,
-            auth_user_id,
-            nombre,
-            apellido,
-            estado,
-            id_permiso,
-            permiso (
-              id_permiso,
-              nombre,
-              descripcion,
-              estado
-            )
-          `,
+          'id_usuario, auth_user_id, nombre, apellido, estado, id_permiso, permiso (id_permiso, nombre, descripcion, estado)',
         )
         .eq('auth_user_id', authUser.id)
-        .single()
+        .maybeSingle()
 
       if (!profileRequestGuard.isCurrent(requestVersion)) return null
 
       if (error) {
         console.error('Error cargando perfil:', error)
+
+        // En una carga inicial se bloquea el acceso si no pudo verificarse.
+        // Durante un fallo temporal de red se conserva el perfil ya verificado.
+        if (!background) setPerfil(null)
+        return null
+      }
+
+      // Un resultado vacío confirma que ya no existe un perfil asociado.
+      if (!data) {
         setPerfil(null)
         return null
       }
 
-      setPerfil(data)
+      setPerfil((perfilActual) =>
+        perfilesIguales(perfilActual, data)
+          ? perfilActual
+          : data,
+      )
+
       return data
     } catch (error) {
       if (profileRequestGuard.isCurrent(requestVersion)) {
         console.error('Error cargando perfil:', error)
-        setPerfil(null)
+        if (!background) setPerfil(null)
       }
       return null
     } finally {
-      if (profileRequestGuard.isCurrent(requestVersion)) {
+      if (
+        !background &&
+        profileRequestGuard.isCurrent(requestVersion)
+      ) {
         setLoading(false)
       }
     }
   }, [profileRequestGuard])
 
-
   /*
-   * Inicializar sesión y escuchar cambios de autenticación.
+   * Inicializa la sesión y escucha cambios de autenticación.
    */
   useEffect(() => {
     let refreshInProgress = false
@@ -92,23 +114,26 @@ export function AuthProvider({ children }) {
 
     const iniciar = async () => {
       const versionAtStart = authEventVersion
+
       try {
-        const {
-          data,
-          error,
-        } = await supabase.auth.getSession()
+        const { data, error } = await supabase.auth.getSession()
 
         if (error) throw error
         if (!mounted || versionAtStart !== authEventVersion) return
 
         const authUser = data.session?.user ?? null
+
         setUser(authUser)
+        authUserIdRef.current = authUser?.id ?? null
+
         await cargarPerfil(authUser)
       } catch (error) {
         console.error('Error inicializando autenticación:', error)
+
         if (mounted && versionAtStart === authEventVersion) {
           profileRequestGuard.invalidate()
           setUser(null)
+          authUserIdRef.current = null
           setPerfil(null)
           setLoading(false)
         }
@@ -118,16 +143,24 @@ export function AuthProvider({ children }) {
     iniciar()
 
     const {
-      data: {
-        subscription,
-      },
+      data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       authEventVersion += 1
       const authUser = session?.user ?? null
+      const mismaCuenta =
+        Boolean(authUser) &&
+        authUser.id === authUserIdRef.current
 
-      setUser(authUser)
-      // Invalidar solicitudes previas inmediatamente, incluso en logout.
-      void cargarPerfil(authUser)
+      if (!mismaCuenta) {
+        setUser(authUser)
+        authUserIdRef.current = authUser?.id ?? null
+      }
+
+      // Una renovación de token de la misma cuenta revalida sin desmontar
+      // las rutas. Cambiar de cuenta sigue usando la carga bloqueante.
+      void cargarPerfil(authUser, {
+        background: mismaCuenta,
+      })
     })
 
     const refrescarPerfilAlVolver = async () => {
@@ -143,24 +176,28 @@ export function AuthProvider({ children }) {
       const versionAtStart = authEventVersion
 
       try {
-        const {
-          data,
-          error,
-        } = await supabase.auth.getSession()
+        const { data, error } = await supabase.auth.getSession()
 
         if (error) throw error
         if (!mounted || versionAtStart !== authEventVersion) return
 
         const authUser = data.session?.user ?? null
-        setUser(authUser)
-        await cargarPerfil(authUser)
-      } catch (error) {
-        console.error('Error revalidando perfil al volver:', error)
-        if (mounted && versionAtStart === authEventVersion) {
-          profileRequestGuard.invalidate()
-          setPerfil(null)
-          setLoading(false)
+        const mismaCuenta =
+          Boolean(authUser) &&
+          authUser.id === authUserIdRef.current
+
+        if (!mismaCuenta) {
+          setUser(authUser)
+          authUserIdRef.current = authUser?.id ?? null
         }
+
+        await cargarPerfil(authUser, {
+          background: mismaCuenta,
+        })
+      } catch (error) {
+        // Conserva la sesión visible ante un fallo temporal al recuperar
+        // el foco. La próxima revalidación volverá a comprobar el perfil.
+        console.error('Error revalidando perfil al volver:', error)
       } finally {
         refreshInProgress = false
       }
@@ -178,15 +215,11 @@ export function AuthProvider({ children }) {
     }
   }, [cargarPerfil, profileRequestGuard])
 
-
   /*
    * Login
    */
   const login = async (email, password) => {
-    const {
-      data,
-      error,
-    } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
@@ -194,6 +227,8 @@ export function AuthProvider({ children }) {
     if (error) throw error
 
     setUser(data.user)
+    authUserIdRef.current = data.user?.id ?? null
+
     const perfilCargado = await cargarPerfil(data.user)
 
     return {
@@ -202,24 +237,20 @@ export function AuthProvider({ children }) {
     }
   }
 
-
   /*
    * Logout
    */
   const logout = async () => {
-    // Bloquear de inmediato cualquier respuesta de perfil pendiente.
     profileRequestGuard.invalidate()
     setUser(null)
+    authUserIdRef.current = null
     setPerfil(null)
     setLoading(false)
 
-    const {
-      error,
-    } = await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut()
 
     if (error) throw error
   }
-
 
   /*
    * Usuario y permiso habilitados para entrar.
@@ -232,7 +263,6 @@ export function AuthProvider({ children }) {
     perfil.permiso &&
     perfil.permiso.estado === true,
   )
-
 
   return (
     <AuthContext.Provider

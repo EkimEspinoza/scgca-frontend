@@ -108,3 +108,30 @@ export async function actualizarComparativo(
 
     return data
 }
+export async function cambiarEstadoComparativo(
+    idComparativo,
+    estado,
+) {
+    const { data, error } = await supabase
+        .from('dim_comparativo')
+        .update({
+            estado,
+            updated_at: new Date().toISOString(),
+        })
+        .eq('id_comparativo', idComparativo)
+        .select(`
+            id_comparativo,
+            descripcion,
+            estado,
+            created_at,
+            updated_at
+        `)
+        .single()
+
+    if (error) {
+        console.error('Error cambiando estado del comparativo:', error)
+        throw error
+    }
+
+    return data
+}

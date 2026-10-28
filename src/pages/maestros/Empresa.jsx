@@ -1,18 +1,23 @@
 // =========================================================
-// IMPORTS
-// =========================================================
+ // IMPORTS
+ // =========================================================
 
 import { useEffect, useRef, useMemo, useState } from 'react'
 
 import {
-  Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
-  DialogTitle, IconButton, Paper, Snackbar, TextField, Typography, Tooltip
+  Alert, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent,
+  DialogTitle, IconButton, MenuItem, Paper, Snackbar, Switch, TextField, Typography, Tooltip
 } from '@mui/material'
 
 import { Add, Close, Edit, Save } from '@mui/icons-material'
+import useMediaQuery from '@mui/material/useMediaQuery'
 
-import { obtenerTodasLasEmpresas, crearEmpresa, actualizarEmpresa } from '../../services/empresaService'
-
+import {
+  obtenerTodasLasEmpresas,
+  crearEmpresa,
+  actualizarEmpresa,
+  cambiarEstadoEmpresa,
+} from '../../services/empresaService'
 import SearchInput from '../../components/common/SearchInput'
 import StatusChip from '../../components/common/StatusChip'
 import Pagination from '../../components/common/Pagination'
@@ -22,8 +27,13 @@ import DataTable from '../../components/common/DataTable'
 const formularioInicial = { descripcion: '', nombre_comercial: '', estado: true }
 
 function Empresas() {
+  const esVistaMovil = useMediaQuery('(max-width:760px)')
   const [empresas, setEmpresas] = useState([])
   const [empresaSeleccionada, setEmpresaSeleccionada] = useState(null)
+
+
+  const [empresaCambioEstado, setEmpresaCambioEstado] = useState(null)
+  const [cambiandoEstado, setCambiandoEstado] = useState(false)
 
   // =========================================================
   // DATOS - DIÁLOGO - FORMULARIO - BÚSQUEDA - PAGINACIÓN&& NO EDITABLE
@@ -41,6 +51,7 @@ function Empresas() {
   const [erroresFormulario, setErroresFormulario] = useState({})
 
   const [busqueda, setBusqueda] = useState('')
+  const [filtroEstado, setFiltroEstado] = useState('todos')
 
   const [pagina, setPagina] = useState(0)
   const [registrosPorPagina, setRegistrosPorPagina] = useState(10)
@@ -72,6 +83,58 @@ function Empresas() {
     cargarEmpresas()
   }, [])
 
+
+
+  const handleSolicitarCambioEstado = (empresa) => {
+  setEmpresaCambioEstado({
+    ...empresa,
+    nuevoEstado: !Boolean(empresa.estado),
+  })
+}
+
+const handleCerrarConfirmacionEstado = () => {
+  if (cambiandoEstado) return
+  setEmpresaCambioEstado(null)
+}
+
+const handleConfirmarCambioEstado = async () => {
+  if (!empresaCambioEstado) return
+
+  const { id_empresa, nuevoEstado } = empresaCambioEstado
+
+  try {
+    setCambiandoEstado(true)
+    setError('')
+
+    const empresaActualizada = await cambiarEstadoEmpresa(
+      id_empresa,
+      nuevoEstado,
+    )
+
+    setEmpresas((actuales) =>
+      actuales.map((empresa) =>
+        empresa.id_empresa === id_empresa
+          ? empresaActualizada
+          : empresa,
+      ),
+    )
+
+    setMensaje(
+      nuevoEstado
+        ? 'Empresa reactivada correctamente.'
+        : 'Empresa desactivada correctamente.',
+    )
+
+    setEmpresaCambioEstado(null)
+    setPagina(0)
+  } catch (err) {
+    console.error('Error cambiando estado de empresa:', err)
+    setError(err?.message || 'No se pudo cambiar el estado de la empresa.')
+  } finally {
+    setCambiandoEstado(false)
+  }
+}
+
   // =========================================================
   // DATOS FILTRADOS
   // =========================================================
@@ -79,15 +142,23 @@ function Empresas() {
   const empresasFiltrados =
     useMemo(() => {
       const texto = busqueda.trim().toLowerCase()
-      if (!texto) { return empresas }
-      return empresas.filter(
-        (empresas) =>
-          empresas.descripcion?.toLowerCase().includes(texto))
-    },
-      [empresas, busqueda])
+
+      return empresas.filter((empresa) => {
+        const coincideTexto =
+          empresa.descripcion?.toLowerCase().includes(texto) ||
+          empresa.nombre_comercial?.toLowerCase().includes(texto)
+
+        const coincideEstado =
+          filtroEstado === 'todos' ||
+          (filtroEstado === 'activos' && Boolean(empresa.estado)) ||
+          (filtroEstado === 'inactivos' && !Boolean(empresa.estado))
+
+        return coincideTexto && coincideEstado
+      })
+    }, [empresas, busqueda, filtroEstado])
 
   // =========================================================
-  // DATOS PAGINADOS 
+  // DATOS PAGINADOS
   // =========================================================
 
   const empresasPaginados =
@@ -183,18 +254,6 @@ function Empresas() {
   }
 
   // =========================================================
-  // CAMBIAR ESTADO && NO EDITABLE
-  // =========================================================
-
-  const handleCambiarEstadoFormulario =
-    () => {
-      setFormulario((prev) => ({
-        ...prev,
-        estado: !prev.estado,
-      }))
-    }
-
-  // =========================================================
   // VALIDAR FORMULARIO
   // =========================================================
 
@@ -288,7 +347,30 @@ function Empresas() {
       width: 'auto',
       whiteSpace: 'nowrap',
       render: (empresa) => (
-        <StatusChip estado={empresa.estado} activoLabel="Activo" inactivoLabel="Inactivo" />
+        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+          <Tooltip
+            title={empresa.estado ? 'Desactivar empresa' : 'Reactivar empresa'}
+          >
+            <span>
+              <Switch
+                checked={Boolean(empresa.estado)}
+                onChange={() => handleSolicitarCambioEstado(empresa)}
+                disabled={cambiandoEstado}
+                size="small"
+                inputProps={{
+                  'aria-label': (empresa.estado ? 'Desactivar ' : 'Reactivar ')
+                    + empresa.descripcion,
+                }}
+              />
+            </span>
+          </Tooltip>
+
+          <StatusChip
+            estado={empresa.estado}
+            activoLabel="Activo"
+            inactivoLabel="Inactivo"
+          />
+        </Box>
       )
     },
 
@@ -322,38 +404,96 @@ function Empresas() {
   return (
 
 
-    <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflowX: 'hidden', overflowY: 'auto' }}>
 
       {/* =====================================================
       ENCABEZADO
             ====================================================== */}
 
-      <PageHeader
-        title="Empresas"
-        description="Administración de empresas del sistema"
-        actionLabel="Nueva Empresa"
-        onAction={handleNuevaEmpresa}
-        actionIcon={<Add />}
-      />
+      <Box
+        sx={{
+          '& > .MuiBox-root': {
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' },
+          },
+          '& > .MuiBox-root > .MuiButton-root': {
+            width: { xs: '100%', sm: 'auto' },
+          },
+        }}
+      >
+        <PageHeader
+          title={
+            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+              Empresas
+
+            </Box>
+          }
+          description="Administración de empresas del sistema"
+          actionLabel="Nueva Empresa"
+          onAction={handleNuevaEmpresa}
+          actionIcon={<Add />}
+        />
+      </Box>
 
       {/* =================================================
-      BUSCADOR 
+      BUSCADOR
             ================================================= */}
 
       <Paper
         elevation={0}
         sx={{
-          width: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', border: '1px solid', borderColor: 'divider', borderRadius: 1,
+          width: '100%', minWidth: 0, flex: '0 0 auto', display: 'flex', flexDirection: 'column', border: '1px solid', borderColor: 'divider', borderRadius: 1,
           overflow: 'hidden', backgroundColor: 'background.paper', marginBottom: 1
         }}>
 
-        <Box sx={{ p: 2, flexShrink: 0, backgroundColor: 'background.paper' }}>
-          <SearchInput
-            value={busqueda.toUpperCase()}
-            onChange={handleCambioBusqueda}
-            placeholder="Buscar empresa..."
-            ariaLabel="Buscar empresa"
-          />
+        <Box
+          sx={{
+            p: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            flexWrap: 'wrap',
+            backgroundColor: 'background.paper',
+          }}
+        >
+          <Box sx={{ flex: '1 1 280px', minWidth: { xs: '100%', sm: 240 } }}>
+            <SearchInput
+              value={busqueda}
+              onChange={handleCambioBusqueda}
+              placeholder="Buscar empresa o nombre comercial..."
+              ariaLabel="Buscar empresa o nombre comercial"
+              maxWidth="none"
+            />
+          </Box>
+
+          <TextField
+            select
+            size="small"
+            label="Estado"
+            value={filtroEstado}
+            onChange={(event) => {
+              setFiltroEstado(event.target.value)
+              setPagina(0)
+            }}
+            sx={{ width: { xs: '100%', sm: 190 }, flexShrink: 0 }}
+          >
+            <MenuItem value="todos">Todas</MenuItem>
+            <MenuItem value="activos">Activo</MenuItem>
+            <MenuItem value="inactivos">Inactivo</MenuItem>
+          </TextField>
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            aria-live="polite"
+            sx={{
+              ml: { xs: 'auto', sm: 0 },
+              whiteSpace: 'nowrap',
+              fontWeight: 500,
+            }}
+          >
+            {totalRegistros} {totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}
+          </Typography>
         </Box>
 
         {/* =================================================
@@ -370,26 +510,118 @@ function Empresas() {
       </Paper>
 
       {/* =================================================
-                    TABLA 
+                    TABLA
                 ================================================= */}
 
       <Paper
         elevation={0}
         sx={{
-          width: '100%', minWidth: 0, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column',
-          border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden', backgroundColor: 'background.paper'
+          width: '100%',
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          flex: '0 0 auto',
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1,
+          overflow: 'hidden',
+          backgroundColor: 'background.paper',
+          '& .MuiTableContainer-root': {
+            flex: '0 1 auto',
+            maxHeight: { xs: 420, sm: 560 },
+          },
         }}>
 
-        <DataTable
-          columns={columnas}
-          rows={empresasPaginados}
-          loading={loading}
-          emptyMessage={'No existen empresas registradas.'}
-          emptySearchMessage={'No se encontraron empresas.'}
-          hasSearch={Boolean(busqueda.trim())}
-          getRowKey={(empresa) => empresa.id_empresa}
-
-        />
+        {esVistaMovil ? (
+          <Box
+            component="ul"
+            aria-label="Lista de empresas"
+            sx={{
+              listStyle: 'none',
+              m: 0,
+              p: 0,
+              flex: '0 1 auto',
+              maxHeight: 420,
+              overflowY: 'auto',
+            }}
+          >
+            {loading ? (
+              <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
+                <CircularProgress size={28} />
+              </Box>
+            ) : empresasPaginados.length === 0 ? (
+              <Typography color="text.secondary" align="center" sx={{ p: 3 }}>
+                {Boolean(busqueda.trim()) || filtroEstado !== 'todos'
+                  ? 'No se encontraron empresas.'
+                  : 'No existen empresas registradas.'}
+              </Typography>
+            ) : empresasPaginados.map((empresa) => (
+              <Box
+                component="li"
+                key={empresa.id_empresa}
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) auto',
+                  columnGap: 1,
+                  alignItems: 'center',
+                  px: 1.5,
+                  py: 1.25,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  '&:last-child': { borderBottom: 0 },
+                }}
+              >
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
+                    {empresa.descripcion}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, overflowWrap: 'anywhere' }}>
+                    Nombre comercial: {empresa.nombre_comercial || 'Sin especificar'}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.75 }}>
+                    <Tooltip title={empresa.estado ? 'Desactivar empresa' : 'Reactivar empresa'}>
+                      <span>
+                        <Switch
+                          checked={Boolean(empresa.estado)}
+                          onChange={() => handleSolicitarCambioEstado(empresa)}
+                          disabled={cambiandoEstado}
+                          size="small"
+                          inputProps={{
+                            'aria-label': `${empresa.estado ? 'Desactivar' : 'Reactivar'} ${empresa.descripcion}`,
+                          }}
+                        />
+                      </span>
+                    </Tooltip>
+                    <StatusChip
+                      estado={empresa.estado}
+                      activoLabel="Activo"
+                      inactivoLabel="Inactivo"
+                    />
+                  </Box>
+                </Box>
+                <Tooltip title="Editar empresa">
+                  <IconButton
+                    aria-label={`Editar ${empresa.descripcion}`}
+                    onClick={() => handleEditarEmpresa(empresa)}
+                    sx={{ minWidth: 44, minHeight: 44 }}
+                  >
+                    <Edit fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <DataTable
+            columns={columnas}
+            rows={empresasPaginados}
+            loading={loading}
+            emptyMessage={'No existen empresas registradas.'}
+            emptySearchMessage={'No se encontraron empresas.'}
+            hasSearch={Boolean(busqueda.trim()) || filtroEstado !== 'todos'}
+            getRowKey={(empresa) => empresa.id_empresa}
+          />
+        )}
 
         {/* =================================================
                     PAGINACIÓN
@@ -403,6 +635,7 @@ function Empresas() {
           registrosPorPagina={registrosPorPagina}
           onPageChange={handleChangePagina}
           onRowsPerPageChange={handleChangeRegistrosPorPagina}
+          opciones={[5, 10]}
 
 
         />
@@ -467,19 +700,7 @@ function Empresas() {
               inputProps={{ style: { textTransform: 'uppercase' } }}
             />
 
-            {/* ESTADO */}
 
-            <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
-                Estado
-              </Typography>
-
-              <StatusChip
-                estado={formulario.estado}
-                onClick={!guardando ? handleCambiarEstadoFormulario : undefined}
-                disabled={guardando}
-              />
-            </Box>
           </Box>
 
         </DialogContent>
@@ -514,6 +735,54 @@ function Empresas() {
 
       </Dialog>
 
+      <Dialog
+        open={Boolean(empresaCambioEstado)}
+        onClose={handleCerrarConfirmacionEstado}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          {empresaCambioEstado?.nuevoEstado
+            ? 'Reactivar empresa'
+            : 'Desactivar empresa'}
+        </DialogTitle>
+
+        <DialogContent>
+          <Typography>
+            {empresaCambioEstado?.nuevoEstado
+              ? '¿Deseas reactivar "' + empresaCambioEstado?.descripcion + '"?'
+              : '¿Deseas desactivar "' + empresaCambioEstado?.descripcion
+                + '"? El registro se conservará en la base de datos.'}
+          </Typography>
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={handleCerrarConfirmacionEstado}
+            disabled={cambiandoEstado}
+          >
+            Cancelar
+          </Button>
+
+          <Button
+            variant="contained"
+            color={empresaCambioEstado?.nuevoEstado ? 'success' : 'warning'}
+            onClick={handleConfirmarCambioEstado}
+            disabled={cambiandoEstado}
+            startIcon={
+              cambiandoEstado
+                ? <CircularProgress size={16} color="inherit" />
+                : undefined
+            }
+          >
+            {cambiandoEstado
+              ? 'Guardando...'
+              : empresaCambioEstado?.nuevoEstado
+                ? 'Reactivar'
+                : 'Desactivar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
       {/* =====================================================
                 NOTIFICACIONES && NO EDITABLE
             ====================================================== */}

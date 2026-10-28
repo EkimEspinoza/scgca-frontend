@@ -82,3 +82,30 @@ export async function actualizarEtapaCosto(idEtapa, datos) {
 
     return data
 }
+export async function cambiarEstadoEtapaCosto(
+    codEtapa,
+    estado,
+) {
+    const { data, error } = await supabase
+        .from('Dim_Etapa_Costo')
+        .update({
+            estado,
+            updated_at: new Date().toISOString(),
+        })
+        .eq('cod_etapa', codEtapa)
+        .select(`
+            cod_etapa,
+            etapa_costo,
+            estado,
+            created_at,
+            updated_at
+        `)
+        .single()
+
+    if (error) {
+        console.error('Error cambiando estado de etapa de costo:', error)
+        throw error
+    }
+
+    return data
+}
