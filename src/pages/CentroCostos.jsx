@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Paper, Snackbar, Typography, } from '@mui/material'
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Snackbar, Typography, } from '@mui/material'
 import { Add as AddIcon, Storage as StorageIcon, TableView as TableViewIcon } from '@mui/icons-material'
 
 import { useCentroCosto } from '../hooks/useCentroCosto'
@@ -6,6 +6,7 @@ import { useCentroCosto } from '../hooks/useCentroCosto'
 import CentroCostoFilters from '../components/centroCosto/CentroCostoFilters'
 import CentroCostoTable from '../components/centroCosto/CentroCostoTable'
 import CentroCostoForm from '../components/centroCosto/CentroCostoForm'
+import CompactModuleTheme from '../components/common/CompactModuleTheme'
 
 
 function CentroCostos() {
@@ -55,6 +56,8 @@ function CentroCostos() {
     // =====================================================
 
     notificacion,
+    cambioEstadoPendiente,
+    cambiandoEstado,
 
      // =====================================================
      // FILTROS
@@ -108,13 +111,16 @@ function CentroCostos() {
     cerrarNuevoCentroCosto,
 
     handleCentroCostoGuardado,
+    handleSolicitarCambioEstado,
+    handleCerrarConfirmacionEstado,
+    handleConfirmarCambioEstado,
     cerrarNotificacion,
 
   } = useCentroCosto()
 
 
   return (
-    
+    <CompactModuleTheme>
 
     <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
@@ -126,7 +132,7 @@ function CentroCostos() {
         sx={{
           display: 'flex',flexDirection: {xs: 'column',sm: 'row'},
           alignItems: {xs: 'stretch',sm: 'center'},justifyContent:'space-between',
-          gap: 2,flexShrink: 0,mb: 1,minWidth: 0,
+          gap: 1.5,flexShrink: 0,mb: 0.75,minWidth: 0,
         }}
       >
 
@@ -134,13 +140,13 @@ function CentroCostos() {
             TÍTULO
         ================================================== */}
 
-        <Box sx={{display: 'flex',alignItems: 'center',gap: 1.75,minWidth: 0}}>
-          <Box sx={{width: 56,height: 56,flexShrink: 0,display: 'flex',alignItems: 'center',justifyContent: 'center',borderRadius: 1,backgroundColor:'primary.light',color:'primary.dark',opacity: 0.95}}>
-            <StorageIcon sx={{fontSize: 32}}/>
+        <Box sx={{display: 'flex',alignItems: 'center',gap: 1.25,minWidth: 0}}>
+          <Box sx={{width: 48,height: 48,flexShrink: 0,display: 'flex',alignItems: 'center',justifyContent: 'center',borderRadius: 1,backgroundColor:'primary.light',color:'primary.dark',opacity: 0.95}}>
+            <StorageIcon sx={{fontSize: 27}}/>
           </Box>
 
           <Box sx={{minWidth: 0}}>
-            <Typography component="h1" sx={{fontSize: {xs: '1.5rem',sm: '1.75rem'},lineHeight: 1.2,fontWeight: 700,color:'text.primary'}}>
+            <Typography component="h1" sx={{fontSize: {xs: '1.25rem',sm: '1.375rem'},lineHeight: 1.2,fontWeight: 700,color:'text.primary'}}>
               Centros de Costo
             </Typography>
 
@@ -154,7 +160,7 @@ function CentroCostos() {
             ACCIONES
         ================================================== */}
 
-        <Box sx={{display: 'flex',flexDirection: {xs: 'column',sm: 'row',},gap: 1,width: {xs: '100%',sm: 'auto'},flexShrink: 0}}>
+        <Box sx={{display: 'flex',flexDirection: 'row',gap: 0.75,width: {xs: '100%',sm: 'auto'},flexShrink: 0,minWidth: 0}}>
 
           {/* =============================================
               EXPORTAR EXCEL
@@ -165,7 +171,7 @@ function CentroCostos() {
             startIcon={<TableViewIcon />}
             onClick={handleExportarExcel}
             disabled={ exportandoExcel ||loadingMaestros ||loadingOpciones}
-            sx={{minWidth: {xs: '100%',sm: 170},height: 44,fontWeight: 700,borderRadius: 1,boxShadow: 'none','&:hover': {boxShadow: 'none'}}}
+            sx={{minWidth: 0,flex: {xs: '1 1 0%',sm: '0 1 auto'},height: 36,whiteSpace: 'nowrap',fontSize: {xs: '0.6875rem',sm: '0.75rem'},px: {xs: 0.75,sm: 1.5},fontWeight: 700,borderRadius: 1,boxShadow: 'none','&:hover': {boxShadow: 'none'}}}
           >
             {exportandoExcel ? 'Exportando...' : 'Exportar Excel'}
           </Button>
@@ -178,7 +184,7 @@ function CentroCostos() {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={abrirNuevoCentroCosto}
-            sx={{minWidth: {xs: '100%',sm: 220},height: 44,flexShrink: 0,fontWeight: 700,borderRadius: 1,boxShadow: 'none','&:hover': {boxShadow: 'none'}}}>
+            sx={{minWidth: 0,flex: {xs: '1 1 0%',sm: '0 1 auto'},height: 36,whiteSpace: 'nowrap',fontSize: {xs: '0.6875rem',sm: '0.75rem'},px: {xs: 0.75,sm: 1.5},flexShrink: 0,fontWeight: 700,borderRadius: 1,boxShadow: 'none','&:hover': {boxShadow: 'none'}}}>
             Nuevo Centro de Costo
           </Button>
 
@@ -191,7 +197,7 @@ function CentroCostos() {
           FILTROS
       ====================================================== */}
 
-      <Box sx={{flexShrink: 0,minWidth: 0 ,mb: 1}}>
+      <Box sx={{flexShrink: 0,minWidth: 0 ,mb: 0.75}}>
 
         <CentroCostoFilters
           empresas={empresas}
@@ -233,7 +239,7 @@ function CentroCostos() {
       ====================================================== */}
 
       {error && (
-        <Paper elevation={0} sx={{p: 2,mb: 2,flexShrink: 0,borderRadius: 1,border: '1px solid', borderColor:'divider'}}>
+        <Paper elevation={0} sx={{p: 1.5,mb: 1.5,flexShrink: 0,borderRadius: 1,border: '1px solid', borderColor:'divider'}}>
           <Alert severity="error">
             {error}
           </Alert>
@@ -256,6 +262,8 @@ function CentroCostos() {
           onChangePagina={handleChangePagina}
           onChangeRegistrosPorPagina={handleChangeRegistrosPorPagina}
           onEditar={abrirEditarCentroCosto}
+          onCambiarEstado={handleSolicitarCambioEstado}
+          cambiandoEstado={cambiandoEstado}
         />
 
       </Box>
@@ -281,6 +289,36 @@ function CentroCostos() {
       />
 
 
+      <Dialog
+        open={Boolean(cambioEstadoPendiente)}
+        onClose={handleCerrarConfirmacionEstado}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          {cambioEstadoPendiente?.nuevoEstado ? 'Activar Centro de Costo' : 'Desactivar Centro de Costo'}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            {cambioEstadoPendiente?.nuevoEstado
+              ? `¿Deseas activar el Centro de Costo ${cambioEstadoPendiente?.cod_cc}?`
+              : `¿Deseas desactivar el Centro de Costo ${cambioEstadoPendiente?.cod_cc}? El registro se conservará en la base de datos.`}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCerrarConfirmacionEstado} disabled={cambiandoEstado}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            color={cambioEstadoPendiente?.nuevoEstado ? 'success' : 'warning'}
+            onClick={handleConfirmarCambioEstado}
+            disabled={cambiandoEstado}
+          >
+            {cambiandoEstado ? 'Guardando...' : cambioEstadoPendiente?.nuevoEstado ? 'Activar' : 'Desactivar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
       {/* =====================================================
           NOTIFICACIÓN
       ====================================================== */}
@@ -301,6 +339,7 @@ function CentroCostos() {
         </Alert>
       </Snackbar>
     </Box>
+    </CompactModuleTheme>
   )
 }
 

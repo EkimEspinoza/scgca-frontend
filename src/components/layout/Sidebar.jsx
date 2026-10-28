@@ -76,23 +76,23 @@ function Sidebar({
     const menuItems = [
         {
             text: 'Dashboard',
-            icon: <DashboardIcon />,
+            icon: <DashboardIcon fontSize="small" />,
             path: '/dashboard',
         },
         {
             text: 'Usuarios',
-            icon: <People />,
+            icon: <People fontSize="small" />,
             path: '/usuarios',
             permissions: ['ADMIN'],
         },
         {
             text: 'Reportes',
-            icon: <Assessment />,
+            icon: <Assessment fontSize="small" />,
             path: '/reportes',
         },
         {
             text: 'Configuración',
-            icon: <Settings />,
+            icon: <Settings fontSize="small" />,
             path: '/configuracion',
             permissions: ['ADMIN'],
         },
@@ -223,17 +223,18 @@ function Sidebar({
                 {/* HEADER DEL SIDEBAR */}
                 <Box
                     sx={{
-                        height: 64,
+                        height: 56,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        px: 1.5,
+                        px: 1.25,
                     }}
                 >
                     <Typography
                         variant="h6"
                         color="primary"
                         sx={{
+                            fontSize: '1.125rem',
                             fontWeight: 700,
                             letterSpacing: 0.5,
                         }}
@@ -251,7 +252,7 @@ function Sidebar({
                 <Divider />
 
                 {/* MENÚ PRINCIPAL */}
-                <List sx={{ px: 0.5, py: 1 }}>
+                <List sx={{ px: 0.5, py: 0.75 }}>
                     {itemsVisibles.map((item) => {
                         const active = isActive(item.path)
                         return (
@@ -260,7 +261,7 @@ function Sidebar({
                                 selected={active}
                                 onClick={() => handleNavigate(item.path)}
                                 sx={{
-                                    minHeight: 48,
+                                    minHeight: 42,
                                     justifyContent: 'initial',
                                     px: 2,
                                     '&.Mui-selected': {
@@ -287,7 +288,7 @@ function Sidebar({
                                 >
                                     {item.icon}
                                 </ListItemIcon>
-                                <ListItemText primary={item.text} />
+                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
                             </ListItemButton>
                         )
                     })}
@@ -296,7 +297,7 @@ function Sidebar({
                     <ListItemButton
                         onClick={handleMaestrosToggle}
                         sx={{
-                            minHeight: 48,
+                            minHeight: 42,
                             justifyContent: 'initial',
                             px: 2,
                             backgroundColor: maestrosActivo
@@ -314,9 +315,9 @@ function Sidebar({
                                 justifyContent: 'center',
                             }}
                         >
-                            <Category />
+                            <Category fontSize="small" />
                         </ListItemIcon>
-                        <ListItemText primary="Maestros" />
+                        <ListItemText primary="Maestros" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
                         {maestrosOpen ? (
                             <ExpandMore fontSize="small" />
                         ) : (
@@ -333,7 +334,7 @@ function Sidebar({
                                         selected={active}
                                         onClick={() => handleNavigate(item.path)}
                                         sx={{
-                                            minHeight: 44,
+                                            minHeight: 38,
                                             /*
                                              * Se mantiene el ajuste de indentación
                                              * para acercar las opciones hacia la izquierda.
@@ -352,7 +353,7 @@ function Sidebar({
                                             },
                                         }}
                                     >
-                                        <ListItemText primary={item.text} />
+                                        <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
                                     </ListItemButton>
                                 )
                             })}
@@ -366,7 +367,7 @@ function Sidebar({
                     <ListItemButton
                         onClick={handleLogout}
                         sx={{
-                            minHeight: 48,
+                            minHeight: 42,
                             justifyContent: 'initial',
                             px: 2,
                             color: 'text.secondary',
@@ -384,9 +385,9 @@ function Sidebar({
                                 color: 'inherit',
                             }}
                         >
-                            <Logout />
+                                <Logout fontSize="small" />
                         </ListItemIcon>
-                        <ListItemText primary="Cerrar sesión" />
+                        <ListItemText primary="Cerrar sesión" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
                     </ListItemButton>
                 </Box>
             </Drawer>
@@ -419,11 +420,11 @@ function Sidebar({
             {/* HEADER DEL SIDEBAR */}
             <Box
                 sx={{
-                    height: 64,
+                    height: 56,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: collapsed ? 'center' : 'space-between',
-                    px: 1.5,
+                    px: 1.25,
                 }}
             >
                 {!collapsed && (
@@ -431,6 +432,7 @@ function Sidebar({
                         variant="h6"
                         color="primary"
                         sx={{
+                            fontSize: '1.125rem',
                             fontWeight: 700,
                             letterSpacing: 0.5,
                             whiteSpace: 'nowrap',
@@ -450,7 +452,7 @@ function Sidebar({
             <Divider />
 
             {/* MENÚ PRINCIPAL */}
-            <List sx={{ px: 0.5, py: 1 }}>
+            <List sx={{ px: 0.5, py: 0.75 }}>
                 {itemsVisibles.map((item) => {
                     const active = isActive(item.path)
                     const button = (
@@ -459,7 +461,7 @@ function Sidebar({
                             selected={active}
                             onClick={() => handleNavigate(item.path)}
                             sx={{
-                                minHeight: 48,
+                                minHeight: 42,
                                 justifyContent: collapsed ? 'center' : 'initial',
                                 px: 2,
                                 '&.Mui-selected': {
@@ -486,7 +488,7 @@ function Sidebar({
                             >
                                 {item.icon}
                             </ListItemIcon>
-                            {!collapsed && <ListItemText primary={item.text} />}
+                            {!collapsed && <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />}
                         </ListItemButton>
                     )
                     if (collapsed) {
@@ -507,7 +509,7 @@ function Sidebar({
                 <ListItemButton
                     onClick={handleMaestrosToggle}
                     sx={{
-                        minHeight: 48,
+                        minHeight: 42,
                         justifyContent: collapsed ? 'center' : 'initial',
                         px: 2,
                         backgroundColor: maestrosActivo
@@ -525,11 +527,11 @@ function Sidebar({
                             justifyContent: 'center',
                         }}
                     >
-                        <Category />
+                        <Category fontSize="small" />
                     </ListItemIcon>
                     {!collapsed && (
                         <>
-                            <ListItemText primary="Maestros" />
+                            <ListItemText primary="Maestros" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
                             {maestrosOpen ? (
                                 <ExpandMore fontSize="small" />
                             ) : (
@@ -549,7 +551,7 @@ function Sidebar({
                                         selected={active}
                                         onClick={() => handleNavigate(item.path)}
                                         sx={{
-                                            minHeight: 44,
+                                            minHeight: 38,
                                             /*
                                              * Se mantiene el ajuste de indentación
                                              * que mueve las opciones hacia la izquierda.
@@ -571,7 +573,7 @@ function Sidebar({
                                         {/*
                                          * Las opciones de Maestros no utilizan iconos individuales.
                                          */}
-                                        <ListItemText primary={item.text} />
+                                        <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
                                     </ListItemButton>
                                 )
                             })}
@@ -584,7 +586,7 @@ function Sidebar({
                             <ListItemButton
                                 onClick={handleMaestrosToggle}
                                 sx={{
-                                    minHeight: 48,
+                                    minHeight: 42,
                                     justifyContent: 'center',
                                     px: 2,
                                     backgroundColor: maestrosActivo
@@ -601,7 +603,7 @@ function Sidebar({
                                         justifyContent: 'center',
                                     }}
                                 >
-                                    <Category />
+                                    <Category fontSize="small" />
                                 </ListItemIcon>
                             </ListItemButton>
                         </Box>
@@ -619,7 +621,7 @@ function Sidebar({
                     <ListItemButton
                         onClick={handleLogout}
                         sx={{
-                            minHeight: 48,
+                            minHeight: 42,
                             justifyContent: collapsed ? 'center' : 'initial',
                             px: 2,
                             color: 'text.secondary',
@@ -637,9 +639,9 @@ function Sidebar({
                                 color: 'inherit',
                             }}
                         >
-                            <Logout />
+                            <Logout fontSize="small" />
                         </ListItemIcon>
-                        {!collapsed && <ListItemText primary="Cerrar sesión" />}
+                        {!collapsed && <ListItemText primary="Cerrar sesión" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />}
                     </ListItemButton>
                 </Tooltip>
             </Box>

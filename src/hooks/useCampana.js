@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { obtenerCampanas, obtenerEmpresasActivas, obtenerCentrosCostoParaCampana, crearCampana, actualizarCampana, eliminarCampana } from '../services/campanaService'
+import { obtenerCampanas, obtenerEmpresasActivas, obtenerCentrosCostoParaCampana, crearCampana, actualizarCampana, cambiarEstadoCampana, eliminarCampana } from '../services/campanaService'
 import { validarFormularioCampana, construirDatosCampana, obtenerMensajeErrorCampana } from '../components/campanas/campanaRules'
 
 export const formularioInicial = {
@@ -13,6 +13,13 @@ export const formularioInicial = {
     hectareas: '',
     estado: true,
     cierre_camp: false,
+}
+
+function sumarUnDia(fecha) {
+    if (!fecha) return ''
+    const [anio, mes, dia] = fecha.split('-').map(Number)
+    if (!anio || !mes || !dia) return ''
+    return new Date(Date.UTC(anio, mes - 1, dia + 1)).toISOString().slice(0, 10)
 }
 
 function useCampana({ codCcPkContextual = '' } = {}) {
@@ -70,6 +77,8 @@ function useCampana({ codCcPkContextual = '' } = {}) {
     const [guardando, setGuardando] = useState(false)
     const [eliminando, setEliminando] = useState(false)
     const [errorFormulario, setErrorFormulario] = useState('')
+    const [campanaCambioEstado, setCampanaCambioEstado] = useState(null)
+    const [cambiandoEstado, setCambiandoEstado] = useState(false)
     const [exportandoExcel, setExportandoExcel] = useState(false)
 
     // ============================================================
@@ -83,6 +92,17 @@ function useCampana({ codCcPkContextual = '' } = {}) {
     // ============================================================
 
     const esModoContextual = Boolean(codCcPkContextual)
+
+    const ultimaCampanaCentroCosto = useMemo(() => {
+        if (!formulario.cod_cc_pk || modoEdicion) return null
+
+        return campanas
+            .filter((campana) => String(campana.cod_cc_pk) === String(formulario.cod_cc_pk))
+            .sort((a, b) =>
+                (b.fecha_fin ?? '').localeCompare(a.fecha_fin ?? '') ||
+                (b.fecha_fin_ctb ?? '').localeCompare(a.fecha_fin_ctb ?? ''),
+            )[0] ?? null
+    }, [campanas, formulario.cod_cc_pk, modoEdicion])
 
     const mostrarMensaje = useCallback((message, severity = 'success') => {
         setSnackbar({ open: true, message, severity })
@@ -141,6 +161,10 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         void cargarCentrosCosto(formulario.id_empresa)
     }, [formulario.id_empresa, cargarCentrosCosto])
 
+    function handleBusquedaChange(event) {
+        setBusqueda(event.target.value)
+        setPagina(0)
+    }
     // ============================================================
     // FILTRO POR EMPRESA
     // ============================================================
@@ -390,9 +414,18 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         setCampanaSeleccionada(null)
         setErrorFormulario('')
         if (esModoContextual) {
+            const ultimaCampana = campanas
+                .filter((campana) => String(campana.cod_cc_pk) === String(codCcPkContextual))
+                .sort((a, b) =>
+                    (b.fecha_fin ?? '').localeCompare(a.fecha_fin ?? '') ||
+                    (b.fecha_fin_ctb ?? '').localeCompare(a.fecha_fin_ctb ?? ''),
+                )[0]
+
             setFormulario({
                 ...formularioInicial,
-                cod_cc_pk: String(codCcPkContextual)
+                cod_cc_pk: String(codCcPkContextual),
+                fecha_inicio: sumarUnDia(ultimaCampana?.fecha_fin),
+                fecha_inicio_ctb: sumarUnDia(ultimaCampana?.fecha_fin_ctb),
             })
         } else { setFormulario(formularioInicial) }
         setCentrosCosto([])
@@ -409,6 +442,7 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         setCampanaSeleccionada(campana)
         setFormulario({
             id_campana_emp: campana.id_campana_emp?.toString() ?? '',
+            nombre_campana: campana.nombre_campana ?? '',
             id_empresa: campana.id_empresa?.toString() ?? '',
             cod_cc_pk: campana.cod_cc_pk?.toString() ?? '',
             fecha_inicio: campana.fecha_inicio ?? '',
@@ -444,6 +478,24 @@ function useCampana({ codCcPkContextual = '' } = {}) {
 
     function handleChange(event) {
         const { name, value } = event.target
+
+        if (name === 'cod_cc_pk' && !modoEdicion) {
+            const ultimaCampana = campanas
+                .filter((campana) => String(campana.cod_cc_pk) === String(value))
+                .sort((a, b) =>
+                    (b.fecha_fin ?? '').localeCompare(a.fecha_fin ?? '') ||
+                    (b.fecha_fin_ctb ?? '').localeCompare(a.fecha_fin_ctb ?? ''),
+                )[0]
+
+            setFormulario((prev) => ({
+                ...prev,
+                [name]: value,
+                fecha_inicio: sumarUnDia(ultimaCampana?.fecha_fin),
+                fecha_inicio_ctb: sumarUnDia(ultimaCampana?.fecha_fin_ctb),
+            }))
+            return
+        }
+
         setFormulario((prev) => ({ ...prev, [name]: value }))
     }
 
@@ -455,6 +507,45 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         setFormulario((prev) => ({ ...prev, [campo]: valor }))
     }
 
+    function solicitarCambioEstado(campana) {
+        setCampanaCambioEstado({
+            ...campana,
+            nuevoEstado: !Boolean(campana.estado),
+        })
+    }
+
+    function cerrarConfirmacionCambioEstado() {
+        if (cambiandoEstado) return
+        setCampanaCambioEstado(null)
+    }
+
+    async function confirmarCambioEstado() {
+        if (!campanaCambioEstado) return
+
+        const { id_campana, nuevoEstado } = campanaCambioEstado
+        setCambiandoEstado(true)
+
+        try {
+            const campanaActualizada = await cambiarEstadoCampana(id_campana, nuevoEstado)
+            setCampanas((actuales) => actuales.map((campana) =>
+                campana.id_campana === id_campana
+                    ? { ...campana, ...campanaActualizada }
+                    : campana,
+            ))
+            setPagina(0)
+            mostrarMensaje(
+                nuevoEstado
+                    ? 'Campaña reactivada correctamente.'
+                    : 'Campaña desactivada correctamente. El registro se conservó.',
+                'success',
+            )
+            setCampanaCambioEstado(null)
+        } catch (error) {
+            mostrarMensaje(obtenerMensajeErrorCampana(error), 'error')
+        } finally {
+            setCambiandoEstado(false)
+        }
+    }
     // ============================================================
     // GUARDAR
     // ============================================================
@@ -573,6 +664,7 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         setEstadoFiltro,
         cierreFiltro,
         setCierreFiltro,
+        handleBusquedaChange,
         handleEmpresaFiltroChange,
         handleTipoCentroCostoFiltroChange,
         handleCentroCostoFiltroChange,
@@ -595,6 +687,7 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         formulario,
         setFormulario,
         formularioInicial,
+        ultimaCampanaCentroCosto,
         modalAbierto,
         modoEdicion,
         campanaSeleccionada,
@@ -604,6 +697,8 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         /* Operaciones */
         guardando,
         eliminando,
+        campanaCambioEstado,
+        cambiandoEstado,
 
         /* Exportar Excel */
 
@@ -624,6 +719,9 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         handleBooleanChange,
         handleGuardar,
         handleEliminar,
+        solicitarCambioEstado,
+        cerrarConfirmacionCambioEstado,
+        confirmarCambioEstado,
         recargarCampanas,
         cargarDatos,
         cargarCentrosCosto,

@@ -22,6 +22,7 @@ import StatusChip from '../../components/common/StatusChip'
 import Pagination from '../../components/common/Pagination'
 import PageHeader from '../../components/common/PageHeader'
 import DataTable from '../../components/common/DataTable'
+import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 
 const MESES = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -358,6 +359,7 @@ function TipoCambio() {
     // RENDER
     // =========================================================
     return (
+        <CompactModuleTheme>
         <Box
             sx={{
                 width: '100%',
@@ -783,6 +785,7 @@ function TipoCambio() {
                 </Alert>
             </Snackbar>
         </Box>
+        </CompactModuleTheme>
     )
 }
 

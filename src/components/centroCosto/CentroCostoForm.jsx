@@ -1049,30 +1049,7 @@ function CentroCostoForm({
           {/* =================================================
               ESTADO
           ================================================== */}
-          <FormControl
-            fullWidth
-            disabled={guardando}
-          >
-            <InputLabel>
-              Estado
-            </InputLabel>
 
-            <Select
-              value={estado}
-              label="Estado"
-              onChange={
-                handleEstadoChange
-              }
-            >
-              <MenuItem value="true">
-                ACTIVO
-              </MenuItem>
-
-              <MenuItem value="false">
-                INACTIVO
-              </MenuItem>
-            </Select>
-          </FormControl>
 
           {/* =================================================
               PREVIEW

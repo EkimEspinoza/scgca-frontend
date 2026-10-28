@@ -6,6 +6,7 @@ import {
     MenuItem,
     Paper,
     Select,
+    TextField,
     Tooltip,
 } from '@mui/material'
 import {
@@ -19,51 +20,31 @@ function CampanaFilters({
     centroCostoSeleccionado,
     estadoFiltro,
     cierreFiltro,
+    busqueda = '',
     onEmpresaChange,
     onTipoCentroCostoChange,
     onCentroCostoChange,
     onEstadoChange,
     onCierreChange,
+    onBusquedaChange,
     onLimpiarFiltros,
     loading = false,
 }) {
-    /*
-     * ============================================================
-     * TIPOS DE CENTRO DE COSTO
-     * ============================================================
-     * Se obtienen desde los Centros de Costo ya cargados.
-     * No se realiza una consulta adicional a Supabase.
-     */
     const tiposCentroCosto = Array.from(
         new Map(
             centrosCosto
-                .filter(
-                    (centro) =>
-                        centro.tipo_centro_costo?.id_tip_cc &&
-                        centro.tipo_centro_costo?.des_tip_cc,
-                )
-                .map(
-                    (centro) => [
-                        centro.tipo_centro_costo.id_tip_cc,
-                        {
-                            id_tip_cc: centro.tipo_centro_costo.id_tip_cc,
-                            des_tip_cc: centro.tipo_centro_costo.des_tip_cc,
-                        },
-                    ],
-                ),
+                .filter((centro) => centro.tipo_centro_costo?.id_tip_cc && centro.tipo_centro_costo?.des_tip_cc)
+                .map((centro) => [centro.tipo_centro_costo.id_tip_cc, centro.tipo_centro_costo]),
         ).values(),
-    ).sort((a, b) =>
-        a.des_tip_cc.localeCompare(b.des_tip_cc, 'es', {
-            sensitivity: 'base',
-        }),
-    )
+    ).sort((a, b) => a.des_tip_cc.localeCompare(b.des_tip_cc, 'es', { sensitivity: 'base' }))
+
     return (
         <Paper
             elevation={0}
             sx={{
                 width: '100%',
                 maxWidth: '100%',
-                p: 1.5,
+                p: { xs: 0.75, sm: 1 },
                 borderRadius: 1,
                 border: '1px solid',
                 borderColor: 'divider',
@@ -77,7 +58,7 @@ function CampanaFilters({
                 sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1.25,
+                    gap: 0.75,
                     width: '100%',
                     minWidth: 0,
                     /*
@@ -87,10 +68,7 @@ function CampanaFilters({
                      * En pantallas pequeñas:
                      * pueden distribuirse en varias filas.
                      */
-                    flexWrap: {
-                        xs: 'wrap',
-                        lg: 'nowrap',
-                    },
+                    flexWrap: 'wrap',
                 }}
             >
                 {/* =================================================
@@ -101,13 +79,13 @@ function CampanaFilters({
                     disabled={loading}
                     sx={{
                         flex: {
-                            xs: '1 1 100%',
-                            sm: '1 1 180px',
+                            xs: '1 1 calc(50% - 8px)',
+                            sm: '1 1 160px',
                             lg: '0 1 180px',
                         },
                         minWidth: {
-                            xs: '100%',
-                            sm: 160,
+                            xs: 0,
+                            sm: 140,
                             lg: 160,
                         },
                     }}
@@ -140,19 +118,16 @@ function CampanaFilters({
                 ================================================== */}
                 <FormControl
                     size="small"
-                    disabled={
-                        loading ||
-                        !empresaSeleccionada
-                    }
+                    disabled={loading || !empresaSeleccionada}
                     sx={{
                         flex: {
-                            xs: '1 1 100%',
-                            sm: '1 1 240px',
+                            xs: '1 1 calc(50% - 8px)',
+                            sm: '1 1 190px',
                             lg: '1.2 1 240px',
                         },
                         minWidth: {
-                            xs: '100%',
-                            sm: 220,
+                            xs: 0,
+                            sm: 180,
                             lg: 220,
                         },
                     }}
@@ -201,13 +176,13 @@ function CampanaFilters({
                     }
                     sx={{
                         flex: {
-                            xs: '1 1 100%',
-                            sm: '1 1 240px',
+                            xs: '1 1 calc(50% - 8px)',
+                            sm: '1 1 190px',
                             lg: '1.4 1 240px',
                         },
                         minWidth: {
-                            xs: '100%',
-                            sm: 220,
+                            xs: 0,
+                            sm: 180,
                             lg: 220,
                         },
                     }}
@@ -265,6 +240,28 @@ function CampanaFilters({
                     </Select>
                 </FormControl>
                 {/* =================================================
+                    BÚSQUEDA
+                ================================================== */}
+                <TextField
+                    size="small"
+                    label="Buscar"
+                    placeholder="Campaña, empresa o centro de costo"
+                    value={busqueda}
+                    onChange={onBusquedaChange}
+                    disabled={loading}
+                    sx={{
+                        flex: {
+                            xs: '1 1 calc(50% - 8px)',
+                            sm: '1 1 190px',
+                            lg: '1.2 1 220px',
+                        },
+                        minWidth: {
+                            xs: 0,
+                            sm: 180,
+                            lg: 200,
+                        },
+                    }}
+                />                {/* =================================================
                     ESTADO
                 ================================================== */}
                 <FormControl
@@ -272,12 +269,12 @@ function CampanaFilters({
                     disabled={loading}
                     sx={{
                         flex: {
-                            xs: '1 1 100%',
+                            xs: '1 1 calc(50% - 8px)',
                             sm: '1 1 130px',
                             lg: '0 1 130px',
                         },
                         minWidth: {
-                            xs: '100%',
+                            xs: 0,
                             sm: 120,
                             lg: 120,
                         },
@@ -314,12 +311,12 @@ function CampanaFilters({
                     disabled={loading}
                     sx={{
                         flex: {
-                            xs: '1 1 100%',
+                            xs: '1 1 calc(50% - 8px)',
                             sm: '1 1 130px',
                             lg: '0 1 130px',
                         },
                         minWidth: {
-                            xs: '100%',
+                            xs: 0,
                             sm: 120,
                             lg: 120,
                         },
@@ -365,8 +362,8 @@ function CampanaFilters({
                             color="primary"
                             aria-label="Limpiar filtros"
                             sx={{
-                                width: 38,
-                                height: 38,
+                                width: 34,
+                                height: 34,
                                 flexShrink: 0,
                                 borderRadius: 1,
                                 '&:hover': {
@@ -377,7 +374,7 @@ function CampanaFilters({
                         >
                             <CleaningServicesIcon
                                 sx={{
-                                    fontSize: 21,
+                                    fontSize: 19,
                                 }}
                             />
                         </IconButton>

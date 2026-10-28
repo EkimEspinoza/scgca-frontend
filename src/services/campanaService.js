@@ -309,6 +309,22 @@ export async function actualizarCampana(idCampana, datos) {
  *
  * La autorización real está protegida por RLS.
  */
+export async function cambiarEstadoCampana(idCampana, estado) {
+    const { data, error } = await supabase
+        .from('Dim_Campana')
+        .update({ estado })
+        .eq('id_campana', idCampana)
+        .select('id_campana, estado, updated_at')
+        .single()
+
+    if (error) {
+        console.error('Error cambiando estado de campaña:', error)
+        throw error
+    }
+
+    return data
+}
+
 export async function eliminarCampana(idCampana) {
     const { error } = await supabase
         .from('Dim_Campana')

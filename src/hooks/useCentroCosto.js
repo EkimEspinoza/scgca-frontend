@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { obtenerCentrosCosto, obtenerOpcionesFiltros, obtenerCentrosCostoParaExportar } from '../services/centroCostoService'
+import { obtenerCentrosCosto, obtenerOpcionesFiltros, obtenerCentrosCostoParaExportar, cambiarEstadoCentroCosto } from '../services/centroCostoService'
 import { obtenerEmpresas } from '../services/empresaService'
 import { obtenerTiposCentroCosto, obtenerTiposMaquinaria, obtenerComparativos, obtenerVariedades } from '../services/maestroService'
 import { mostrarTipoMaquinaria, mostrarComparativo, mostrarVariedad, requiereLimpiarFiltrosDependientes } from '../components/centroCosto/centroCostoRules'
@@ -48,6 +48,8 @@ export function useCentroCosto() {
 
     const [modalNuevo, setModalNuevo] = useState(false)
     const [centroCostoEditar, setCentroCostoEditar] = useState(null)
+    const [cambioEstadoPendiente, setCambioEstadoPendiente] = useState(null)
+    const [cambiandoEstado, setCambiandoEstado] = useState(false)
 
     // ==========================================================
     // RECARGA
@@ -72,6 +74,7 @@ export function useCentroCosto() {
     const [comparativoId, setComparativoId] = useState('')
     const [variedadId, setVariedadId] = useState('')
     const [busqueda, setBusqueda] = useState('')
+    const [busquedaAplicada, setBusquedaAplicada] = useState('')
 
     // ==========================================================
     // PAGINACIÓN
@@ -141,7 +144,7 @@ export function useCentroCosto() {
         }
         if (!loadingMaestros) { void cargarOpciones() }
         return () => { vigente = false }
-    }, [empresaId, estado, tipoCcId, loadingMaestros])
+    }, [empresaId, estado, tipoCcId, loadingMaestros, recarga])
 
 
     // ==========================================================
@@ -183,6 +186,17 @@ export function useCentroCosto() {
         [tiposCentroCostoFiltrados, tiposMaquinariaDisponibles, comparativosDisponibles, variedadesDisponibles, tipoCcId, tipoMaqId, comparativoId, variedadId])
 
     // ==========================================================
+    // APLICAR BÚSQUEDA CON UNA PAUSA PARA EVITAR CONSULTAS POR TECLA
+    // ==========================================================
+
+    useEffect(() => {
+        const temporizador = setTimeout(() => {
+            setBusquedaAplicada(busqueda.trim())
+        }, 350)
+
+        return () => clearTimeout(temporizador)
+    }, [busqueda])
+    // ==========================================================
     // CARGAR CENTROS DE COSTO
     // ==========================================================
 
@@ -201,7 +215,7 @@ export function useCentroCosto() {
                         tipoMaqId: mostrarTipoMaquinariaActual && tipoMaqId !== '' ? Number(tipoMaqId) : null,
                         comparativoId: mostrarComparativoActual && comparativoId !== '' ? Number(comparativoId) : null,
                         variedadId: mostrarVariedadActual && variedadId !== '' ? Number(variedadId) : null,
-                        busqueda,
+                        busqueda: busquedaAplicada,
                         pagina: pagina + 1,
                         registrosPorPagina,
                     })
@@ -220,7 +234,7 @@ export function useCentroCosto() {
         if (!loadingMaestros) { void cargarCentros() }
         return () => { vigente = false }
     }, [
-        empresaId, estado, tipoCcId, tipoMaqId, comparativoId, variedadId, busqueda, pagina, registrosPorPagina, loadingMaestros,
+        empresaId, estado, tipoCcId, tipoMaqId, comparativoId, variedadId, busquedaAplicada, pagina, registrosPorPagina, loadingMaestros,
         mostrarTipoMaquinariaActual, mostrarComparativoActual, mostrarVariedadActual, recarga])
 
     // ==========================================================
@@ -286,6 +300,51 @@ export function useCentroCosto() {
             setPagina(0)
         }
 
+    const handleSolicitarCambioEstado = (centro) => {
+        setCambioEstadoPendiente({
+            ...centro,
+            nuevoEstado: !Boolean(centro.estado),
+        })
+    }
+
+    const handleCerrarConfirmacionEstado = () => {
+        if (cambiandoEstado) return
+        setCambioEstadoPendiente(null)
+    }
+
+    const handleConfirmarCambioEstado = async () => {
+        if (!cambioEstadoPendiente) return
+
+        const { cod_cc_pk, cod_cc, nuevoEstado } = cambioEstadoPendiente
+
+        try {
+            setCambiandoEstado(true)
+            const actualizado = await cambiarEstadoCentroCosto(cod_cc_pk, nuevoEstado)
+            setCentros((actuales) => actuales.map((centro) =>
+                centro.cod_cc_pk === cod_cc_pk
+                    ? { ...centro, ...actualizado }
+                    : centro,
+            ))
+            setRecarga((valor) => valor + 1)
+            setNotificacion({
+                open: true,
+                mensaje: nuevoEstado
+                    ? `Centro de Costo ${cod_cc} activado correctamente.`
+                    : `Centro de Costo ${cod_cc} desactivado correctamente. El registro se conservó.`,
+                severity: 'success',
+            })
+            setCambioEstadoPendiente(null)
+        } catch (err) {
+            console.error('Error cambiando estado del Centro de Costo:', err)
+            setNotificacion({
+                open: true,
+                mensaje: err?.message || 'No se pudo cambiar el estado del Centro de Costo.',
+                severity: 'error',
+            })
+        } finally {
+            setCambiandoEstado(false)
+        }
+    }
     // ==========================================================
     // LIMPIAR FILTROS
     // ==========================================================
@@ -451,6 +510,8 @@ export function useCentroCosto() {
         // Formulario
 
         modalNuevo,
+        cambioEstadoPendiente,
+        cambiandoEstado,
         centroCostoEditar,
 
         // Notificación
@@ -502,6 +563,9 @@ export function useCentroCosto() {
         abrirEditarCentroCosto,
         cerrarNuevoCentroCosto,
         handleCentroCostoGuardado,
+        handleSolicitarCambioEstado,
+        handleCerrarConfirmacionEstado,
+        handleConfirmarCambioEstado,
         cerrarNotificacion,
 
     }

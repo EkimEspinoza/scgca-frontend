@@ -1,4 +1,4 @@
-import { Box, CircularProgress, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography } from '@mui/material'
+import { Box, CircularProgress, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography, Paper, Divider, Switch } from '@mui/material'
 import { Edit as EditIcon } from '@mui/icons-material'
 import StatusChip from '../common/StatusChip'
 function formatearFecha(fecha) {
@@ -28,13 +28,16 @@ function CampanaTable({
     emptyMessage = 'No existen campañas registradas.',
     emptySearchMessage = 'No se encontraron campañas para la búsqueda.',
     hasSearch = false,
+    cambiandoEstado = false,
+    onCambiarEstado,
     onEditar,
 }) {
     return (
         <TableContainer
             sx={{
                 width: '100%',
-                height: '100%',
+                height: 'auto',
+                flex: '1 1 0%',
                 minWidth: 0,
                 minHeight: 0,
                 display: 'flex',
@@ -42,18 +45,100 @@ function CampanaTable({
                 border: '1px solid',
                 borderColor: 'divider',
                 borderRadius: 1,
-                overflow: 'hidden',
+                overflow: 'auto',
                 backgroundColor: 'background.paper',
             }}
         >
+            <Box
+                sx={{
+                    display: { xs: 'flex', lg: 'none' },
+                    flexDirection: 'column',
+                    gap: 0.75,
+                    flex: '1 1 0%',
+                    minHeight: 0,
+                    overflowY: 'auto',
+                    p: 0.75,
+                }}
+            >
+                {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                        <CircularProgress size={28} />
+                    </Box>
+                ) : campanas.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ p: 3, textAlign: 'center' }}>
+                        {hasSearch ? emptySearchMessage : emptyMessage}
+                    </Typography>
+                ) : campanas.map((campana) => (
+                    <Paper
+                        key={campana.id_campana}
+                        variant="outlined"
+                        sx={{ p: 1.25, borderRadius: 1.25, borderLeft: `3px solid ${obtenerColorEmpresa(campana.empresa?.nombre_comercial)}` }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.3, overflowWrap: 'anywhere' }}>
+                                    {mostrarValor(campana.nombre_campana)}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">ID {campana.id_campana_emp}</Typography>
+                            </Box>
+                            <Tooltip title="Editar campaña" arrow>
+                                <span>
+                                    <IconButton size="small" disabled={eliminando} onClick={() => onEditar(campana)} aria-label={`Editar campaña ${campana.id_campana_emp}`}>
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 0.75, mt: 0.75 }}>
+                            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                                <Tooltip title={campana.estado ? 'Desactivar campaña' : 'Reactivar campaña'}>
+                                    <span>
+                                        <Switch
+                                            checked={Boolean(campana.estado)}
+                                            onChange={() => onCambiarEstado(campana)}
+                                            disabled={eliminando || cambiandoEstado}
+                                            size="small"
+                                            inputProps={{ 'aria-label': `${campana.estado ? 'Desactivar' : 'Reactivar'} campaña ${campana.id_campana_emp}` }}
+                                        />
+                                    </span>
+                                </Tooltip>
+                                <Typography variant="body2" color={campana.estado ? 'success.dark' : 'text.secondary'} fontWeight={600}>
+                                    {campana.estado ? 'Activa' : 'Inactiva'}
+                                </Typography>
+                            </Box>
+                            <StatusChip estado={campana.cierre_camp} cerrado={campana.cierre_camp} activoLabel="Cerrada" inactivoLabel="Abierta" />
+                        </Box>
+                        <Divider sx={{ my: 0.75 }} />
+                        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', columnGap: 1.25, rowGap: 0.75 }}>
+                            {[
+                                ['Empresa', campana.empresa?.nombre_comercial],
+                                ['Centro de costo', campana.centro_costo?.desc_cc],
+                                ['Periodo', `${formatearFecha(campana.fecha_inicio)} → ${formatearFecha(campana.fecha_fin)}`],
+                                ['Hectáreas', Number(campana.hectareas ?? 0).toFixed(4)],
+                            ].map(([etiqueta, valor]) => (
+                                <Box key={etiqueta} sx={{ minWidth: 0 }}>
+                                    <Typography component="div" variant="caption" color="text.secondary">{etiqueta}</Typography>
+                                    <Typography component="div" variant="body2" title={valor || ''} sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {mostrarValor(valor)}
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Box>
+                    </Paper>
+                ))}
+            </Box>
             <Table
                 stickyHeader
                 size="small"
                 sx={{
                     width: '100%',
+                    display: { xs: 'none', lg: 'table' },
                     tableLayout: 'fixed',
-                    '& .MuiTableCell-root': { fontSize: '13px' },
-                    '& .MuiTypography-root': { fontSize: '13px' },
+                    flex: '1 1 auto',
+                    minHeight: 0,
+                    '& .MuiTableHead-root .MuiTableCell-root': { fontSize: '12px', px: 1, py: 0.6 },
+                    '& .MuiTableBody-root .MuiTableCell-root': { fontSize: '12px', px: 1, py: 0.3 },
+                    '& .MuiTypography-root': { fontSize: '12px' },
                 }}
             >
                 <TableHead>
@@ -180,7 +265,7 @@ function CampanaTable({
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                            <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
                                 <CircularProgress
                                     size={28}
                                 />
@@ -188,7 +273,7 @@ function CampanaTable({
                         </TableRow>
                     ) : campanas.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                            <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
                                 <Typography variant="body2" color="text.secondary">
                                     {hasSearch
                                         ? emptySearchMessage
@@ -202,7 +287,7 @@ function CampanaTable({
                                 const colorEmpresa = obtenerColorEmpresa(campana.empresa?.nombre_comercial)
                                 return (
                                     <TableRow
-                                        key={campana.id_campana_emp}
+                                        key={campana.id_campana}
                                         hover
                                         sx={{
                                             backgroundColor: '#FFFFFF',
@@ -274,11 +359,22 @@ function CampanaTable({
                                         <TableCell
                                             align="center"
                                             sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 0.5, pl: 1.5, }}>
-                                            <StatusChip
-                                                estado={campana.estado}
-                                                activoLabel="Activo"
-                                                inactivoLabel="Inactivo"
-                                            />
+                                            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                                                <Tooltip title={campana.estado ? 'Desactivar campaña' : 'Reactivar campaña'}>
+                                                    <span>
+                                                        <Switch
+                                                            checked={Boolean(campana.estado)}
+                                                            onChange={() => onCambiarEstado(campana)}
+                                                            disabled={eliminando || cambiandoEstado}
+                                                            size="small"
+                                                            inputProps={{ 'aria-label': `${campana.estado ? 'Desactivar' : 'Reactivar'} campaña ${campana.id_campana_emp}` }}
+                                                        />
+                                                    </span>
+                                                </Tooltip>
+                                                <Typography variant="body2" color={campana.estado ? 'success.dark' : 'text.secondary'} fontWeight={600}>
+                                                    {campana.estado ? 'Activa' : 'Inactiva'}
+                                                </Typography>
+                                            </Box>
                                         </TableCell>
                                         {/* ======================================
                                             CIERRE

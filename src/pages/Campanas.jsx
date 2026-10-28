@@ -1,4 +1,4 @@
-import {Alert,Box,Button,Dialog,DialogContent,DialogTitle,Paper,Snackbar,Stack,Typography} from '@mui/material'
+import {Alert,Box,Button,Dialog,DialogActions,DialogContent,DialogTitle,Paper,Snackbar,Stack,Typography} from '@mui/material'
 import {Add as AddIcon,Campaign,TableView as TableViewIcon} from '@mui/icons-material'
 import { useSearchParams } from 'react-router-dom'
 
@@ -7,6 +7,7 @@ import CampanaFilters from '../components/campanas/CampanaFilters'
 import CampanaForm from '../components/campanas/CampanaForm'
 import CampanaTable from '../components/campanas/CampanaTable'
 import useCampana from '../hooks/useCampana'
+import CompactModuleTheme from '../components/common/CompactModuleTheme'
 
 
 function Campanas() {
@@ -29,6 +30,7 @@ function Campanas() {
 
         empresas,
         centrosCosto,
+        ultimaCampanaCentroCosto,
 
         //--------------------------------------------------------
         // Cargas
@@ -43,6 +45,7 @@ function Campanas() {
         // --------------------------------------------------------
 
         busqueda,
+        handleBusquedaChange,
 
         empresaFiltro,
         tipoCentroCostoFiltro,
@@ -83,6 +86,8 @@ function Campanas() {
 
         guardando,
         eliminando,
+        campanaCambioEstado,
+        cambiandoEstado,
 
         // --------------------------------------------------------
         // Contexto
@@ -101,6 +106,9 @@ function Campanas() {
         handleBooleanChange,
         handleGuardar,
         handleEliminar,
+        solicitarCambioEstado,
+        cerrarConfirmacionCambioEstado,
+        confirmarCambioEstado,
         // --------------------------------------------------------
         // Mensajes
         // --------------------------------------------------------
@@ -144,6 +152,7 @@ function Campanas() {
      * ============================================================
      */
     return (
+      <CompactModuleTheme>
         <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* ====================================================
                 ENCABEZADO
@@ -153,19 +162,19 @@ function Campanas() {
                 sx={{
                     display: 'flex', flexDirection: { xs: 'column', sm: 'row' },
                     alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between',
-                    gap: 2, flexShrink: 0, mb: 1, minWidth: 0,
+                    gap: 1.5, flexShrink: 0, mb: 0.75, minWidth: 0,
                 }}
             >
 
                 {/* =================================================
                 TÍTULO
                 ================================================== */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, minWidth: 0 }}>
-                    <Box sx={{ width: 56, height: 56, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1, backgroundColor: 'primary.light', color: 'primary.dark', opacity: 0.95 }}>
-                        <Campaign sx={{ fontSize: 32 }} />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+                    <Box sx={{ width: 48, height: 48, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1, backgroundColor: 'primary.light', color: 'primary.dark', opacity: 0.95 }}>
+                        <Campaign sx={{ fontSize: 27 }} />
                     </Box>
                     <Box sx={{ minWidth: 0 }}>
-                        <Typography component="h1" sx={{ fontSize: { xs: '1.5rem', sm: '1.75rem' }, lineHeight: 1.2, fontWeight: 700, color: 'text.primary' }}>
+                        <Typography component="h1" sx={{ fontSize: { xs: '1.25rem', sm: '1.375rem' }, lineHeight: 1.2, fontWeight: 700, color: 'text.primary' }}>
                             Campañas
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -177,7 +186,7 @@ function Campanas() {
                 ACCIONES
                 ================================================== */}
 
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row', }, gap: 1, width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'row', sm: 'row' }, gap: 1, width: { xs: '100%', sm: 'auto' }, flexShrink: 0, minWidth: 0 }}>
                     {/* =================================================
                     EXPORTAR EXCEL
                     ============================================== */}
@@ -187,7 +196,7 @@ function Campanas() {
                         startIcon={<TableViewIcon />}
                         onClick={handleExportarExcel}
                         disabled={exportandoExcel || loading || loadingEmpresas || loadingCentrosCosto}
-                        sx={{ minWidth: { xs: '100%', sm: 170 }, height: 44, fontWeight: 700, borderRadius: 1, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
+                        sx={{ minWidth: 0, flex: { xs: '1 1 0%', sm: '0 1 auto' }, height: 36, whiteSpace: 'nowrap', fontSize: { xs: '0.6875rem', sm: '0.75rem' }, px: { xs: 0.75, sm: 1.5 }, fontWeight: 700, borderRadius: 1, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
                     >
                         {exportandoExcel ? 'Exportando...' : 'Exportar Excel'}
                     </Button>
@@ -200,7 +209,8 @@ function Campanas() {
                         variant="contained"
                         startIcon={<AddIcon />}
                         onClick={abrirNuevo}
-                        sx={{ minWidth: { xs: '100%', sm: 220 }, height: 44, flexShrink: 0, fontWeight: 700, borderRadius: 1, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
+                        disabled={loading}
+                        sx={{ minWidth: 0, flex: { xs: '1 1 0%', sm: '0 1 auto' }, height: 36, whiteSpace: 'nowrap', fontSize: { xs: '0.6875rem', sm: '0.75rem' }, px: { xs: 0.75, sm: 1.5 }, flexShrink: 0, fontWeight: 700, borderRadius: 1, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
                         Nueva Campaña
                     </Button>
 
@@ -211,7 +221,7 @@ function Campanas() {
             {/* ====================================================
                 FILTROS
             ===================================================== */}
-            <Paper elevation={0} sx={{ flexShrink: 0, minWidth: 0, mb: 1 }}>
+            <Paper elevation={0} sx={{ flexShrink: 0, minWidth: 0, mb: 0.75 }}>
 
                 <CampanaFilters
 
@@ -222,12 +232,14 @@ function Campanas() {
                     centroCostoSeleccionado={centroCostoFiltro}
                     estadoFiltro={estadoFiltro}
                     cierreFiltro={cierreFiltro}
+                    busqueda={busqueda}
 
                     onEmpresaChange={handleEmpresaFiltroChange}
                     onTipoCentroCostoChange={handleTipoCentroCostoFiltroChange}
                     onCentroCostoChange={handleCentroCostoFiltroChange}
                     onEstadoChange={handleEstadoFiltroChange}
                     onCierreChange={handleCierreFiltroChange}
+                    onBusquedaChange={handleBusquedaChange}
                     onLimpiarFiltros={limpiarFiltros}
 
                     loading={loading || loadingEmpresas || loadingCentrosCosto || eliminando}
@@ -248,30 +260,34 @@ function Campanas() {
                     campanas={campanasPaginadas}
                     loading={loading}
                     eliminando={eliminando}
+                    cambiandoEstado={cambiandoEstado}
                     emptyMessage={esModoContextual ? 'No existen campañas registradas para este Centro de Costo.' : 'No existen campañas registradas.'}
                     emptySearchMessage={'No se encontraron campañas para la búsqueda.'}
                     hasSearch={Boolean(busqueda.trim())}
                     onEditar={abrirEditar}
+                    onCambiarEstado={solicitarCambioEstado}
                     onEliminar={handleEliminar}
                 />
-                <Pagination
-                    total={campanasFiltradas.length}
-                    pagina={pagina}
-                    registrosPorPagina={registrosPorPagina}
-                    onPageChange={handleChangePagina}
-                    onRowsPerPageChange={handleChangeRegistrosPorPagina}
-                />
+                <Box sx={{ flexShrink: 0, '& .MuiTablePagination-toolbar': { minHeight: 48, px: 1 }, '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': { fontSize: '0.75rem' } }}>
+                    <Pagination
+                        total={campanasFiltradas.length}
+                        pagina={pagina}
+                        registrosPorPagina={registrosPorPagina}
+                        onPageChange={handleChangePagina}
+                        onRowsPerPageChange={handleChangeRegistrosPorPagina}
+                    />
+                </Box>
             </Paper>
 
             {/* ====================================================
                 MODAL
             ===================================================== */}
             <Dialog open={modalAbierto} onClose={cerrarModal} fullWidth maxWidth="md">
-                <DialogTitle sx={{ fontWeight: 700 }}>
+                <DialogTitle sx={{ py: 1.25, fontWeight: 700 }}>
                     {modoEdicion ? 'Editar campaña' : 'Nueva campaña'}
                 </DialogTitle>
-                <DialogContent dividers >
-                    <Stack spacing={2}>
+                <DialogContent dividers sx={{ p: { xs: 1.5, sm: 2 } }}>
+                    <Stack spacing={1.5}>
                         {errorFormulario && (
                             <Alert
                                 severity="error"
@@ -285,6 +301,8 @@ function Campanas() {
                             formulario={formulario}
                             empresas={empresas}
                             centrosCosto={centrosCosto}
+                            ultimaCampanaCentroCosto={ultimaCampanaCentroCosto}
+                            cargandoHistorial={loading}
                             error=""
                             guardando={guardando}
                             modoEdicion={modoEdicion}
@@ -298,6 +316,36 @@ function Campanas() {
                         />
                     </Stack>
                 </DialogContent>
+            </Dialog>
+            <Dialog
+                open={Boolean(campanaCambioEstado)}
+                onClose={cerrarConfirmacionCambioEstado}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle>
+                    {campanaCambioEstado?.nuevoEstado ? 'Reactivar campaña' : 'Desactivar campaña'}
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        {campanaCambioEstado?.nuevoEstado
+                            ? `¿Deseas reactivar "${campanaCambioEstado?.nombre_campana}"?`
+                            : `¿Deseas desactivar "${campanaCambioEstado?.nombre_campana}"? El registro se conservará en la base de datos.`}
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={cerrarConfirmacionCambioEstado} disabled={cambiandoEstado}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color={campanaCambioEstado?.nuevoEstado ? 'success' : 'warning'}
+                        onClick={confirmarCambioEstado}
+                        disabled={cambiandoEstado}
+                    >
+                        {cambiandoEstado ? 'Guardando...' : campanaCambioEstado?.nuevoEstado ? 'Reactivar' : 'Desactivar'}
+                    </Button>
+                </DialogActions>
             </Dialog>
             {/* ====================================================
                 NOTIFICACIÓN
@@ -317,6 +365,7 @@ function Campanas() {
                 </Alert>
             </Snackbar>
         </Box>
+      </CompactModuleTheme>
     )
 }
 export default Campanas

@@ -114,13 +114,16 @@ function CentroCostoFilters({
       sx={{
         width: '100%',
         maxWidth: '100%',
-        p: 1.5,
+        p: { xs: 0.75, sm: 1 },
         borderRadius: 1,
         border: '1px solid',
         borderColor: 'divider',
         backgroundColor:
           'background.paper',
         boxSizing: 'border-box',
+        '& .MuiInputBase-root': { fontSize: '0.75rem', minHeight: 36 },
+        '& .MuiInputLabel-root': { fontSize: '0.75rem' },
+        '& .MuiMenuItem-root': { fontSize: '0.75rem' },
         overflow: 'hidden',
       }}
     >
@@ -131,7 +134,7 @@ function CentroCostoFilters({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1.25,
+          gap: 0.75,
           width: '100%',
           minWidth: 0,
           /*
@@ -143,7 +146,7 @@ function CentroCostoFilters({
            */
           flexWrap: {
             xs: 'wrap',
-            lg: 'nowrap',
+            xl: 'nowrap',
           },
         }}
       >
@@ -155,12 +158,12 @@ function CentroCostoFilters({
           disabled={cargando}
           sx={{
             flex: {
-              xs: '1 1 100%',
+              xs: '1 1 calc(50% - 8px)',
               sm: '1 1 180px',
               lg: '0 1 180px',
             },
             minWidth: {
-              xs: '100%',
+              xs: 0,
               sm: 160,
               lg: 160,
             },
@@ -199,48 +202,7 @@ function CentroCostoFilters({
             )}
           </Select>
         </FormControl>
-        {/* =================================================
-            ESTADO
-        ================================================== */}
-        <FormControl
-          size="small"
-          disabled={cargando}
-          sx={{
-            flex: {
-              xs: '1 1 100%',
-              sm: '1 1 130px',
-              lg: '0 1 130px',
-            },
-            minWidth: {
-              xs: '100%',
-              sm: 120,
-              lg: 120,
-            },
-          }}
-        >
-          <InputLabel>
-            Estado
-          </InputLabel>
-          <Select
-            value={
-              estado ?? ''
-            }
-            label="Estado"
-            onChange={
-              onEstadoChange
-            }
-          >
-            <MenuItem value="">
-              Todos
-            </MenuItem>
-            <MenuItem value="ACTIVO">
-              Activo
-            </MenuItem>
-            <MenuItem value="INACTIVO">
-              Inactivo
-            </MenuItem>
-          </Select>
-        </FormControl>
+
         {/* =================================================
             TIPO DE CENTRO DE COSTO
         ================================================== */}
@@ -249,12 +211,12 @@ function CentroCostoFilters({
           disabled={cargando}
           sx={{
             flex: {
-              xs: '1 1 100%',
+              xs: '1 1 calc(50% - 8px)',
               sm: '1 1 240px',
               lg: '1.4 1 240px',
             },
             minWidth: {
-              xs: '100%',
+              xs: 0,
               sm: 220,
               lg: 220,
             },
@@ -304,8 +266,8 @@ function CentroCostoFilters({
               !tipoCcId
             }
             sx={{
-              flex: '1 1 190px',
-              minWidth: 170,
+              flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 180px' },
+              minWidth: { xs: 0, sm: 160 },
             }}
           >
             <InputLabel>
@@ -353,8 +315,8 @@ function CentroCostoFilters({
               !tipoCcId
             }
             sx={{
-              flex: '1 1 170px',
-              minWidth: 150,
+              flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 170px' },
+              minWidth: { xs: 0, sm: 140 },
             }}
           >
             <InputLabel>
@@ -402,8 +364,8 @@ function CentroCostoFilters({
               !tipoCcId
             }
             sx={{
-              flex: '1 1 170px',
-              minWidth: 150,
+              flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 170px' },
+              minWidth: { xs: 0, sm: 140 },
             }}
           >
             <InputLabel>
@@ -456,12 +418,12 @@ function CentroCostoFilters({
           disabled={cargando}
           sx={{
             flex: {
-              xs: '1 1 100%',
+            xs: '2 1 calc(50% - 8px)',
               sm: '1 1 220px',
               lg: '1.3 1 220px',
             },
             minWidth: {
-              xs: '100%',
+            xs: 0,
               sm: 200,
               lg: 200,
             },
@@ -486,6 +448,48 @@ function CentroCostoFilters({
           }}
         />
         {/* =================================================
+            ESTADO
+        ================================================== */}
+        <FormControl
+          size="small"
+          disabled={cargando}
+          sx={{
+            flex: {
+              xs: '1 1 calc(50% - 8px)',
+              sm: '1 1 130px',
+              lg: '0 1 130px',
+            },
+            minWidth: {
+              xs: 0,
+              sm: 120,
+              lg: 120,
+            },
+          }}
+        >
+          <InputLabel>
+            Estado
+          </InputLabel>
+          <Select
+            value={
+              estado ?? ''
+            }
+            label="Estado"
+            onChange={
+              onEstadoChange
+            }
+          >
+            <MenuItem value="">
+              Todos
+            </MenuItem>
+            <MenuItem value="ACTIVO">
+              Activo
+            </MenuItem>
+            <MenuItem value="INACTIVO">
+              Inactivo
+            </MenuItem>
+          </Select>
+        </FormControl>
+        {/* =================================================
             LIMPIAR FILTROS
         ================================================== */}
         <Tooltip
@@ -504,8 +508,8 @@ function CentroCostoFilters({
               color="primary"
               aria-label="Limpiar filtros"
               sx={{
-                width: 38,
-                height: 38,
+                width: 34,
+                height: 34,
                 flexShrink: 0,
                 borderRadius: 1,
                 '&:hover': {
@@ -516,7 +520,7 @@ function CentroCostoFilters({
             >
               <CleaningServicesIcon
                 sx={{
-                  fontSize: 21,
+                  fontSize: 19,
                 }}
               />
             </IconButton>

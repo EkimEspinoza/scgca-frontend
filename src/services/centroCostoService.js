@@ -1308,3 +1308,24 @@ export async function obtenerCentrosCostoParaExportar({
 
   return datos
 }
+/**
+ * Actualiza únicamente el estado activo/inactivo de un Centro de Costo.
+ */
+export async function cambiarEstadoCentroCosto(codCcPk, estado) {
+  const { data, error } = await supabase
+    .from('dim_centro_costo')
+    .update({
+      estado: Boolean(estado),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('cod_cc_pk', Number(codCcPk))
+    .select('cod_cc_pk, estado, updated_at')
+    .single()
+
+  if (error) {
+    console.error('Error cambiando estado del Centro de Costo:', error)
+    throw error
+  }
+
+  return data
+}

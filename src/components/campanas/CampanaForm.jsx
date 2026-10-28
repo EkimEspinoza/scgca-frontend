@@ -1,4 +1,5 @@
 import {
+    Alert,
     Box,
     Button,
     FormControl,
@@ -14,6 +15,8 @@ function CampanaForm({
     formulario,
     empresas = [],
     centrosCosto = [],
+    ultimaCampanaCentroCosto = null,
+    cargandoHistorial = false,
     error = '',
     guardando = false,
     modoEdicion = false,
@@ -28,8 +31,26 @@ function CampanaForm({
         modoContextual || guardando
     const centroCostoBloqueado =
         modoContextual || guardando
+
+    const formatearFecha = (fecha) => {
+        if (!fecha) return 'sin fecha'
+        const [anio, mes, dia] = fecha.split('-')
+        return `${dia}/${mes}/${anio}`
+    }
+
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {!modoEdicion && formulario.cod_cc_pk && !cargandoHistorial && (
+                <Alert severity="info" variant="outlined" sx={{ py: 0, '& .MuiAlert-message': { py: 0.75 } }}>
+                    {ultimaCampanaCentroCosto ? (
+                        <>
+                            Última campaña: {ultimaCampanaCentroCosto.nombre_campana || `ID ${ultimaCampanaCentroCosto.id_campana_emp}`}. Cierre operativo: {formatearFecha(ultimaCampanaCentroCosto.fecha_fin)}; cierre CTB: {formatearFecha(ultimaCampanaCentroCosto.fecha_fin_ctb)}. Se sugieren como inicios los días siguientes.
+                        </>
+                    ) : (
+                        'Nueva campaña para este Centro de Costo; no tiene campañas anteriores.'
+                    )}
+                </Alert>
+            )}
             {error && (
                 <Box
                     sx={{ border: '1px solid', borderColor: 'error.main', backgroundColor: 'rgba(211, 47, 47, 0.06)', borderRadius: 1, px: 2, py: 1.25, }}>
@@ -49,7 +70,7 @@ function CampanaForm({
                         xs: '1fr',
                         md: '1fr 1fr',
                     },
-                    gap: 2,
+                    gap: 1.5,
                 }}
             >
 
@@ -86,11 +107,7 @@ function CampanaForm({
                             MozAppearance: 'textfield',
                         },
                     }}
-                    helperText={
-                        modoEdicion
-                            ? 'Identificador definido por la empresa. No modificable después de crear la campaña.'
-                            : 'Identificador definido por la empresa.'
-                    }
+                    helperText={modoEdicion ? 'No se puede cambiar después de crear.' : undefined}
                 />
 
 
@@ -130,11 +147,6 @@ function CampanaForm({
                             </MenuItem>
                         ))}
                     </Select>
-                    {modoEdicion && (
-                        <FormHelperText>
-                            Empresa definida para la campaña.
-                        </FormHelperText>
-                    )}
                     {modoContextual && !modoEdicion && (
                         <FormHelperText>
                             Empresa definida por el Centro
@@ -190,11 +202,6 @@ function CampanaForm({
                             ),
                         )}
                     </Select>
-                    {modoEdicion && (
-                        <FormHelperText>
-                            Centro de Costo definido para la campaña.
-                        </FormHelperText>
-                    )}
                     {modoContextual && !modoEdicion && (
                         <FormHelperText>
                             Centro de Costo definido por
@@ -231,7 +238,7 @@ function CampanaForm({
                             MozAppearance: 'textfield',
                         },
                     }}
-                    helperText="Obligatorio: las hectáreas deben ser mayores que 0. Puede registrar hasta 4 decimales."
+                    helperText="Mayor que 0; hasta 4 decimales."
                 />
 
                 <Box
@@ -240,17 +247,15 @@ function CampanaForm({
                             xs: '1',
                             md: '1 / -1',
                         },
-                        border: '1px solid',
-                        borderColor: '#E0E5E2',
-                        borderRadius: 1,
-                        p: 2,
-                        backgroundColor: '#FAFBFA',
+                        py: 1,
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
                     }}
                 >
                     <Typography
                         variant="body2"
                         sx={{
-                            mb: 1.5,
+                            mb: 1,
                             fontWeight: 700,
                             color: '#1B5E20',
                         }}
@@ -265,21 +270,13 @@ function CampanaForm({
                                 xs: '1fr',
                                 md: '1fr 1fr',
                             },
-                            gap: 2,
+                            gap: 1.5,
                         }}
                     >
                         <Box>
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    mb: 0.75,
-                                    fontWeight: 500,
-                                    color: '#4B5563',
-                                }}
-                            >
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                                 Fecha de inicio *
                             </Typography>
-
                             <TextField
                                 fullWidth
                                 size="small"
@@ -297,17 +294,9 @@ function CampanaForm({
                         </Box>
 
                         <Box>
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    mb: 0.75,
-                                    fontWeight: 500,
-                                    color: '#4B5563',
-                                }}
-                            >
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                                 Fecha de fin *
                             </Typography>
-
                             <TextField
                                 fullWidth
                                 size="small"
@@ -331,17 +320,15 @@ function CampanaForm({
                             xs: '1',
                             md: '1 / -1',
                         },
-                        border: '1px solid',
-                        borderColor: '#E0E5E2',
-                        borderRadius: 1,
-                        p: 2,
-                        backgroundColor: '#FAFBFA',
+                        py: 1,
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
                     }}
                 >
                     <Typography
                         variant="body2"
                         sx={{
-                            mb: 1.5,
+                            mb: 1,
                             fontWeight: 700,
                             color: '#1B5E20',
                         }}
@@ -356,21 +343,13 @@ function CampanaForm({
                                 xs: '1fr',
                                 md: '1fr 1fr',
                             },
-                            gap: 2,
+                            gap: 1.5,
                         }}
                     >
                         <Box>
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    mb: 0.75,
-                                    fontWeight: 500,
-                                    color: '#4B5563',
-                                }}
-                            >
-                                Fecha de inicio *
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                Fecha de inicio CTB *
                             </Typography>
-
                             <TextField
                                 fullWidth
                                 size="small"
@@ -388,17 +367,9 @@ function CampanaForm({
                         </Box>
 
                         <Box>
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    mb: 0.75,
-                                    fontWeight: 500,
-                                    color: '#4B5563',
-                                }}
-                            >
-                                Fecha de fin *
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                Fecha de fin CTB *
                             </Typography>
-
                             <TextField
                                 fullWidth
                                 size="small"
@@ -423,65 +394,23 @@ function CampanaForm({
                     display: 'grid',
                     gridTemplateColumns: {
                         xs: '1fr',
-                        md: '1fr 1fr',
+                        sm: '1fr 1fr',
                     },
-                    gap: 2,
+                    gap: 1.5,
                 }}
             >
                 <Box
                     sx={{
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        px: 2,
-                        py: 1.5,
-                        backgroundColor:
-                            'background.paper',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        minWidth: 0,
                     }}
                 >
                     <Typography
                         variant="body2"
                         color="text.secondary"
-                        sx={{ mb: 0.75 }}
-                    >
-                        Estado
-                    </Typography>
-                    <StatusChip
-                        estado={
-                            formulario.estado
-                        }
-                        onClick={
-                            !guardando
-                                ? onCambiarEstado
-                                : undefined
-                        }
-                        disabled={guardando}
-                        activoLabel="Activo"
-                        inactivoLabel="Inactivo"
-                    />
-                    <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                        sx={{ mt: 0.75 }}
-                    >
-                    </Typography>
-                </Box>
-                <Box
-                    sx={{
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        px: 2,
-                        py: 1.5,
-                        backgroundColor:
-                            'background.paper',
-                    }}
-                >
-                    <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 0.75 }}
+                        sx={{ mb: 0, minWidth: 120 }}
                     >
                         Cierre de campaña
                     </Typography>
@@ -497,13 +426,6 @@ function CampanaForm({
                         activoLabel="Abierta"
                         inactivoLabel="Cerrada"
                     />
-                    <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                        sx={{ mt: 0.75 }}
-                    >
-                    </Typography>
                 </Box>
             </Box>
             {modoEdicion && (
@@ -513,11 +435,7 @@ function CampanaForm({
                     label="Nombre de campaña"
                     value={formulario.nombre_campana ?? ''}
                     disabled
-                    multiline
-                    minRows={2}
-                    helperText={
-                        'El nombre se genera automáticamente según las reglas de campaña.'
-                    }
+                    helperText="Nombre generado automáticamente."
                 />
             )}
             <Box

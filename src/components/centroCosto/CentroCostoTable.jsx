@@ -1,7 +1,7 @@
-import { Box, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Tooltip, Typography } from '@mui/material'
+import { Box, Divider, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Switch, Tooltip, Typography } from '@mui/material'
 import { Edit as EditIcon } from '@mui/icons-material'
 
-function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina, onChangePagina, onChangeRegistrosPorPagina, onEditar }) {
+function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina, onChangePagina, onChangeRegistrosPorPagina, onEditar, onCambiarEstado, cambiandoEstado = false }) {
     /*
      * =========================================================
      * COLOR DE LA BARRA LATERAL SEGÚN EMPRESA
@@ -17,30 +17,6 @@ function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina,
         if (nombre.includes('MCR')) { return '#9C27B0' }
         if (nombre.includes('CANTERA')) { return '#ED6C02' }
         return '#BDBDBD'
-    }
-
-    /*
-     * =========================================================
-     * COLOR DEL PUNTO DE ESTADO
-     * Verde suave = ACTIVO
-     * Rojo suave  = INACTIVO
-     * =========================================================
-     */
-
-    const obtenerColorEstado = (estado) => { return estado ? '#66BB6A' : '#EF9A9A' }
-
-    /*
-     * =========================================================
-     * COLOR DEL TEXTO DE ESTADO
-     * =========================================================
-     */
-
-    const obtenerColorTextoEstado = (
-        estado,
-    ) => {
-        return estado
-            ? '#388E3C'
-            : '#C62828'
     }
 
     /*
@@ -95,18 +71,113 @@ function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina,
         >
 
             {/* =================================================
+                FICHAS PARA PANTALLAS PEQUEÑAS
+            ================================================== */}
+            <Box
+                sx={{
+                    display: { xs: 'flex', lg: 'none' },
+                    flexDirection: 'column',
+                    gap: 0.75,
+                    flex: '1 1 0%',
+                    minHeight: 0,
+                    overflowY: 'auto',
+                    p: 0.75,
+                }}
+            >
+                {loading ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ p: 3, textAlign: 'center' }}>
+                        Cargando centros de costo...
+                    </Typography>
+                ) : centros.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ p: 3, textAlign: 'center' }}>
+                        No se encontraron centros de costo.
+                    </Typography>
+                ) : centros.map((centro) => (
+                    <Paper
+                        key={centro.cod_cc_pk}
+                        variant="outlined"
+                        sx={{
+                            p: 1.25,
+                            borderRadius: 1.25,
+                            borderLeft: `3px solid ${obtenerColorEmpresa(centro.empresa?.nombre_comercial)}`,
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.3 }}>
+                                    {mostrarValor(centro.desc_cc)}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Código {centro.cod_cc}
+                                </Typography>
+                            </Box>
+                            <IconButton
+                                size="small"
+                                onClick={() => onEditar(centro)}
+                                aria-label={`Editar Centro de Costo ${centro.cod_cc}`}
+                            >
+                                <EditIcon fontSize="small" />
+                            </IconButton>
+                        </Box>
+                        <Box sx={{ mt: 0.75, mb: 0.75 }}>
+                            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                            <Tooltip title={centro.estado ? 'Desactivar Centro de Costo' : 'Activar Centro de Costo'}>
+                                <span>
+                                    <Switch
+                                        checked={Boolean(centro.estado)}
+                                        onChange={() => onCambiarEstado(centro)}
+                                        disabled={cambiandoEstado}
+                                        size="small"
+                                        inputProps={{ 'aria-label': `${centro.estado ? 'Desactivar' : 'Activar'} Centro de Costo ${centro.cod_cc}` }}
+                                    />
+                                </span>
+                            </Tooltip>
+                            <Typography variant="body2" fontWeight={600} color={centro.estado ? 'success.dark' : 'text.secondary'}>
+                                {centro.estado ? 'Activo' : 'Inactivo'}
+                            </Typography>
+                        </Box>
+                        </Box>
+                        <Divider sx={{ mb: 0.75 }} />
+                        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', columnGap: 1.25, rowGap: 0.75 }}>
+                            {[
+                                ['Empresa', centro.empresa?.nombre_comercial],
+                                ['Tipo de centro', centro.tipo_cc?.des_tip_cc],
+                                ['Tipo de maquinaria', centro.tipo_maq?.des_tipo_maquinaria],
+                                ['Comparativo', centro.comparativo?.descripcion],
+                                ['Variedad', centro.variedad?.descripcion],
+                            ].map(([etiqueta, valor]) => (
+                                <Box key={etiqueta} sx={{ minWidth: 0 }}>
+                                    <Typography component="div" variant="caption" color="text.secondary">
+                                        {etiqueta}
+                                    </Typography>
+                                    <Typography
+                                        component="div"
+                                        variant="body2"
+                                        title={valor || ''}
+                                        sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                    >
+                                        {mostrarValor(valor)}
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Box>
+                    </Paper>
+                ))}
+            </Box>
+            {/* =================================================
                 TABLA
             ================================================== */}
 
             <TableContainer
-                sx={{ width: '100%', flex: '1 1 0%', minWidth: 0, minHeight: 0, overflowX: 'auto', overflowY: 'auto' }}>
+                sx={{ width: '100%', flex: '1 1 0%', minWidth: 0, minHeight: 0, overflowX: 'auto', overflowY: 'auto', display: { xs: 'none', lg: 'block' } }}>
                 <Table
                     stickyHeader
                     size="small"
                     sx={{
                         width: '100%',
                         tableLayout: 'fixed',
-                        '& .MuiTableCell-root': { fontSize: '12px' },
+                        '& .MuiTableHead-root .MuiTableCell-root': { fontSize: '12px', px: 1, py: 0.6 },
+                        '& .MuiTableBody-root .MuiTableCell-root': { fontSize: '12px', px: 1, py: 0.3 },
                         '& .MuiTypography-root': { fontSize: '12px' },
                     }}
                 >
@@ -209,8 +280,6 @@ function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina,
                             centros.map(
                                 (centro) => {
                                     const colorEmpresa = obtenerColorEmpresa(centro.empresa?.nombre_comercial)
-                                    const colorEstado = obtenerColorEstado(centro.estado)
-                                    const colorTextoEstado = obtenerColorTextoEstado(centro.estado)
                                     const tipoCC = centro.tipo_cc?.des_tip_cc
                                     const colorTipoCC = obtenerColorTipoCC(tipoCC)
 
@@ -339,18 +408,19 @@ function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina,
                                                 align="center"
                                                 sx={{ py: 0.5, }}>
 
-                                                <Box
-                                                    sx={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 0.75, }}>
-                                                    {/* PUNTO */}
-                                                    <Box
-                                                        sx={{ width: 7, height: 7, minWidth: 7, borderRadius: '50%', backgroundColor: colorEstado }}
-                                                    />
-
-                                                    {/* TEXTO */}
-
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{ fontWeight: 600, color: colorTextoEstado }}>
+                                                <Box sx={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                                                    <Tooltip title={centro.estado ? 'Desactivar Centro de Costo' : 'Activar Centro de Costo'}>
+                                                        <span>
+                                                            <Switch
+                                                                checked={Boolean(centro.estado)}
+                                                                onChange={() => onCambiarEstado(centro)}
+                                                                disabled={cambiandoEstado}
+                                                                size="small"
+                                                                inputProps={{ 'aria-label': `${centro.estado ? 'Desactivar' : 'Activar'} Centro de Costo ${centro.cod_cc}` }}
+                                                            />
+                                                        </span>
+                                                    </Tooltip>
+                                                    <Typography variant="body2" fontWeight={600} color={centro.estado ? 'success.dark' : 'text.secondary'}>
                                                         {centro.estado ? 'Activo' : 'Inactivo'}
                                                     </Typography>
                                                 </Box>
@@ -416,10 +486,11 @@ function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina,
                 }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
                 sx={{
                     borderTop: '1px solid #E8ECEA',
-                    '& .MuiTablePagination-toolbar': { minHeight: 52 },
-                    '& .MuiTablePagination-selectLabel': { fontSize: '13px' },
-                    '& .MuiTablePagination-displayedRows': { fontSize: '13px' },
-                    '& .MuiTablePagination-select': { fontSize: '13px' },
+                    flexShrink: 0,
+                    '& .MuiTablePagination-toolbar': { minHeight: 48, px: { xs: 0.5, sm: 1.5 }, flexWrap: { xs: 'wrap', sm: 'nowrap' }, justifyContent: { xs: 'center', sm: 'flex-end' } },
+                    '& .MuiTablePagination-selectLabel': { fontSize: '12px' },
+                    '& .MuiTablePagination-displayedRows': { fontSize: '12px' },
+                    '& .MuiTablePagination-select': { fontSize: '12px' },
                 }}
             />
 

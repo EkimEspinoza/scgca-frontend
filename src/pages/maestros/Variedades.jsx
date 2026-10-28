@@ -18,6 +18,7 @@ import SearchInput from '../../components/common/SearchInput'
 import StatusChip from '../../components/common/StatusChip'
 import Pagination from '../../components/common/Pagination'
 import PageHeader from '../../components/common/PageHeader'
+import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import DataTable from '../../components/common/DataTable'
 
 const formularioInicial = { descripcion: '', estado: true }
@@ -345,7 +346,8 @@ function Variedades() {
 
     return (
 
-        <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflowX: 'hidden', overflowY: 'auto' }}>
+        <CompactModuleTheme>
+<Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflowX: 'hidden', overflowY: 'auto' }}>
 
             {/* =====================================================
             ENCABEZADO
@@ -695,6 +697,7 @@ function Variedades() {
                 </Alert>
             </Snackbar>
         </Box>
+</CompactModuleTheme>
     )
 }
 
