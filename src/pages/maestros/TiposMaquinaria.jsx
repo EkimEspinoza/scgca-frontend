@@ -8,7 +8,7 @@ import {
     DialogTitle, IconButton, MenuItem, Paper, Snackbar, Switch, TextField, Tooltip, Typography
 } from '@mui/material'
 
-import { Add, Close as CloseIcon, Edit as EditIcon, Save } from '@mui/icons-material'
+import { Add, Close as CloseIcon, Edit as EditIcon, Save, Download as DownloadIcon } from '@mui/icons-material'
 import useMediaQuery from '@mui/material/useMediaQuery'
 
 import { obtenerTiposMaquinaria, crearTipoMaquinaria, actualizarTipoMaquinaria, cambiarEstadoTipoMaquinaria } from '../../services/tipoMaquinariaService'
@@ -19,6 +19,7 @@ import Pagination from '../../components/common/Pagination'
 import PageHeader from '../../components/common/PageHeader'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import DataTable from '../../components/common/DataTable'
+import { exportarTiposMaquinariaExcel } from '../../services/excelService'
 
 
 const formularioInicial = { des_tipo_maquinaria: '', estado: true }
@@ -134,6 +135,10 @@ function TiposMaquinaria() {
             return coincideTexto && coincideEstado
         })
     }, [tiposMaquinaria, busqueda, filtroEstado])
+
+    const handleExportarExcel = () => {
+        exportarTiposMaquinariaExcel(tiposMaquinariaFiltrados)
+    }
     // =========================================================
     // TIPOS DE MAQUINARIA PAGINADO
     // =========================================================
@@ -367,22 +372,27 @@ function TiposMaquinaria() {
 
             <Box
                 sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) auto' },
+                    alignItems: 'center',
+                    gap: 1,
                     '& > .MuiBox-root': {
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        alignItems: { xs: 'stretch', sm: 'center' },
-                    },
-                    '& > .MuiBox-root > .MuiButton-root': {
-                        width: { xs: '100%', sm: 'auto' },
+                        mb: 0,
                     },
                 }}
             >
                 <PageHeader
                     title="Tipos de Maquinaria"
                     description="Administración de tipos de maquinaria agrícola"
-                    actionLabel="Nuevo tipo de maquinaria"
-                    onAction={handleNuevoTipo}
-                    actionIcon={<Add />}
                 />
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, width: { xs: '100%', sm: 'auto' }, alignItems: 'center' }}>
+                    <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportarExcel} disabled={loading || tiposMaquinariaFiltrados.length === 0} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+                        Exportar Excel
+                    </Button>
+                    <Button variant="contained" startIcon={<Add />} onClick={handleNuevoTipo} sx={{ borderRadius: 0.8, minHeight: 40, px: 2, textTransform: 'none', fontWeight: 600, width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+                        Nuevo tipo de maquinaria
+                    </Button>
+                </Box>
             </Box>
 
 

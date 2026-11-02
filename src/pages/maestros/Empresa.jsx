@@ -427,12 +427,12 @@ const handleConfirmarCambioEstado = async () => {
 
       <Box
         sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) auto' },
+          alignItems: 'center',
+          gap: 1,
           '& > .MuiBox-root': {
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { xs: 'stretch', sm: 'center' },
-          },
-          '& > .MuiBox-root > .MuiButton-root': {
-            width: { xs: '100%', sm: 'auto' },
+            mb: 0,
           },
         }}
       >
@@ -444,18 +444,23 @@ const handleConfirmarCambioEstado = async () => {
             </Box>
           }
           description="Administración de empresas del sistema"
-          actionLabel={puedeAdministrar ? 'Nueva Empresa' : undefined}
-          onAction={puedeAdministrar ? handleNuevaEmpresa : undefined}
-          actionIcon={puedeAdministrar ? <Add /> : undefined}
         />
-        <Button
-          variant="outlined"
-          startIcon={<Download />}
-          onClick={handleExportarExcel}
-          sx={{ mb: 1, textTransform: 'none', fontWeight: 600 }}
-        >
-          Exportar Excel
-        </Button>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, width: { xs: '100%', sm: 'auto' }, alignItems: 'center' }}>
+          <Button
+            variant="outlined"
+            startIcon={<Download />}
+            onClick={handleExportarExcel}
+            disabled={loading || empresasFiltrados.length === 0}
+            sx={{ textTransform: 'none', fontWeight: 600, width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}
+          >
+            Exportar Excel
+          </Button>
+          {puedeAdministrar && (
+            <Button variant="contained" startIcon={<Add />} onClick={handleNuevaEmpresa} sx={{ borderRadius: 0.8, minHeight: 40, px: 2, textTransform: 'none', fontWeight: 600, width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+              Nueva Empresa
+            </Button>
+          )}
+        </Box>
       </Box>
 
       {/* =================================================

@@ -3,7 +3,7 @@ import {
     Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
     DialogTitle, IconButton, MenuItem, Paper, Snackbar, Switch, TextField, Tooltip, Typography,
 } from '@mui/material'
-import { Add, Close as CloseIcon, Edit as EditIcon, Save } from '@mui/icons-material'
+import { Add, Close as CloseIcon, Edit as EditIcon, Save, Download as DownloadIcon } from '@mui/icons-material'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { obtenerEtapasCosto, crearEtapaCosto, actualizarEtapaCosto, cambiarEstadoEtapaCosto } from '../../services/etapaCostoService'
 import SearchInput from '../../components/common/SearchInput'
@@ -12,6 +12,7 @@ import Pagination from '../../components/common/Pagination'
 import PageHeader from '../../components/common/PageHeader'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import DataTable from '../../components/common/DataTable'
+import { exportarEtapasCostoExcel } from '../../services/excelService'
 
 const formularioInicial = { etapa_costo: '', estado: true }
 
@@ -117,6 +118,10 @@ function EtapasCosto() {
             return coincideTexto && coincideEstado
         })
     }, [etapas, busqueda, filtroEstado])
+
+    const handleExportarExcel = () => {
+        exportarEtapasCostoExcel(etapasFiltradas)
+    }
     // =========================================================
     // PAGINAR ETAPAS FILTRADAS
     // =========================================================
@@ -327,22 +332,27 @@ function EtapasCosto() {
             {/* ENCABEZADO DE LA PANTALLA */}
             <Box
                 sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) auto' },
+                    alignItems: 'center',
+                    gap: 1,
                     '& > .MuiBox-root': {
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        alignItems: { xs: 'stretch', sm: 'center' },
-                    },
-                    '& > .MuiBox-root > .MuiButton-root': {
-                        width: { xs: '100%', sm: 'auto' },
+                        mb: 0,
                     },
                 }}
             >
                 <PageHeader
                     title="Etapas de Costo"
                     description="Administración de etapas utilizadas para clasificar los costos de inversión."
-                    actionLabel="Nueva etapa"
-                    onAction={handleNuevaEtapa}
-                    actionIcon={<Add />}
                 />
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, width: { xs: '100%', sm: 'auto' }, alignItems: 'center' }}>
+                    <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportarExcel} disabled={loading || etapasFiltradas.length === 0} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+                        Exportar Excel
+                    </Button>
+                    <Button variant="contained" startIcon={<Add />} onClick={handleNuevaEtapa} sx={{ borderRadius: 0.8, minHeight: 40, px: 2, textTransform: 'none', fontWeight: 600, width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+                        Nueva etapa
+                    </Button>
+                </Box>
             </Box>
 
             {/* BUSCADOR Y MENSAJE DE ERROR */}

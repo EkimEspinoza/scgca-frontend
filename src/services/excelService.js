@@ -47,6 +47,35 @@ export function prepararDatosVariedadesExcel(variedades) {
   }))
 }
 
+export function prepararDatosTiposMaquinariaExcel(tiposMaquinaria) {
+  return tiposMaquinaria.map((tipo) => ({
+    'Tipo de Maquinaria': tipo.des_tipo_maquinaria ?? '',
+    Estado: tipo.estado ? 'Activo' : 'Inactivo',
+  }))
+}
+
+export function prepararDatosTiposCentroCostoExcel(tipos) {
+  return tipos.map((tipo) => ({
+    'Tipo de Centro de Costo': tipo.des_tip_cc ?? '',
+    Estado: tipo.estado ? 'Activo' : 'Inactivo',
+  }))
+}
+
+export function prepararDatosEtapasCostoExcel(etapas) {
+  return etapas.map((etapa) => ({
+    Código: etapa.cod_etapa ?? '',
+    Etapa: etapa.etapa_costo ?? '',
+    Estado: etapa.estado ? 'Activo' : 'Inactivo',
+  }))
+}
+
+export function prepararDatosComparativosExcel(comparativos) {
+  return comparativos.map((comparativo) => ({
+    Comparativo: comparativo.descripcion ?? '',
+    Estado: comparativo.estado ? 'Activo' : 'Inactivo',
+  }))
+}
+
 function descargarExcel(datos, nombreHoja, nombreArchivo, anchosColumnas) {
   const hoja = XLSX.utils.json_to_sheet(datos)
   hoja['!cols'] = anchosColumnas.map((wch) => ({ wch }))
@@ -86,6 +115,42 @@ export function exportarVariedadesExcel(variedades, nombreArchivo = 'Variedades'
   descargarExcel(
     prepararDatosVariedadesExcel(variedades),
     'Variedades',
+    nombreArchivo,
+    [40, 14],
+  )
+}
+
+export function exportarTiposMaquinariaExcel(tiposMaquinaria, nombreArchivo = 'Tipos_de_Maquinaria') {
+  descargarExcel(
+    prepararDatosTiposMaquinariaExcel(tiposMaquinaria),
+    'Tipos de Maquinaria',
+    nombreArchivo,
+    [40, 14],
+  )
+}
+
+export function exportarTiposCentroCostoExcel(tipos, nombreArchivo = 'Tipos_de_Centro_de_Costo') {
+  descargarExcel(
+    prepararDatosTiposCentroCostoExcel(tipos),
+    'Tipos de Centro de Costo',
+    nombreArchivo,
+    [40, 14],
+  )
+}
+
+export function exportarEtapasCostoExcel(etapas, nombreArchivo = 'Etapas_de_Costo') {
+  descargarExcel(
+    prepararDatosEtapasCostoExcel(etapas),
+    'Etapas de Costo',
+    nombreArchivo,
+    [14, 40, 14],
+  )
+}
+
+export function exportarComparativosExcel(comparativos, nombreArchivo = 'Comparativos') {
+  descargarExcel(
+    prepararDatosComparativosExcel(comparativos),
+    'Comparativos',
     nombreArchivo,
     [40, 14],
   )

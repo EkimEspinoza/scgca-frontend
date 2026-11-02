@@ -361,31 +361,30 @@ function Variedades() {
 
             <Box
                 sx={{
-                    display: 'flex',
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) auto' },
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: 1,
-                    flexWrap: 'wrap',
                     '& > .MuiBox-root': {
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        alignItems: { xs: 'stretch', sm: 'center' },
                         mb: 0,
-                    },
-                    '& > .MuiBox-root > .MuiButton-root': {
-                        width: { xs: '100%', sm: 'auto' },
                     },
                 }}
             >
                 <PageHeader
                     title="Variedades"
                     description={puedeAdministrar ? 'Administración de variedades agrícolas' : 'Consulta de variedades agrícolas'}
-                    actionLabel={puedeAdministrar ? 'Nueva variedad' : undefined}
-                    onAction={puedeAdministrar ? handleNuevaVariedad : undefined}
-                    actionIcon={puedeAdministrar ? <Add /> : undefined}
                 />
-                <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportarExcel} disabled={loading || variedadesFiltradas.length === 0} sx={{ mb: 2, textTransform: 'none', alignSelf: 'center', width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
-                    Exportar Excel
-                </Button>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, width: { xs: '100%', sm: 'auto' }, alignItems: 'center' }}>
+                    <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportarExcel} disabled={loading || variedadesFiltradas.length === 0} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+                        Exportar Excel
+                    </Button>
+                    {puedeAdministrar && (
+                        <Button variant="contained" startIcon={<Add />} onClick={handleNuevaVariedad} sx={{ borderRadius: 0.8, minHeight: 40, px: 2, textTransform: 'none', fontWeight: 600, width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+                            Nueva variedad
+                        </Button>
+                    )}
+                </Box>
             </Box>
 
 

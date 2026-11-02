@@ -9,7 +9,7 @@ import {
     DialogTitle, IconButton, MenuItem, Paper, Snackbar, Switch, TextField, Tooltip, Typography
 } from '@mui/material'
 
-import { Add, Close, Edit, Save } from '@mui/icons-material'
+import { Add, Close, Edit, Save, Download as DownloadIcon } from '@mui/icons-material'
 import useMediaQuery from '@mui/material/useMediaQuery'
 
 import { obtenerComparativos, crearComparativo, actualizarComparativo, cambiarEstadoComparativo } from '../../services/comparativoService'
@@ -20,6 +20,7 @@ import Pagination from '../../components/common/Pagination'
 import PageHeader from '../../components/common/PageHeader'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import DataTable from '../../components/common/DataTable'
+import { exportarComparativosExcel } from '../../services/excelService'
 
 
 const formularioInicial = { descripcion: '', estado: true }
@@ -143,6 +144,10 @@ function Comparativos() {
             return coincideTexto && coincideEstado
         })
     }, [comparativos, busqueda, filtroEstado])
+
+    const handleExportarExcel = () => {
+        exportarComparativosExcel(comparativosFiltrados)
+    }
     // =========================================================
     // DATOS PAGINADOS 
     // =========================================================
@@ -388,22 +393,27 @@ function Comparativos() {
 
             <Box
                 sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) auto' },
+                    alignItems: 'center',
+                    gap: 1,
                     '& > .MuiBox-root': {
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        alignItems: { xs: 'stretch', sm: 'center' },
-                    },
-                    '& > .MuiBox-root > .MuiButton-root': {
-                        width: { xs: '100%', sm: 'auto' },
+                        mb: 0,
                     },
                 }}
             >
                 <PageHeader
                     title="Comparativos"
                     description="Administración de comparativos agrícolas"
-                    actionLabel="Nuevo comparativo"
-                    onAction={handleNuevoComparativo}
-                    actionIcon={<Add />}
                 />
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, width: { xs: '100%', sm: 'auto' }, alignItems: 'center' }}>
+                    <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportarExcel} disabled={loading || comparativosFiltrados.length === 0} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+                        Exportar Excel
+                    </Button>
+                    <Button variant="contained" startIcon={<Add />} onClick={handleNuevoComparativo} sx={{ borderRadius: 0.8, minHeight: 40, px: 2, textTransform: 'none', fontWeight: 600, width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+                        Nuevo comparativo
+                    </Button>
+                </Box>
             </Box>
 
 

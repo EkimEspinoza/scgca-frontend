@@ -9,7 +9,7 @@ import {
   DialogTitle, IconButton, MenuItem, Paper, Snackbar, Switch, TextField, Tooltip, Typography
 } from '@mui/material'
 
-import { Add, Close as CloseIcon, Edit as EditIcon, Save } from '@mui/icons-material'
+import { Add, Close as CloseIcon, Edit as EditIcon, Save, Download as DownloadIcon } from '@mui/icons-material'
 import useMediaQuery from '@mui/material/useMediaQuery'
 
 import { obtenerTiposCentroCosto, crearTipoCentroCosto, actualizarTipoCentroCosto, cambiarEstadoTipoCentroCosto } from '../../services/tipoCentroCostoService'
@@ -20,6 +20,7 @@ import Pagination from '../../components/common/Pagination'
 import PageHeader from '../../components/common/PageHeader'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import DataTable from '../../components/common/DataTable'
+import { exportarTiposCentroCostoExcel } from '../../services/excelService'
 
 
 const formularioInicial = { des_tip_cc: '', estado: true }
@@ -140,6 +141,10 @@ function TiposCentroCosto() {
       return coincideTexto && coincideEstado
     })
   }, [tipos, busqueda, filtroEstado])
+
+  const handleExportarExcel = () => {
+    exportarTiposCentroCostoExcel(tiposFiltrados)
+  }
   // =========================================================
   // DATOS PAGINADOS
   // =========================================================
@@ -396,22 +401,27 @@ function TiposCentroCosto() {
 
       <Box
         sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) auto' },
+          alignItems: 'center',
+          gap: 1,
           '& > .MuiBox-root': {
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { xs: 'stretch', sm: 'center' },
-          },
-          '& > .MuiBox-root > .MuiButton-root': {
-            width: { xs: '100%', sm: 'auto' },
+            mb: 0,
           },
         }}
       >
         <PageHeader
           title="Tipos de Centro de Costo"
           description="Administra los tipos utilizados para clasificar los Centros de Costo"
-          actionLabel="Nuevo tipo de Centro de Costo"
-          onAction={handleNuevoTipoCentroCosto}
-          actionIcon={<Add />}
         />
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, width: { xs: '100%', sm: 'auto' }, alignItems: 'center' }}>
+          <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportarExcel} disabled={loading || tiposFiltrados.length === 0} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+            Exportar Excel
+          </Button>
+          <Button variant="contained" startIcon={<Add />} onClick={handleNuevoTipoCentroCosto} sx={{ borderRadius: 0.8, minHeight: 40, px: 2, textTransform: 'none', fontWeight: 600, width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+            Nuevo tipo de Centro de Costo
+          </Button>
+        </Box>
       </Box>
 
       <Paper
