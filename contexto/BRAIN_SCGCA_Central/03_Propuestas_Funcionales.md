@@ -1,0 +1,34 @@
+# Propuestas funcionales futuras — SCGCA Central
+
+**Actualizado:** 2026-11-02
+Este registro acumula ideas y requisitos futuros. Estar aquí no significa que la propuesta esté aprobada ni que se haya iniciado. Cuando el usuario acuerde ejecutarla, mover su seguimiento al plan de trabajo y conservar aquí el origen y la decisión.
+
+**Escala de estimación:** días/persona o intervalo de esfuerzo, definido después de analizar alcance, dependencias y criterios. Hasta entonces se indica “Por estimar”; no se inventan fechas ni duraciones.
+
+| ID | Propuesta | Estado | Prioridad | Estimación | Dependencias / próximo paso |
+|---|---|---|---|---|---|
+| PF-001 | Permisos granulares por usuario y módulo | EN DESARROLLO (PILOTO) | En curso | Por estimar | Catálogo y asignaciones creados; RLS piloto de Empresas y niveles QUERY/WRITER validados por el usuario. Pantallas ADMIN de Módulos y Permisos implementadas localmente; falta validación manual, despliegue del frontend y decidir qué módulo de negocio recibirá después RLS granular. Eliminar solo ADMIN. |
+| PF-002 | Módulo Almacén: artículos, clases y subclases | PROPUESTA | Por definir | Por estimar | Definir alcance, datos, pantallas, permisos e importación. |
+| PF-003 | Importación Excel con validación de maestros | PROPUESTA | Por definir | Por estimar | Definir formato, vista previa, errores y reversión. |
+| PF-004 | Distribución mensual | PENDIENTE DE DEFINICIÓN | Por definir | Por estimar | Resolver reglas abiertas documentadas en la sección 03 del BRAIN principal. |
+| PF-005 | Reportes, KPIs y Power BI | PROPUESTA | Por definir | Por estimar | Definir indicadores, filtros, exportaciones y fuentes. |
+| PF-006 | Integraciones SCIRE y XRAY | FUTURA | Por definir | Por estimar | Identificar sistemas fuente, datos y sincronización. |
+| PF-007 | Mostrar el cierre de la campaña anterior al crear una nueva | REGISTRADO | Por definir | Por estimar | Acordar comportamiento y validación esperados. |
+| PF-008 | Tipo de cambio BCRP: penúltimo día hábil con cotización | PENDIENTE DE CONFIRMACIÓN | Por definir | Por estimar | Cotejar el requisito con la función desplegada v15 y definir casos de prueba. |
+| PF-009 | Optimización de consultas y paginación de módulos | PROPUESTA | Por definir | Por estimar | Revisar módulos que descargan todos los registros y filtran/paginan en frontend; mover filtros, orden y paginación a Supabase, evaluar índices según consultas reales y definir una estrategia separada para exportaciones completas. |
+| PF-010 | Interfaz ADMIN para gestionar asignaciones de módulos y niveles QUERY/WRITER | IMPLEMENTADA EN LOCAL | Validar | Por estimar | Rutas `/modulos` y `/permisos` y pantallas locales compiladas correctamente el 2026-11-02. Falta validar flujos manualmente y publicar el frontend; no afirmar despliegue ni aceptación funcional. |
+
+## Plantilla para nuevas propuestas
+
+- ID:
+- Fecha y origen:
+- Necesidad y usuario beneficiado:
+- Descripción / resultado esperado:
+- Módulo:
+- Prioridad:
+- Estimación y supuestos:
+- Dependencias y riesgos:
+- Criterios de aceptación:
+- Estado: PROPUESTA, EN ANÁLISIS, APROBADA, DESCARTADA, EN DESARROLLO o IMPLEMENTADA.
+- Decisión/evidencia:
+- Siguiente paso:
