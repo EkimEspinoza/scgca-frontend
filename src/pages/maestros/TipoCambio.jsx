@@ -13,7 +13,7 @@ import {
     obtenerTiposCambio,
     obtenerUltimoTipoCambio,
     obtenerSiguientePeriodo,
-    consultarTipoCambioBCRP,
+    prepararTipoCambioManual,
     crearTipoCambio,
     actualizarTipoCambio
 } from '../../services/tipoCambioService'
@@ -44,8 +44,8 @@ const formatearPeriodo = (anho, mes) => {
 const formatearTipoCambio = (valor) => {
     if (valor === null || valor === undefined || valor === '') return '—'
     return Number(valor).toLocaleString('es-PE', {
-        minimumFractionDigits: 4,
-        maximumFractionDigits: 4
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3
     })
 }
 
@@ -152,19 +152,19 @@ function TipoCambio() {
     }
 
     // =========================================================
-    // CONSULTAR PROPUESTA DEL BCRP
+    // PREPARAR INGRESO MANUAL
     // =========================================================
-    const handleConsultarBCRP = async () => {
+    const handlePrepararIngresoManual = async () => {
         try {
             setConsultando(true)
             setError('')
             setPropuesta(null)
-            const data = await consultarTipoCambioBCRP()
+            const data = await prepararTipoCambioManual()
             setPropuesta(data)
             setDialogPropuestaOpen(true)
         } catch (err) {
-            console.error('Error consultando el BCRP:', err)
-            setError(err?.message || 'No se pudo consultar el tipo de cambio del BCRP.')
+            console.error('Error preparando el tipo de cambio:', err)
+            setError(err?.message || 'No se pudo preparar el registro manual.')
         } finally {
             setConsultando(false)
         }
@@ -377,7 +377,7 @@ function TipoCambio() {
 
             {/* TARJETAS DE PERÍODOS */}
             
-            {/* CONSULTA DEL BCRP */}
+            {/* INGRESO MANUAL */}
             
             {/* Contenedor horizontal de consulta e histórico */}
             <Box
@@ -391,7 +391,7 @@ function TipoCambio() {
                     alignItems: 'start'
                 }}
             >
-                {/* Panel de consulta del BCRP */}
+                {/* Panel de ingreso manual */}
                 <Paper
                     elevation={0}
                     sx={{
@@ -426,14 +426,14 @@ function TipoCambio() {
                                 variant="subtitle1"
                                 fontWeight={700}
                             >
-                                Consulta del Banco Central de Reserva del Perú
+                                Ingreso manual del tipo de cambio
                             </Typography>
 
                             <Typography
                                 variant="body2"
                                 color="text.secondary"
                             >
-                                Consulta el siguiente período y revisa el valor antes de registrarlo.
+                                El sistema propone 1.000 como valor inicial. Actualízalo con el dato oficial antes de guardarlo.
                             </Typography>
                         </Box>
                     </Box>
@@ -486,7 +486,7 @@ function TipoCambio() {
                             {/* Botón a la derecha */}
                             <Button
                                 variant="contained"
-                                onClick={handleConsultarBCRP}
+                                onClick={handlePrepararIngresoManual}
                                 disabled={
                                     consultando ||
                                     loading ||
@@ -510,8 +510,8 @@ function TipoCambio() {
                                 }}
                             >
                                 {consultando
-                                    ? 'Consultando...'
-                                    : 'Consultar siguiente mes'}
+                                    ? 'Preparando...'
+                                    : 'Ingresar siguiente mes'}
                             </Button>
                         </Box>
                     )}
@@ -608,7 +608,7 @@ function TipoCambio() {
                 />
             </Paper>
 
-            {/* DIÁLOGO DE PROPUESTA DEL BCRP */}
+            {/* DIÁLOGO DE INGRESO MANUAL */}
             <Dialog
                 open={dialogPropuestaOpen}
                 onClose={() => !guardando && setDialogPropuestaOpen(false)}
@@ -631,7 +631,7 @@ function TipoCambio() {
                     {propuesta && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
                             <Alert severity="info" sx={{ borderRadius: 1 }}>
-                                Revisa el período y el valor consultado. El registro solo se guardará cuando lo confirmes.
+                                El valor inicia en 1.000. Reemplázalo manualmente por el tipo de cambio oficial antes de guardar.
                             </Alert>
                             <Box
                                 sx={{
@@ -649,14 +649,36 @@ function TipoCambio() {
                                     {formatearPeriodo(propuesta.anho, propuesta.mes)}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Tipo de cambio propuesto
+                                    Tipo de cambio (editable)
                                 </Typography>
-                                <Typography variant="h4" fontWeight={800} color="success.main">
-                                    S/ {formatearTipoCambio(propuesta.tipo_cambio)}
-                                </Typography>
+                                <TextField
+                                    label="Tipo de cambio"
+                                    type="number"
+                                    value={propuesta.tipo_cambio}
+                                    onChange={(event) => setPropuesta((actual) => ({
+                                        ...actual,
+                                        tipo_cambio: event.target.value
+                                    }))}
+                                    inputProps={{ min: 0, step: '0.001' }}
+                                    helperText="Ingresa el valor oficial con hasta tres decimales."
+                                    fullWidth
+                                    required
+                                    sx={{
+                                        mt: 1,
+                                        '& input[type=number]': { MozAppearance: 'textfield' },
+                                        '& input[type=number]::-webkit-outer-spin-button': {
+                                            WebkitAppearance: 'none',
+                                            margin: 0
+                                        },
+                                        '& input[type=number]::-webkit-inner-spin-button': {
+                                            WebkitAppearance: 'none',
+                                            margin: 0
+                                        }
+                                    }}
+                                />
                             </Box>
                             <Typography variant="caption" color="text.secondary">
-                                La consulta no modifica la base de datos. Debes confirmar para guardar el registro.
+                                El registro no se guarda hasta que confirmes. Verifica el valor antes de continuar.
                             </Typography>
                         </Box>
                     )}
@@ -720,11 +742,22 @@ function TipoCambio() {
                             value={formulario.tipo_cambio}
                             onChange={handleChangeFormulario}
                             error={Boolean(erroresFormulario.tipo_cambio)}
-                            helperText={erroresFormulario.tipo_cambio || 'Ingresa el valor con hasta cuatro decimales.'}
-                            inputProps={{ min: 0, step: '0.0001' }}
+                            helperText={erroresFormulario.tipo_cambio || 'Ingresa el valor con hasta tres decimales.'}
+                            inputProps={{ min: 0, step: '0.001' }}
                             fullWidth
                             required
                             disabled={guardando}
+                            sx={{
+                                '& input[type=number]': { MozAppearance: 'textfield' },
+                                '& input[type=number]::-webkit-outer-spin-button': {
+                                    WebkitAppearance: 'none',
+                                    margin: 0
+                                },
+                                '& input[type=number]::-webkit-inner-spin-button': {
+                                    WebkitAppearance: 'none',
+                                    margin: 0
+                                }
+                            }}
                         />
                     </Box>
                 </DialogContent>

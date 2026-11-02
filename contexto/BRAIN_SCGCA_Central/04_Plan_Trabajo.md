@@ -1,7 +1,7 @@
 # Plan de trabajo y seguimiento — SCGCA Central
 
 **Actualizado:** 2026-11-02
-La lista registra pendientes y seguimiento. La actualización visual de Centro de Costos y Campañas quedó publicada; Tipo de Cambio recibió la escala compacta, pero su revisión funcional queda pendiente.
+La lista registra pendientes y seguimiento. La actualización visual de Centro de Costos y Campañas quedó publicada. Tipo de Cambio usa tres decimales y quedó preparado para ingreso manual mientras se identifica una API de SUNAT estable.
 
 ## 07. Prioridades y plan de trabajo
 
@@ -14,7 +14,7 @@ El usuario decidió primero ordenar el contexto. Para la siguiente jornada, el 2
 5. Confirmar si existe un proyecto Supabase separado para pruebas; en la cuenta consultada solo apareció Central y no se listaron ramas de desarrollo.
 6. Decidir si se mantiene desactivada la protección de contraseñas filtradas y cómo atender alertas de rendimiento.
 7. Cerrar documentalmente A-04 y revisar reglas pendientes de campañas, distribución, cierres y reportes.
-8. Confirmar la regla BCRP del penúltimo día hábil antes de cambiar esa lógica.
+8. Encontrar y validar una API estable para obtener la venta SUNAT del último día de cada mes.
 
 Estos temas no constituyen autorización para modificar producción.
 
@@ -26,6 +26,7 @@ Estos temas no constituyen autorización para modificar producción.
 | R-02 | Implementar catálogo de módulos, asignaciones QUERY/WRITER y piloto RLS para Empresas; renombrar READER a WRITER | 2026-10-31 | Incremental | Completado (piloto) | Usuario informó que las pruebas manuales salieron OK. La base muestra prueba 1 y prueba 3 como WRITER en EMPRESAS; prueba 2 está como rol QUERY, pero no tiene asignación al módulo. No extender hasta alinear esa matriz. | Migraciones Supabase `20261031040053`, `20261031040135`, `20261031040723`, `20261031050245`; build local aprobado 2026-10-31 |
 | R-03 | Alinear las rutas de los nueve Maestros a ADMIN y al estado activo del módulo en catálogo | 2026-11-02 | Incremental | Integrado en GitHub main | Las rutas siguen siendo ADMIN-only. Build aprobado; prueba manual y publicación en hosting pendientes. | `src/App.jsx`; build Vite 11,773 módulos aprobado 2026-11-02; PR #63 |
 | R-04 | Restringir lectura del catálogo de permisos a roles activos y validar RLS de perfiles/asignaciones/catálogos | 2026-11-02 | Puntual | Completado en Supabase | `usuarios`, `usuario_empresa`, `usuario_modulo` y `modulos` ya cumplían el alcance elegido. No se simuló sesión por rol. | Migración `20261102202432_restrict_permission_catalog_reads_to_active_users`; verificación `pg_policies` |
+| R-05 | Simplificar roles globales y dejar Tipo de Cambio con valor inicial 1.000 editable manualmente | 2026-11-02 | Puntual | Completado en Supabase y local | API directa de SUNAT aún no identificada. Cambios frontend pendientes de integrar a GitHub `main`. | Migraciones `20261102205813` y `20261102213154`; Edge Function BCRP eliminada de Supabase; build local aprobado antes de los últimos cambios visuales |
 
 PF-010 está implementada e integrada en GitHub `main`; pendiente validar manualmente los flujos de catálogo y asignación, y publicar el frontend en hosting. La matriz de cuentas de prueba EMPRESAS sigue pendiente de alinear.
 

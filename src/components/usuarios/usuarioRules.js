@@ -2,6 +2,11 @@ export function esPermisoAdministrador(nombrePermiso) {
   return nombrePermiso === 'ADMIN'
 }
 
+export function obtenerEtiquetaPermiso(nombrePermiso) {
+  if (nombrePermiso === 'USUARIO') return 'Usuario normal'
+  return nombrePermiso || 'Sin asignar'
+}
+
 export function validarFormularioUsuario(formulario, { esEdicion = false, esAdmin = false } = {}) {
   const errores = {}
   const email = String(formulario.email ?? '').trim()

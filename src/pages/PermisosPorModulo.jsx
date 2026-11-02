@@ -13,6 +13,7 @@ import { Save, Security } from '@mui/icons-material'
 import CompactModuleTheme from '../components/common/CompactModuleTheme'
 import DataTable from '../components/common/DataTable'
 import PageHeader from '../components/common/PageHeader'
+import { obtenerEtiquetaPermiso } from '../components/usuarios/usuarioRules'
 import {
   obtenerAsignacionesUsuario,
   obtenerModulos,
@@ -161,7 +162,7 @@ function PermisosPorModulo() {
           >
             {usuarios.map((usuario) => (
               <MenuItem key={usuario.id_usuario} value={String(usuario.id_usuario)}>
-                {nombreUsuario(usuario)} · {usuario.permiso?.nombre ?? 'Sin rol'} · {usuario.estado ? 'Activo' : 'Inactivo'}
+                {nombreUsuario(usuario)} · {obtenerEtiquetaPermiso(usuario.permiso?.nombre)} · {usuario.estado ? 'Activo' : 'Inactivo'}
               </MenuItem>
             ))}
           </TextField>

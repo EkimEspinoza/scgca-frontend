@@ -7,6 +7,7 @@ import {
   obtenerPermisos as obtenerPermisosService,
   obtenerUsuarios as obtenerUsuariosService,
 } from '../services/usuarioService'
+import { obtenerEtiquetaPermiso } from '../components/usuarios/usuarioRules'
 
 const FILAS_POR_PAGINA = 10
 
@@ -91,7 +92,7 @@ export function useUsuarios() {
     const buscar = normalizarTexto(filtros.buscar)
     return usuarios.filter((usuario) => {
       const nombreCompleto = `${usuario.nombre ?? ''} ${usuario.apellido ?? ''}`
-      const permiso = usuario.permiso?.nombre ?? ''
+      const permiso = obtenerEtiquetaPermiso(usuario.permiso?.nombre)
       const empresasUsuario = usuario.usuario_empresa ?? []
       const coincideBuscar = !buscar || normalizarTexto(nombreCompleto).includes(buscar) || normalizarTexto(permiso).includes(buscar)
       const coincideEstado = !filtros.estado || usuario.estado === filtros.estado

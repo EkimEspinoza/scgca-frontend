@@ -15,6 +15,7 @@ import { useEmpresa } from '../context/useEmpresa'
 
 import PageTitle from '../components/PageTitle'
 import KpiCard from '../components/KpiCard'
+import { obtenerEtiquetaPermiso } from '../components/usuarios/usuarioRules'
 
 function Dashboard() {
   const { perfil } = useAuth()
@@ -53,7 +54,7 @@ function Dashboard() {
         <Grid xs={12} sm={6} md={4}>
           <KpiCard
             title="Permiso"
-            value={perfil?.permiso?.nombre ?? '-'}
+            value={obtenerEtiquetaPermiso(perfil?.permiso?.nombre)}
             subtitle="Nivel de acceso"
             icon={<Security />}
           />

@@ -16,6 +16,8 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material'
 
+import { obtenerEtiquetaPermiso } from './usuarioRules'
+
 function UsuariosFilters({
   filtros,
   permisos = [],
@@ -140,7 +142,7 @@ function UsuariosFilters({
                     permiso.id_permiso
                   }
                 >
-                  {permiso.nombre}
+                  {obtenerEtiquetaPermiso(permiso.nombre)}
                 </MenuItem>
               ),
             )}

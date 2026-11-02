@@ -14,7 +14,7 @@ Este registro acumula ideas y requisitos futuros. Estar aquí no significa que l
 | PF-005 | Reportes, KPIs y Power BI | PROPUESTA | Por definir | Por estimar | Definir indicadores, filtros, exportaciones y fuentes. |
 | PF-006 | Integraciones SCIRE y XRAY | FUTURA | Por definir | Por estimar | Identificar sistemas fuente, datos y sincronización. |
 | PF-007 | Mostrar el cierre de la campaña anterior al crear una nueva | REGISTRADO | Por definir | Por estimar | Acordar comportamiento y validación esperados. |
-| PF-008 | Tipo de cambio BCRP: penúltimo día hábil con cotización | PENDIENTE DE CONFIRMACIÓN | Por definir | Por estimar | Cotejar el requisito con la función desplegada v15 y definir casos de prueba. |
+| PF-008 | Automatizar la venta SUNAT del último día calendario del mes | PENDIENTE (API ESTABLE) | Por definir | Por estimar | Hasta encontrar y validar una API directa de SUNAT, el formulario propone 1.000 y el ADMIN ingresa manualmente el valor. No sustituir la fuente por BCRP. |
 | PF-009 | Optimización de consultas y paginación de módulos | PROPUESTA | Por definir | Por estimar | Revisar módulos que descargan todos los registros y filtran/paginan en frontend; mover filtros, orden y paginación a Supabase, evaluar índices según consultas reales y definir una estrategia separada para exportaciones completas. |
 | PF-010 | Interfaz ADMIN para gestionar asignaciones de módulos y niveles QUERY/WRITER | IMPLEMENTADA EN GITHUB MAIN | Validar | Por estimar | Rutas `/modulos` y `/permisos` integradas mediante PR #63; build correcto el 2026-11-02. Falta validar los flujos manualmente y publicar el frontend en hosting. |
 

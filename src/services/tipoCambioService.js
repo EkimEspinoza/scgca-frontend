@@ -5,7 +5,8 @@ import { supabase } from '../lib/supabase'
 // =========================================================
 
 const TABLA = 'TipoCambio'
-const FUNCION_BCRP = 'consultar-tipo-cambio-bcrp'
+
+const normalizarTipoCambio = (valor) => Number(Number(valor).toFixed(3))
 
 // =========================================================
 // CONSULTAR HISTÓRICO
@@ -89,20 +90,11 @@ export async function obtenerSiguientePeriodo() {
 
 
 // =========================================================
-// CONSULTAR TIPO DE CAMBIO EN EL BCRP
-//
-// La Edge Function consulta la fuente oficial.
-// Esta operación no inserta ningún registro.
+// PREPARAR TIPO DE CAMBIO PARA INGRESO MANUAL
 // =========================================================
 
-/**
- * Solicita el tipo de cambio del siguiente período.
- *
- * Si el BCRP todavía no publicó el dato, se genera un
- * mensaje controlado para mostrarlo en la interfaz.
- */
-export async function consultarTipoCambioBCRP() {
-    // Determinar el período que corresponde consultar.
+/** Prepara el siguiente período con un valor inicial editable. */
+export async function prepararTipoCambioManual() {
     const periodo = await obtenerSiguientePeriodo()
 
     if (periodo.requiereInicializacion) {
@@ -111,72 +103,12 @@ export async function consultarTipoCambioBCRP() {
         )
     }
 
-    // Invocar la Edge Function de Supabase.
-    const { data, error } = await supabase.functions.invoke(
-        FUNCION_BCRP,
-        {
-            body: {
-                anho: periodo.anho,
-                mes: periodo.mes
-            }
-        }
-    )
-
-    // Gestionar errores HTTP o de comunicación.
-    if (error) {
-        console.error(
-            '[TipoCambio] Error consultando el BCRP:',
-            error
-        )
-
-        // Intentar recuperar el detalle de la respuesta HTTP.
-        if (error.context) {
-            try {
-                const detalle = await error.context.clone().text()
-                console.error('[TipoCambio] Estado HTTP:', error.context.status)
-                console.error('[TipoCambio] Detalle de respuesta:', detalle)
-            } catch (detalleError) {
-                console.error('[TipoCambio] No se pudo leer el detalle:', detalleError)
-            }
-        }
-        throw new Error(`No se pudo consultar el BCRP: ${error.message}`)
-    }
-
-    // Registrar la respuesta para facilitar el diagnóstico.
-    console.log('[TipoCambio] Respuesta de la función:', data)
-
-    // Gestionar períodos que el BCRP todavía no ha publicado.
-    // La Edge Function devuelve HTTP 200 en este escenario.
-    if (data?.disponible === false) {
-        throw new Error(
-            data.mensaje ||
-            `El tipo de cambio de ${String(periodo.mes).padStart(2, '0')}/${periodo.anho} aún no está disponible en el BCRP. Intenta nuevamente más adelante.`
-        )
-    }
-
-    // Gestionar errores de negocio devueltos por la función.
-    if (data?.error) { throw new Error(data.error) }
-
-    // Validar que la respuesta corresponda al período esperado.
-    if (
-        !data ||
-        data.disponible !== true ||
-        Number(data.anho) !== periodo.anho ||
-        Number(data.mes) !== periodo.mes ||
-        !Number.isFinite(Number(data.tipo_cambio)) ||
-        Number(data.tipo_cambio) <= 0
-    ) {
-        throw new Error(
-            'La respuesta del BCRP no contiene un tipo de cambio válido para el período solicitado.'
-        )
-    }
-
-    // Devolver la propuesta sin guardar en la base de datos.
     return {
-        ...data,
-        anho: Number(data.anho),
-        mes: Number(data.mes),
-        tipo_cambio: Number(data.tipo_cambio)
+        disponible: true,
+        anho: periodo.anho,
+        mes: periodo.mes,
+        tipo_cambio: 1,
+        fuente: 'Manual'
     }
 }
 
@@ -195,7 +127,7 @@ export async function crearTipoCambio(datos) {
     const registro = {
         anho: Number(datos.anho),
         mes: Number(datos.mes),
-        tipo_cambio: Number(datos.tipo_cambio)
+        tipo_cambio: normalizarTipoCambio(datos.tipo_cambio)
     }
 
     // Validar los datos antes de enviarlos a Supabase.
@@ -241,7 +173,7 @@ export async function actualizarTipoCambio(idTipoCambio, datos) {
     if (datos.tipo_cambio !== undefined) {
         const valor = Number(datos.tipo_cambio)
         if (!Number.isFinite(valor) || valor <= 0) { throw new Error('El tipo de cambio debe ser mayor que cero.') }
-        actualizacion.tipo_cambio = valor
+        actualizacion.tipo_cambio = normalizarTipoCambio(valor)
     }
 
     // Evitar enviar una actualización vacía.

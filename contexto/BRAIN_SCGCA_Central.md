@@ -79,6 +79,9 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 - En `public.modulos`, usuarios activos pueden leer solo módulos activos y ADMIN puede leer y administrar todo. En `public.permiso`, se restringió SELECT: usuarios activos ven permisos activos y ADMIN ve también los inactivos. El catálogo de permisos sigue sin escritura directa por Data API; sus cambios se controlan con migraciones.
 - La migración `20261102202432_restrict_permission_catalog_reads_to_active_users` se aplicó a Supabase Central. Se verificó el resultado consultando `pg_policies`; no se hizo una prueba de sesión real con cada rol.
 - Las rutas y pantallas de ADMIN para **Módulos** y **Permisos** están integradas en GitHub `main` mediante PR #63 (`/modulos`, `/permisos`). `npm run build` aprobó el 2026-11-02 (Vite transformó 11,773 módulos). No se hizo prueba manual de esas pantallas ni despliegue del frontend a hosting.
+- Se simplificó el rol global a `ADMIN` y `USUARIO`; `QUERY` y `WRITER` quedan exclusivamente como niveles de `usuario_modulo`. La migración `20261102205813_simplify_global_user_roles` aparece aplicada en Supabase.
+- Tipo de Cambio usa ahora precisión de tres decimales (`numeric(10,3)`), aplicada con `20261102213154_tipo_cambio_tres_decimales`. La Edge Function `consultar-tipo-cambio-bcrp` fue retirada de Supabase y del repositorio. El formulario propone `1.000` y el ADMIN debe reemplazarlo manualmente por la venta oficial SUNAT del último día del mes; encontrar una API estable de SUNAT sigue pendiente.
+- A la fecha, las 42 migraciones locales coinciden con las 42 registradas en Supabase. Las funciones desplegadas verificadas son `crear-usuario` v9 y `actualizar-usuario` v3.
 ### Pendientes vigentes al 2 de noviembre
 
 - Alinear, según instrucción del usuario, las asignaciones de prueba: la base muestra prueba 1 WRITER, prueba 3 WRITER y prueba 2 sin asignación a Empresas.
@@ -86,7 +89,7 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 - Decidir el siguiente módulo de negocio para extender autorización granular por módulo en RLS; los nueve maestros siguen con administración ADMIN y lectura para perfiles activos.
 - Revisar si QUERY/WRITER globales seguirán siendo necesarios cuando las asignaciones por módulo estén completas.
 - Distribución mensual tiene decisiones de negocio y diseño abiertas.
-- La regla del BCRP para el penúltimo día hábil requiere cotejo con la lógica desplegada.
+- Encontrar una API estable para obtener directamente de SUNAT la venta del último día de cada mes; hasta entonces el Tipo de Cambio se ingresa manualmente.
 - Siguen abiertas alertas de Advisors y preguntas de auditoría.
 - No se toma como vigente ningún porcentaje histórico de avance (30%, 55% o 58%).
 
@@ -124,13 +127,12 @@ Es un área crítica pendiente. No diseñar tablas ni SQL hasta resolver:
 
 Reglas propuestas: PORCENTAJE es el dato contable y debe sumar 100% por empresa y mes; cero puede ser válido y NULL no equivale a cero. PORCENTAJE_HEC se calcula desde hectáreas vigentes. El cierre corresponde al último día del mes y debe ser correlativo. Debe haber vista previa; si falla un mes de un rango, toda la operación debe revertirse. ADMIN podría reabrir y editar PORCENTAJE. Estas reglas requieren confirmación funcional y técnica antes de implementarse.
 
-### Tipo de cambio BCRP
+### Tipo de cambio
 
-- La actualización BRAIN del 2026-10-21 confirma consultar-tipo-cambio-bcrp v15 ACTIVE, integrada mediante PR #55 y con verify_jwt=true. Esto reemplaza notas previas de “v14” o “pausado”.
-- La función consulta la serie PN01215PM. El flujo requiere autenticación, usuario activo, permiso ADMIN activo, correlatividad mensual y confirmación manual antes de registrar el valor.
-- La prueba manual de interfaz fue reportada como satisfactoria. No hay prueba HTTP independiente del asistente para cada rol; ADMIN con permiso inactivo tampoco se probó con una invocación real.
-- La función propone el tipo de cambio; no lo guarda sin confirmación.
-- La regla solicitada del penúltimo día hábil con cotización, retrocediendo si no hay cotización, aún no está confirmada como implementada. No inferirla por la versión 15.
+- El valor requerido es la **venta SUNAT del último día calendario del mes**. El usuario confirmó como referencias julio de 2026: 3.399; agosto: 3.356; septiembre: 3.450.
+- No hay una API pública de SUNAT documentada y comprobada como estable para la integración. La automatización queda pendiente; no usar otra fuente como sustituto silencioso.
+- Hasta resolverlo, el formulario del siguiente período inicia en 1.000 y permite ingresar manualmente el valor oficial antes de confirmar y guardar.
+- La Edge Function `consultar-tipo-cambio-bcrp` fue eliminada de Supabase y su código local se retiró. Funciones desplegadas verificadas: `crear-usuario` v9 y `actualizar-usuario` v3.
 
 ## 04. Arquitectura y estado técnico
 
@@ -148,9 +150,9 @@ RLS está habilitado en las 12 tablas observadas. PostgreSQL reporta versión 17
 
 ### Migraciones y funciones
 
-- Al 2026-11-02 hay 40 archivos de migración locales y 40 versiones registradas en Supabase; los nombres y versiones coinciden tras renombrar cuatro archivos locales. La migración más reciente es `20261102202432_restrict_permission_catalog_reads_to_active_users`.
-- Edge Functions desplegadas y contrastadas con local: crear-usuario v9, actualizar-usuario v3 y consultar-tipo-cambio-bcrp v15.
-- Las funciones de usuarios tienen verify_jwt=false, pero usan middleware withSupabase({ auth: "user" }) y comprueban identidad y ADMIN activo antes de usar privilegios administrativos. BCRP tiene verify_jwt=true.
+- Al 2026-11-02 hay 42 archivos de migración locales y 42 versiones registradas en Supabase; las versiones coinciden. Las más recientes son `20261102205813_simplify_global_user_roles` y `20261102213154_tipo_cambio_tres_decimales`.
+- Edge Functions desplegadas y contrastadas: `crear-usuario` v9 y `actualizar-usuario` v3. `consultar-tipo-cambio-bcrp` fue eliminada.
+- Las funciones de usuarios tienen verify_jwt=false, pero usan middleware withSupabase({ auth: "user" }) y comprueban identidad y ADMIN activo antes de usar privilegios administrativos.
 - La migración 20261021222143_a03_restringir_privilegios_secuencias_public.sql está en local y en el historial remoto.
 - La migración 20261014100000_serializar_validacion_campanas_centros_costo consta como aplicada. Su encabezado histórico decía que era una propuesta. La auditoría A-04 explica que una migración posterior endureció el search_path de validar_campana(); falta cierre documental integral.
 
@@ -158,7 +160,7 @@ RLS está habilitado en las 12 tablas observadas. PostgreSQL reporta versión 17
 
 ### Roles y controles
 
-- **Modelo acordado al 2026-10-31:** roles globales `ADMIN`, `QUERY` y `WRITER`. ADMIN tiene control total y es el único que puede eliminar. QUERY consulta y exporta solo módulos asignados. WRITER tiene lo de QUERY más crear, actualizar y activar/desactivar en módulos asignados; no elimina.
+- **Modelo actualizado al 2026-11-02:** roles globales `ADMIN` y `USUARIO`. ADMIN tiene control total y es el único que puede eliminar. `QUERY` y `WRITER` son niveles independientes por módulo: QUERY consulta y exporta; WRITER puede además crear, actualizar y activar/desactivar, sin eliminar.
 - Se implementaron `modulos` y `usuario_modulo`, con niveles por módulo QUERY/WRITER. El piloto de control RLS granular por asignación está implementado para Empresas; los demás maestros conservan lectura para perfiles activos y escritura ADMIN-only, sin exigir asignación granular para consultar sus datos.
 - ALMACEN y CONSULTA corresponden a una propuesta anterior, no a los nombres vigentes del modelo acordado.
 - Las interfaces ADMIN para catálogo de módulos y permisos por usuario existen en el código local (`/modulos`, `/permisos`); build aprobado, prueba manual y despliegue pendientes.

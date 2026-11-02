@@ -27,7 +27,7 @@ import {
   Typography,
 } from '@mui/material'
 
-import { esPermisoAdministrador, validarFormularioUsuario } from './usuarioRules'
+import { esPermisoAdministrador, obtenerEtiquetaPermiso, validarFormularioUsuario } from './usuarioRules'
 
 import {
   Business as BusinessIcon,
@@ -627,9 +627,7 @@ function UsuarioForm({
                         permiso.id_permiso
                       }
                     >
-                      {
-                        permiso.nombre
-                      }
+                      {obtenerEtiquetaPermiso(permiso.nombre)}
                     </MenuItem>
                   ),
                 )}

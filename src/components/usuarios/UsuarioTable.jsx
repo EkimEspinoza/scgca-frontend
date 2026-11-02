@@ -17,6 +17,8 @@ import {
   Edit as EditIcon,
 } from '@mui/icons-material'
 
+import { obtenerEtiquetaPermiso } from './usuarioRules'
+
 const COLORES_EMPRESA = {
   RANCHO: '#1976D2',
   'MOCHE NORTE': '#2E7D32',
@@ -375,10 +377,7 @@ function UsuarioTable({
                             fontSize: 13,
                           }}
                         >
-                          {usuario
-                            .permiso
-                            ?.nombre ||
-                            'Sin asignar'}
+                          {obtenerEtiquetaPermiso(usuario.permiso?.nombre)}
                         </Typography>
                       </TableCell>
 
