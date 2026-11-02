@@ -42,7 +42,7 @@ export async function obtenerCampanas() {
             )
         `)
         .order('fecha_inicio', {
-            ascending: true,
+            ascending: false,
         })
 
     if (error) {
@@ -325,6 +325,16 @@ export async function cambiarEstadoCampana(idCampana, estado) {
     return data
 }
 
+export async function cambiarCierreCampana(idCampana, cierreCamp) {
+    const { data, error } = await supabase
+        .from('Dim_Campana')
+        .update({ cierre_camp: cierreCamp })
+        .eq('id_campana', idCampana)
+        .select('id_campana, cierre_camp, updated_at')
+        .single()
+    if (error) throw error
+    return data
+}
 export async function eliminarCampana(idCampana) {
     const { error } = await supabase
         .from('Dim_Campana')

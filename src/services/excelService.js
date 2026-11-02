@@ -32,6 +32,21 @@ export function prepararDatosCampanasExcel(campanas) {
   }))
 }
 
+export function prepararDatosEmpresasExcel(empresas) {
+  return empresas.map((empresa) => ({
+    Empresa: empresa.descripcion ?? '',
+    'Nombre comercial': empresa.nombre_comercial ?? '',
+    Estado: empresa.estado ? 'Activo' : 'Inactivo',
+  }))
+}
+
+export function prepararDatosVariedadesExcel(variedades) {
+  return variedades.map((variedad) => ({
+    Variedad: variedad.descripcion ?? '',
+    Estado: variedad.estado ? 'Activo' : 'Inactivo',
+  }))
+}
+
 function descargarExcel(datos, nombreHoja, nombreArchivo, anchosColumnas) {
   const hoja = XLSX.utils.json_to_sheet(datos)
   hoja['!cols'] = anchosColumnas.map((wch) => ({ wch }))
@@ -55,5 +70,23 @@ export function exportarCampanasExcel(campanas, nombreArchivo = 'Campanas') {
     'Campañas',
     nombreArchivo,
     [18, 12, 18, 12, 40, 28, 45, 14, 14, 14, 14, 12, 12, 12],
+  )
+}
+
+export function exportarEmpresasExcel(empresas, nombreArchivo = 'Empresas') {
+  descargarExcel(
+    prepararDatosEmpresasExcel(empresas),
+    'Empresas',
+    nombreArchivo,
+    [40, 30, 14],
+  )
+}
+
+export function exportarVariedadesExcel(variedades, nombreArchivo = 'Variedades') {
+  descargarExcel(
+    prepararDatosVariedadesExcel(variedades),
+    'Variedades',
+    nombreArchivo,
+    [40, 14],
   )
 }

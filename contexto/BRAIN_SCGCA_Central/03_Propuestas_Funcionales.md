@@ -16,7 +16,7 @@ Este registro acumula ideas y requisitos futuros. Estar aquí no significa que l
 | PF-007 | Mostrar el cierre de la campaña anterior al crear una nueva | REGISTRADO | Por definir | Por estimar | Acordar comportamiento y validación esperados. |
 | PF-008 | Tipo de cambio BCRP: penúltimo día hábil con cotización | PENDIENTE DE CONFIRMACIÓN | Por definir | Por estimar | Cotejar el requisito con la función desplegada v15 y definir casos de prueba. |
 | PF-009 | Optimización de consultas y paginación de módulos | PROPUESTA | Por definir | Por estimar | Revisar módulos que descargan todos los registros y filtran/paginan en frontend; mover filtros, orden y paginación a Supabase, evaluar índices según consultas reales y definir una estrategia separada para exportaciones completas. |
-| PF-010 | Interfaz ADMIN para gestionar asignaciones de módulos y niveles QUERY/WRITER | IMPLEMENTADA EN LOCAL | Validar | Por estimar | Rutas `/modulos` y `/permisos` y pantallas locales compiladas correctamente el 2026-11-02. Falta validar flujos manualmente y publicar el frontend; no afirmar despliegue ni aceptación funcional. |
+| PF-010 | Interfaz ADMIN para gestionar asignaciones de módulos y niveles QUERY/WRITER | IMPLEMENTADA EN GITHUB MAIN | Validar | Por estimar | Rutas `/modulos` y `/permisos` integradas mediante PR #63; build correcto el 2026-11-02. Falta validar los flujos manualmente y publicar el frontend en hosting. |
 
 ## Plantilla para nuevas propuestas
 

@@ -10,7 +10,9 @@ import {
 } from '@mui/material'
 
 import { Add, Close, Edit, Save } from '@mui/icons-material'
+import DownloadIcon from '@mui/icons-material/Download'
 import useMediaQuery from '@mui/material/useMediaQuery'
+import { useAuth } from '../../context/useAuth'
 
 import { obtenerVariedades, crearVariedad, actualizarVariedad, cambiarEstadoVariedad } from '../../services/variedadService'
 
@@ -20,10 +22,15 @@ import Pagination from '../../components/common/Pagination'
 import PageHeader from '../../components/common/PageHeader'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import DataTable from '../../components/common/DataTable'
+import { exportarVariedadesExcel } from '../../services/excelService'
 
 const formularioInicial = { descripcion: '', estado: true }
 
 function Variedades() {
+    const { perfil } = useAuth()
+    const rol = perfil?.permiso?.nombre
+    const nivelModulo = perfil?.modulos?.find((modulo) => modulo.codigo === 'VARIEDADES')?.nivel
+    const puedeAdministrar = rol === 'ADMIN'
     const esVistaMovil = useMediaQuery('(max-width:760px)')
 
     const [variedades, setVariedades] = useState([])
@@ -77,6 +84,7 @@ function Variedades() {
     // CAMBIO DE ESTADO
     // =========================================================
     const handleSolicitarCambioEstado = (variedad) => {
+        if (!puedeAdministrar) return
         setVariedadCambioEstado({ ...variedad, nuevoEstado: !Boolean(variedad.estado) })
     }
 
@@ -86,6 +94,7 @@ function Variedades() {
     }
 
     const handleConfirmarCambioEstado = async () => {
+        if (!puedeAdministrar) return
         if (!variedadCambioEstado) return
         const { id_variedad, nuevoEstado } = variedadCambioEstado
 
@@ -169,6 +178,7 @@ function Variedades() {
     // =========================================================
 
     const handleNuevaVariedad = () => {
+        if (!puedeAdministrar) return
         setModoEdicion(false)
         setVariedadSeleccionada(null)
         setFormulario({ ...formularioInicial, estado: true })
@@ -181,6 +191,7 @@ function Variedades() {
     // =========================================================
 
     const handleEditarVariedad = (variedad) => {
+        if (!puedeAdministrar) return
         setModoEdicion(true)
         setVariedadSeleccionada(variedad)
         setFormulario({
@@ -245,6 +256,7 @@ function Variedades() {
     // =========================================================
 
     const handleGuardar = async () => {
+        if (!puedeAdministrar) return
         if (!validarFormulario()) { return }
         try {
             setGuardando(true)
@@ -276,6 +288,10 @@ function Variedades() {
     const handleCerrarMensaje = () => { setMensaje('') }
     const handleCerrarError = () => { setError('') }
 
+    const handleExportarExcel = () => {
+        exportarVariedadesExcel(variedadesFiltradas)
+    }
+
     // =========================================================
     // COLUMNAS DEL DATATABLE
     // =========================================================
@@ -302,25 +318,15 @@ function Variedades() {
             label: 'Estado',
             width: '20%',
             render: (variedad) => (
-                                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-                    <Tooltip title={variedad.estado ? 'Desactivar variedad' : 'Reactivar variedad'}>
-                        <span>
-                            <Switch
-                                checked={Boolean(variedad.estado)}
-                                onChange={() => handleSolicitarCambioEstado(variedad)}
-                                disabled={cambiandoEstado}
-                                size="small"
-                                inputProps={{
-                                    'aria-label': `${variedad.estado ? 'Desactivar' : 'Reactivar'} ${variedad.descripcion}`,
-                                }}
-                            />
-                        </span>
-                    </Tooltip>
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                    {puedeAdministrar && <Tooltip title={variedad.estado ? 'Desactivar variedad' : 'Reactivar variedad'}>
+                        <span><Switch checked={Boolean(variedad.estado)} onChange={() => handleSolicitarCambioEstado(variedad)} disabled={cambiandoEstado} size="small" inputProps={{ 'aria-label': `${variedad.estado ? 'Desactivar' : 'Reactivar'} ${variedad.descripcion}` }} /></span>
+                    </Tooltip>}
                     <StatusChip estado={variedad.estado} activoLabel="Activo" inactivoLabel="Inactivo" />
                 </Box>
             )
         },
-        {
+        ...(puedeAdministrar ? [{
             key: 'acciones',
             label: 'Acciones',
             width: '20%',
@@ -331,7 +337,7 @@ function Variedades() {
                     <Edit fontSize="small" />
                 </IconButton>
             ),
-        },
+        }] : []),
     ]
 
     // =========================================================
@@ -355,9 +361,15 @@ function Variedades() {
 
             <Box
                 sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    flexWrap: 'wrap',
                     '& > .MuiBox-root': {
                         flexDirection: { xs: 'column', sm: 'row' },
                         alignItems: { xs: 'stretch', sm: 'center' },
+                        mb: 0,
                     },
                     '& > .MuiBox-root > .MuiButton-root': {
                         width: { xs: '100%', sm: 'auto' },
@@ -366,11 +378,14 @@ function Variedades() {
             >
                 <PageHeader
                     title="Variedades"
-                    description="Administración de variedades agrícolas"
-                    actionLabel="Nueva variedad"
-                    onAction={handleNuevaVariedad}
-                    actionIcon={<Add />}
+                    description={puedeAdministrar ? 'Administración de variedades agrícolas' : 'Consulta de variedades agrícolas'}
+                    actionLabel={puedeAdministrar ? 'Nueva variedad' : undefined}
+                    onAction={puedeAdministrar ? handleNuevaVariedad : undefined}
+                    actionIcon={puedeAdministrar ? <Add /> : undefined}
                 />
+                <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportarExcel} disabled={loading || variedadesFiltradas.length === 0} sx={{ mb: 2, textTransform: 'none', alignSelf: 'center', width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}>
+                    Exportar Excel
+                </Button>
             </Box>
 
 
@@ -471,7 +486,7 @@ function Variedades() {
                                 key={variedad.id_variedad}
                                 sx={{
                                     display: 'grid',
-                                    gridTemplateColumns: 'minmax(0, 1fr) auto',
+                                    gridTemplateColumns: puedeAdministrar ? 'minmax(0, 1fr) auto' : 'minmax(0, 1fr)',
                                     columnGap: 1,
                                     alignItems: 'center',
                                     px: 1.5,
@@ -486,7 +501,7 @@ function Variedades() {
                                         {variedad.descripcion}
                                     </Typography>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.75 }}>
-                                        <Tooltip title={variedad.estado ? 'Desactivar variedad' : 'Reactivar variedad'}>
+                                        {puedeAdministrar && <Tooltip title={variedad.estado ? 'Desactivar variedad' : 'Reactivar variedad'}>
                                             <span>
                                                 <Switch
                                                     checked={Boolean(variedad.estado)}
@@ -498,17 +513,17 @@ function Variedades() {
                                                     }}
                                                 />
                                             </span>
-                                        </Tooltip>
+                                        </Tooltip>}
                                         <StatusChip estado={variedad.estado} activoLabel="Activo" inactivoLabel="Inactivo" />
                                     </Box>
                                 </Box>
-                                <IconButton
+                                {puedeAdministrar && <IconButton
                                     aria-label={`Editar ${variedad.descripcion}`}
                                     onClick={() => handleEditarVariedad(variedad)}
                                     sx={{ minWidth: 44, minHeight: 44 }}
                                 >
                                     <Edit fontSize="small" />
-                                </IconButton>
+                                </IconButton>}
                             </Box>
                         ))}
                     </Box>
@@ -543,7 +558,7 @@ function Variedades() {
             ====================================================== */}
 
 
-            <Dialog open={dialogOpen} onClose={handleCerrarDialog} fullWidth maxWidth="sm">
+            <Dialog open={puedeAdministrar && dialogOpen} onClose={handleCerrarDialog} fullWidth maxWidth="sm">
                 {/* =====================================================
                 FORMULARIO DE NUEVO / ACTUALIZAR
                 ====================================================== */}

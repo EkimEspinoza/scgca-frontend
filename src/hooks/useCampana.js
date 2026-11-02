@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { obtenerCampanas, obtenerEmpresasActivas, obtenerCentrosCostoParaCampana, crearCampana, actualizarCampana, cambiarEstadoCampana, eliminarCampana } from '../services/campanaService'
+import { obtenerCampanas, obtenerEmpresasActivas, obtenerCentrosCostoParaCampana, crearCampana, actualizarCampana, cambiarEstadoCampana, cambiarCierreCampana, eliminarCampana } from '../services/campanaService'
 import { validarFormularioCampana, construirDatosCampana, obtenerMensajeErrorCampana } from '../components/campanas/campanaRules'
 
 export const formularioInicial = {
@@ -514,6 +514,10 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         })
     }
 
+    function solicitarCambioCierre(campana) {
+        setCampanaCambioEstado({ ...campana, tipoCambio: 'cierre', nuevoCierre: !Boolean(campana.cierre_camp) })
+    }
+
     function cerrarConfirmacionCambioEstado() {
         if (cambiandoEstado) return
         setCampanaCambioEstado(null)
@@ -522,11 +526,11 @@ function useCampana({ codCcPkContextual = '' } = {}) {
     async function confirmarCambioEstado() {
         if (!campanaCambioEstado) return
 
-        const { id_campana, nuevoEstado } = campanaCambioEstado
+        const { id_campana, nuevoEstado, nuevoCierre, tipoCambio } = campanaCambioEstado
         setCambiandoEstado(true)
 
         try {
-            const campanaActualizada = await cambiarEstadoCampana(id_campana, nuevoEstado)
+            const campanaActualizada = tipoCambio === 'cierre' ? await cambiarCierreCampana(id_campana, nuevoCierre) : await cambiarEstadoCampana(id_campana, nuevoEstado)
             setCampanas((actuales) => actuales.map((campana) =>
                 campana.id_campana === id_campana
                     ? { ...campana, ...campanaActualizada }
@@ -534,9 +538,11 @@ function useCampana({ codCcPkContextual = '' } = {}) {
             ))
             setPagina(0)
             mostrarMensaje(
-                nuevoEstado
-                    ? 'Campaña reactivada correctamente.'
-                    : 'Campaña desactivada correctamente. El registro se conservó.',
+                tipoCambio === 'cierre'
+                    ? (nuevoCierre ? 'Campaña cerrada correctamente.' : 'Campaña reabierta correctamente.')
+                    : nuevoEstado
+                        ? 'Campaña reactivada correctamente.'
+                        : 'Campaña desactivada correctamente. El registro se conservó.',
                 'success',
             )
             setCampanaCambioEstado(null)
@@ -720,6 +726,7 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         handleGuardar,
         handleEliminar,
         solicitarCambioEstado,
+        solicitarCambioCierre,
         cerrarConfirmacionCambioEstado,
         confirmarCambioEstado,
         recargarCampanas,

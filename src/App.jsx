@@ -37,6 +37,8 @@ const Login = lazy(() => import('./pages/Login'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const CambiarContrasena = lazy(() => import('./pages/CambiarContrasena'))
 const Usuarios = lazy(() => import('./pages/Usuarios'))
+const CatalogoModulos = lazy(() => import('./pages/CatalogoModulos'))
+const PermisosPorModulo = lazy(() => import('./pages/PermisosPorModulo'))
 const Campanas = lazy(() => import('./pages/Campanas'))
 const Comparativos = lazy(() => import('./pages/maestros/Comparativos'))
 
@@ -759,6 +761,8 @@ function AccesoRestringido() {
 function PermissionRoute({
   children,
   requiredPermissions = [],
+  moduleCode,
+  requiredLevel = 'QUERY',
 }) {
   const {
     perfil,
@@ -769,12 +773,24 @@ function PermissionRoute({
     perfil?.permiso?.nombre
 
 
-  const tienePermiso =
+  const tienePermisoPorRol =
     requiredPermissions.length ===
       0 ||
     requiredPermissions.includes(
       permiso,
     )
+
+  const accesoModulo = perfil?.modulos?.find(
+    (modulo) => modulo.codigo === moduleCode,
+  )
+  const nivelModulo = accesoModulo?.nivel
+  const tienePermisoPorModulo = moduleCode && accesoModulo && (
+    permiso === 'ADMIN' || nivelModulo === 'WRITER' ||
+    (requiredLevel === 'QUERY' && nivelModulo === 'QUERY')
+  )
+  const tienePermiso = moduleCode
+    ? tienePermisoPorRol && tienePermisoPorModulo
+    : tienePermisoPorRol
 
 
   if (!tienePermiso) {
@@ -872,20 +888,16 @@ function App() {
       />
 
 
-      {/* =========================================
+          {/* =========================================
           EMPRESAS
-          SOLO ADMIN
+          ADMIN / QUERY / WRITER ASIGNADO
       ========================================== */}
 
       <Route
         path="/empresas"
         element={
           <ProtectedRoute>
-            <PermissionRoute
-              requiredPermissions={[
-                'ADMIN',
-              ]}
-            >
+            <PermissionRoute requiredPermissions={['ADMIN']} moduleCode="EMPRESAS" requiredLevel="QUERY">
               <MainLayout
                 onLogout={logout}
               >
@@ -899,18 +911,14 @@ function App() {
 
       {/* =========================================
           VARIEDADES
-          SOLO ADMIN
+          ACCESO POR MÓDULO
       ========================================== */}
 
       <Route
         path="/variedades"
         element={
           <ProtectedRoute>
-            <PermissionRoute
-              requiredPermissions={[
-                'ADMIN',
-              ]}
-            >
+            <PermissionRoute requiredPermissions={['ADMIN']} moduleCode="VARIEDADES" requiredLevel="QUERY">
               <MainLayout
                 onLogout={logout}
               >
@@ -934,6 +942,8 @@ function App() {
               requiredPermissions={[
                 'ADMIN',
               ]}
+              moduleCode="TIPOS_CENTRO_COSTO"
+              requiredLevel="QUERY"
             >
               <MainLayout
                 onLogout={logout}
@@ -957,6 +967,8 @@ function App() {
               requiredPermissions={[
                 'ADMIN',
               ]}
+              moduleCode="TIPOS_MAQUINARIA"
+              requiredLevel="QUERY"
             >
               <MainLayout
                 onLogout={logout}
@@ -981,6 +993,8 @@ function App() {
               requiredPermissions={[
                 'ADMIN',
               ]}
+              moduleCode="ETAPAS_COSTO"
+              requiredLevel="QUERY"
             >
               <MainLayout
                 onLogout={logout}
@@ -1004,6 +1018,8 @@ function App() {
               requiredPermissions={[
                 'ADMIN',
               ]}
+              moduleCode="TIPO_CAMBIO"
+              requiredLevel="QUERY"
             >
               <MainLayout
                 onLogout={logout}
@@ -1027,6 +1043,8 @@ function App() {
               requiredPermissions={[
                 'ADMIN',
               ]}
+              moduleCode="CAMPANAS"
+              requiredLevel="QUERY"
             >
               <MainLayout
                 onLogout={logout}
@@ -1051,6 +1069,8 @@ function App() {
               requiredPermissions={[
                 'ADMIN',
               ]}
+              moduleCode="COMPARATIVOS"
+              requiredLevel="QUERY"
             >
               <MainLayout
                 onLogout={logout}
@@ -1075,6 +1095,8 @@ function App() {
               requiredPermissions={[
                 'ADMIN',
               ]}
+              moduleCode="CENTRO_COSTOS"
+              requiredLevel="QUERY"
             >
               <MainLayout
                 onLogout={logout}
@@ -1105,6 +1127,32 @@ function App() {
                 onLogout={logout}
               >
                 <Usuarios />
+              </MainLayout>
+            </PermissionRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/modulos"
+        element={
+          <ProtectedRoute>
+            <PermissionRoute requiredPermissions={['ADMIN']}>
+              <MainLayout onLogout={logout}>
+                <CatalogoModulos />
+              </MainLayout>
+            </PermissionRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/permisos"
+        element={
+          <ProtectedRoute>
+            <PermissionRoute requiredPermissions={['ADMIN']}>
+              <MainLayout onLogout={logout}>
+                <PermisosPorModulo />
               </MainLayout>
             </PermissionRoute>
           </ProtectedRoute>

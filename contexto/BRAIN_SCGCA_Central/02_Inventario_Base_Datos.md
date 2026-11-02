@@ -114,7 +114,7 @@ Triggers: trg_actualizar_fecha_tipo_cambio [habilitado]: CREATE TRIGGER trg_actu
 
 ### Delta verificado 2026-10-31 — RBAC granular y piloto Empresas
 
-Fuente: migraciones aplicadas a Supabase Central `20261031004412_rbac_module_catalog`, `20261031040115_seed_rbac_module_catalog`, `20261031040644_rbac_empresas_pilot` y `20261031050154_rbac_rename_reader_to_writer`. No sustituye la fotografía histórica de las otras tablas.
+Fuente: migraciones aplicadas a Supabase Central `20261031040053_rbac_module_catalog`, `20261031040135_seed_rbac_module_catalog`, `20261031040723_rbac_empresas_pilot` y `20261031050245_rbac_rename_reader_to_writer`. No sustituye la fotografía histórica de las otras tablas.
 
 #### permiso — estado actual
 
@@ -165,7 +165,7 @@ Consulta de solo lectura a `pg_policies`, funciones auxiliares y grants. Se conf
 - **modulos:** los usuarios activos pueden leer únicamente módulos activos; ADMIN puede consultar activos e inactivos y tiene INSERT/UPDATE/DELETE.
 - **permiso:** la política anterior `usuarios_autenticados_ver_permisos` (`USING true`) fue reemplazada por `usuarios_activos_ver_permisos`: usuarios activos leen solo permisos activos; ADMIN puede leer también permisos inactivos. `authenticated` mantiene solo SELECT por grants; la escritura directa sigue revocada y el catálogo se modifica mediante migraciones.
 - Migración aplicada: `20261102202432_restrict_permission_catalog_reads_to_active_users`. La inspección confirmó la política registrada en Supabase. No se simuló una sesión real de cada rol.
-- **Frontend (capa distinta de RLS):** las nueve rutas de Maestros requieren rol ADMIN y validan que el código de módulo esté activo en el catálogo. Las pantallas `/modulos` y `/permisos` existen en el código local; build aprobado el 2026-11-02, pendiente prueba manual y despliegue. Esta validación de ruta no agrega restricción por módulo a las políticas de lectura de las tablas.
+- **Frontend (capa distinta de RLS):** las nueve rutas de Maestros requieren rol ADMIN y validan que el código de módulo esté activo en el catálogo. Las pantallas `/modulos` y `/permisos` están integradas en GitHub `main` mediante PR #63; build aprobado el 2026-11-02, pendiente prueba manual y despliegue. Esta validación de ruta no agrega restricción por módulo a las políticas de lectura de las tablas.
 
 Este delta describe las políticas observadas el 2026-11-02; la ficha histórica de cada tabla se conserva como fotografía previa. Consultar de nuevo el catálogo antes de reconstruir o alterar estas políticas.
 

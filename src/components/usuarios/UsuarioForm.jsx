@@ -27,6 +27,8 @@ import {
   Typography,
 } from '@mui/material'
 
+import { esPermisoAdministrador, validarFormularioUsuario } from './usuarioRules'
+
 import {
   Business as BusinessIcon,
   Close as CloseIcon,
