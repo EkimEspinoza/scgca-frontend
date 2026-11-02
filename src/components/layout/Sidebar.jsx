@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
     Dashboard as DashboardIcon,
-    People,
     Assessment,
     Settings,
     Logout,
@@ -9,6 +8,7 @@ import {
     ExpandMore,
     ChevronRight,
     Category,
+    AdminPanelSettings,
 } from '@mui/icons-material'
 import {
     Box,
@@ -63,12 +63,15 @@ function Sidebar({
         '/tipos-maquinaria',
         '/comparativos',
         '/tipo-cambio',
-        '/campañas',
+        '/campanas',
     ]
     const maestrosActivo = rutasMaestros.some((path) =>
         location.pathname.startsWith(path)
     )
     const [maestrosOpen, setMaestrosOpen] = useState(maestrosActivo)
+    const rutasAccesos = ['/usuarios', '/modulos', '/permisos']
+    const accesosActivo = rutasAccesos.some((path) => location.pathname.startsWith(path))
+    const [accesosOpen, setAccesosOpen] = useState(accesosActivo)
 
     /*
      * Menú principal.
@@ -78,12 +81,6 @@ function Sidebar({
             text: 'Dashboard',
             icon: <DashboardIcon fontSize="small" />,
             path: '/dashboard',
-        },
-        {
-            text: 'Usuarios',
-            icon: <People fontSize="small" />,
-            path: '/usuarios',
-            permissions: ['ADMIN'],
         },
         {
             text: 'Reportes',
@@ -105,48 +102,63 @@ function Sidebar({
         {
             text: 'Campañas',
             path: '/campanas',
+            moduleCode: 'CAMPANAS',
             permissions: ['ADMIN'],
         },
         {
             text: 'Centro de Costos',
             path: '/centro-costos',
+            moduleCode: 'CENTRO_COSTOS',
             permissions: ['ADMIN'],
         },
         {
             text: 'Comparativos',
             path: '/comparativos',
+            moduleCode: 'COMPARATIVOS',
             permissions: ['ADMIN'],
         },
         {
             text: 'Empresas',
             path: '/empresas',
+            moduleCode: 'EMPRESAS',
             permissions: ['ADMIN'],
         },
         {
             text: 'Etapa de Costo Inversión',
             path: '/etapa-costo',
+            moduleCode: 'ETAPAS_COSTO',
             permissions: ['ADMIN'],
         },
         {
             text: 'Tipos de Centro de Costo',
             path: '/tipos-centro-costo',
+            moduleCode: 'TIPOS_CENTRO_COSTO',
             permissions: ['ADMIN'],
         },
         {
             text: 'Tipos de Maquinaria',
             path: '/tipos-maquinaria',
+            moduleCode: 'TIPOS_MAQUINARIA',
             permissions: ['ADMIN'],
         },
         {
             text: 'Variedades',
             path: '/variedades',
+            moduleCode: 'VARIEDADES',
             permissions: ['ADMIN'],
         },
         {
             text: 'Tipo Cambio',
             path: '/tipo-cambio',
+            moduleCode: 'TIPO_CAMBIO',
             permissions: ['ADMIN'],
         },
+    ]
+
+    const accesosItems = [
+        { text: 'Usuarios', path: '/usuarios' },
+        { text: 'Módulos', path: '/modulos' },
+        { text: 'Permisos', path: '/permisos' },
     ]
 
     /*
@@ -157,8 +169,16 @@ function Sidebar({
         return item.permissions.includes(permiso)
     })
     const maestrosVisibles = maestrosItems.filter((item) => {
-        if (!item.permissions) return true
-        return item.permissions.includes(permiso)
+        if (item.permissions && !item.permissions.includes(permiso)) {
+            return false
+        }
+        if (item.moduleCode) {
+            return perfil?.modulos?.some((modulo) =>
+                modulo.codigo === item.moduleCode &&
+                (permiso === 'ADMIN' || ['QUERY', 'WRITER'].includes(modulo.nivel)),
+            )
+        }
+        return true
     })
 
     /*
@@ -192,6 +212,15 @@ function Sidebar({
             return
         }
         setMaestrosOpen((prev) => !prev)
+    }
+
+    const handleAccesosToggle = () => {
+        if (!isMobile && collapsed) {
+            onToggle()
+            setAccesosOpen(true)
+            return
+        }
+        setAccesosOpen((prev) => !prev)
     }
 
     /*
@@ -359,6 +388,24 @@ function Sidebar({
                             })}
                         </List>
                     </Collapse>
+                    {permiso === 'ADMIN' && (
+                        <>
+                            <ListItemButton onClick={handleAccesosToggle} sx={{ minHeight: 42, px: 2, backgroundColor: accesosActivo ? 'action.hover' : 'transparent', '&:hover': { backgroundColor: 'action.hover' } }}>
+                                <ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: 'center' }}><AdminPanelSettings fontSize="small" /></ListItemIcon>
+                                <ListItemText primary="Accesos" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
+                                {accesosOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
+                            </ListItemButton>
+                            <Collapse in={accesosOpen} timeout="auto" unmountOnExit>
+                                <List component="div" disablePadding>
+                                    {accesosItems.map((item) => (
+                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': { backgroundColor: 'primary.main', color: 'primary.contrastText', '&:hover': { backgroundColor: 'primary.dark' } } }}>
+                                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
+                                        </ListItemButton>
+                                    ))}
+                                </List>
+                            </Collapse>
+                        </>
+                    )}
                 </List>
 
                 {/* FOOTER MÓVIL */}
@@ -605,6 +652,33 @@ function Sidebar({
                                 >
                                     <Category fontSize="small" />
                                 </ListItemIcon>
+                            </ListItemButton>
+                        </Box>
+                    </Tooltip>
+                )}
+                {permiso === 'ADMIN' && !collapsed && (
+                    <>
+                        <ListItemButton onClick={handleAccesosToggle} sx={{ minHeight: 42, px: 2, backgroundColor: accesosActivo ? 'action.hover' : 'transparent', '&:hover': { backgroundColor: 'action.hover' } }}>
+                            <ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: 'center' }}><AdminPanelSettings fontSize="small" /></ListItemIcon>
+                            <ListItemText primary="Accesos" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
+                            {accesosOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
+                        </ListItemButton>
+                        <Collapse in={accesosOpen} timeout="auto" unmountOnExit>
+                            <List component="div" disablePadding>
+                                {accesosItems.map((item) => (
+                                    <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': { backgroundColor: 'primary.main', color: 'primary.contrastText', '&:hover': { backgroundColor: 'primary.dark' } } }}>
+                                        <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
+                                    </ListItemButton>
+                                ))}
+                            </List>
+                        </Collapse>
+                    </>
+                )}
+                {permiso === 'ADMIN' && collapsed && (
+                    <Tooltip title="Accesos" placement="right">
+                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <ListItemButton onClick={handleAccesosToggle} sx={{ minHeight: 42, justifyContent: 'center', px: 2 }}>
+                                <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}><AdminPanelSettings fontSize="small" /></ListItemIcon>
                             </ListItemButton>
                         </Box>
                     </Tooltip>

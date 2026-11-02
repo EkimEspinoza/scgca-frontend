@@ -22,7 +22,8 @@ function perfilesIguales(a, b) {
     a.permiso?.id_permiso === b.permiso?.id_permiso &&
     a.permiso?.nombre === b.permiso?.nombre &&
     a.permiso?.descripcion === b.permiso?.descripcion &&
-    a.permiso?.estado === b.permiso?.estado
+    a.permiso?.estado === b.permiso?.estado &&
+    JSON.stringify(a.modulos ?? []) === JSON.stringify(b.modulos ?? [])
   )
 }
 
@@ -81,13 +82,48 @@ export function AuthProvider({ children }) {
         return null
       }
 
+      let perfilConModulos = { ...data, modulos: [] }
+      if (data.permiso?.nombre === 'ADMIN') {
+        const { data: modulosActivos, error: errorModulos } = await supabase
+          .from('modulos')
+          .select('codigo')
+          .eq('estado', true)
+
+        if (errorModulos) {
+          console.error('Error cargando módulos activos:', errorModulos)
+        } else {
+          perfilConModulos.modulos = (modulosActivos ?? []).map((modulo) => ({
+            codigo: modulo.codigo,
+            nivel: 'ADMIN',
+          }))
+        }
+      } else {
+        const { data: asignaciones, error: errorModulos } = await supabase
+          .from('usuario_modulo')
+          .select('nivel, modulos!inner(codigo, estado)')
+          .eq('id_usuario', data.id_usuario)
+          .eq('estado', true)
+          .eq('modulos.estado', true)
+
+        if (errorModulos) {
+          console.error('Error cargando accesos por módulo:', errorModulos)
+        } else {
+          perfilConModulos.modulos = (asignaciones ?? []).map((asignacion) => ({
+            codigo: asignacion.modulos.codigo,
+            nivel: asignacion.nivel,
+          }))
+        }
+      }
+
+      if (!profileRequestGuard.isCurrent(requestVersion)) return null
+
       setPerfil((perfilActual) =>
-        perfilesIguales(perfilActual, data)
+        perfilesIguales(perfilActual, perfilConModulos)
           ? perfilActual
-          : data,
+          : perfilConModulos,
       )
 
-      return data
+      return perfilConModulos
     } catch (error) {
       if (profileRequestGuard.isCurrent(requestVersion)) {
         console.error('Error cargando perfil:', error)

@@ -29,7 +29,9 @@ function CampanaTable({
     emptySearchMessage = 'No se encontraron campañas para la búsqueda.',
     hasSearch = false,
     cambiandoEstado = false,
+    cambiandoCierre = false ,
     onCambiarEstado,
+    onCambiarCierre,
     onEditar,
 }) {
     return (
@@ -134,7 +136,7 @@ function CampanaTable({
                     width: '100%',
                     display: { xs: 'none', lg: 'table' },
                     tableLayout: 'fixed',
-                    flex: '1 1 auto',
+                    flex: '0 0 auto',
                     minHeight: 0,
                     '& .MuiTableHead-root .MuiTableCell-root': { fontSize: '12px', px: 1, py: 0.6 },
                     '& .MuiTableBody-root .MuiTableCell-root': { fontSize: '12px', px: 1, py: 0.3 },
@@ -360,7 +362,7 @@ function CampanaTable({
                                             align="center"
                                             sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 0.5, pl: 1.5, }}>
                                             <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-                                                <Tooltip title={campana.estado ? 'Desactivar campaña' : 'Reactivar campaña'}>
+                                                <Tooltip title={campana.cierre_camp ? 'Reabrir campaña' : 'Cerrar campaña'}>
                                                     <span>
                                                         <Switch
                                                             checked={Boolean(campana.estado)}
@@ -379,17 +381,31 @@ function CampanaTable({
                                         {/* ======================================
                                             CIERRE
                                         ======================================= */}
+
                                         <TableCell
                                             align="center"
                                             sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', py: 0.5, pl: 1.5, }}>
-
-                                            <StatusChip
-                                                estado={campana.cierre_camp}
-                                                cerrado={campana.cierre_camp}
-                                                activoLabel="Cerrada"
-                                                inactivoLabel="Abierta"
-                                            />
+                                            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                                                <Tooltip title={campana.cierre_camp ? 'Reabrir campaña' : 'Cerrar campaña'}>
+                                                    <span>
+                                                        <Switch
+                                                            checked={Boolean(campana.cierre_camp)}
+                                                            onChange={() => onCambiarCierre(campana)}
+                                                            disabled={eliminando || cambiandoEstado}
+                                                            size="small"
+                                                            inputProps={{ 'aria-label': `${campana.cierre_camp ? 'Reabrir' : 'Cerrar'} campaña ${campana.id_campana_emp}` }}
+                                                        />
+                                                    </span>
+                                                </Tooltip>
+                                                <Typography variant="body2" color={campana.cierre_camp ? 'error.main' : 'text.secondary'} fontWeight={600}>
+                                                    {campana.cierre_camp ? 'Cerrada' : 'Abierta'}
+                                                </Typography>
+                                            </Box>
                                         </TableCell>
+
+
+
+
                                         {/* ======================================
                                             ACCIONES
                                         ======================================= */}

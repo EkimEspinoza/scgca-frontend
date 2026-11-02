@@ -107,6 +107,7 @@ function Campanas() {
         handleGuardar,
         handleEliminar,
         solicitarCambioEstado,
+        solicitarCambioCierre,
         cerrarConfirmacionCambioEstado,
         confirmarCambioEstado,
         // --------------------------------------------------------
@@ -266,6 +267,7 @@ function Campanas() {
                     hasSearch={Boolean(busqueda.trim())}
                     onEditar={abrirEditar}
                     onCambiarEstado={solicitarCambioEstado}
+                    onCambiarCierre={solicitarCambioCierre}
                     onEliminar={handleEliminar}
                 />
                 <Box sx={{ flexShrink: 0, '& .MuiTablePagination-toolbar': { minHeight: 48, px: 1 }, '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': { fontSize: '0.75rem' } }}>
@@ -324,11 +326,13 @@ function Campanas() {
                 fullWidth
             >
                 <DialogTitle>
-                    {campanaCambioEstado?.nuevoEstado ? 'Reactivar campaña' : 'Desactivar campaña'}
+                    {campanaCambioEstado?.tipoCambio === 'cierre' ? (campanaCambioEstado.nuevoCierre ? 'Cerrar campaña' : 'Reabrir campaña') : campanaCambioEstado?.nuevoEstado ? 'Reactivar campaña' : 'Desactivar campaña'}
                 </DialogTitle>
                 <DialogContent>
                     <Typography>
-                        {campanaCambioEstado?.nuevoEstado
+                        {campanaCambioEstado?.tipoCambio === 'cierre'
+                            ? `¿Deseas ${campanaCambioEstado.nuevoCierre ? 'cerrar' : 'reabrir'} la campaña "${campanaCambioEstado.nombre_campana}"?`
+                            : campanaCambioEstado?.nuevoEstado
                             ? `¿Deseas reactivar "${campanaCambioEstado?.nombre_campana}"?`
                             : `¿Deseas desactivar "${campanaCambioEstado?.nombre_campana}"? El registro se conservará en la base de datos.`}
                     </Typography>
@@ -339,11 +343,11 @@ function Campanas() {
                     </Button>
                     <Button
                         variant="contained"
-                        color={campanaCambioEstado?.nuevoEstado ? 'success' : 'warning'}
+                        color={campanaCambioEstado?.tipoCambio === 'cierre' ? 'warning' : campanaCambioEstado?.nuevoEstado ? 'success' : 'warning'}
                         onClick={confirmarCambioEstado}
                         disabled={cambiandoEstado}
                     >
-                        {cambiandoEstado ? 'Guardando...' : campanaCambioEstado?.nuevoEstado ? 'Reactivar' : 'Desactivar'}
+                        {cambiandoEstado ? 'Guardando...' : campanaCambioEstado?.tipoCambio === 'cierre' ? (campanaCambioEstado.nuevoCierre ? 'Cerrar' : 'Reabrir') : campanaCambioEstado?.nuevoEstado ? 'Reactivar' : 'Desactivar'}
                     </Button>
                 </DialogActions>
             </Dialog>

@@ -9,7 +9,7 @@ import {
   DialogTitle, IconButton, MenuItem, Paper, Snackbar, Switch, TextField, Typography, Tooltip
 } from '@mui/material'
 
-import { Add, Close, Edit, Save } from '@mui/icons-material'
+import { Add, Close, Download, Edit, Save } from '@mui/icons-material'
 import useMediaQuery from '@mui/material/useMediaQuery'
 
 import {
@@ -24,10 +24,15 @@ import Pagination from '../../components/common/Pagination'
 import PageHeader from '../../components/common/PageHeader'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import DataTable from '../../components/common/DataTable'
+import { useAuth } from '../../context/useAuth'
+import { exportarEmpresasExcel } from '../../services/excelService'
 
 const formularioInicial = { descripcion: '', nombre_comercial: '', estado: true }
 
 function Empresas() {
+  const { perfil } = useAuth()
+  const esAdmin = perfil?.permiso?.nombre === 'ADMIN'
+  const puedeAdministrar = esAdmin
   const esVistaMovil = useMediaQuery('(max-width:760px)')
   const [empresas, setEmpresas] = useState([])
   const [empresaSeleccionada, setEmpresaSeleccionada] = useState(null)
@@ -306,6 +311,14 @@ const handleConfirmarCambioEstado = async () => {
   const handleCerrarMensaje = () => { setMensaje('') }
   const handleCerrarError = () => { setError('') }
 
+  const handleExportarExcel = () => {
+    if (empresasFiltrados.length === 0) {
+      setError('No hay empresas para exportar con los filtros actuales.')
+      return
+    }
+    exportarEmpresasExcel(empresasFiltrados)
+  }
+
   // =========================================================
   // COLUMNAS DEL DATATABLE
   // =========================================================
@@ -349,7 +362,7 @@ const handleConfirmarCambioEstado = async () => {
       whiteSpace: 'nowrap',
       render: (empresa) => (
         <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip
+          {puedeAdministrar && <Tooltip
             title={empresa.estado ? 'Desactivar empresa' : 'Reactivar empresa'}
           >
             <span>
@@ -364,7 +377,7 @@ const handleConfirmarCambioEstado = async () => {
                 }}
               />
             </span>
-          </Tooltip>
+          </Tooltip>}
 
           <StatusChip
             estado={empresa.estado}
@@ -382,12 +395,12 @@ const handleConfirmarCambioEstado = async () => {
       whiteSpace: 'nowrap',
       align: 'center',
       render: (empresa) => (
-        <Tooltip title="Editar empresa">
+        puedeAdministrar ? <Tooltip title="Editar empresa">
           <IconButton size="small" onClick={() => handleEditarEmpresa(empresa)}
             sx={{ p: 0.5, '&:hover': { backgroundColor: 'rgba(46, 125, 50, 0.08)' } }}>
             <Edit fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </Tooltip> : null
       )
     }
   ]
@@ -431,10 +444,18 @@ const handleConfirmarCambioEstado = async () => {
             </Box>
           }
           description="Administración de empresas del sistema"
-          actionLabel="Nueva Empresa"
-          onAction={handleNuevaEmpresa}
-          actionIcon={<Add />}
+          actionLabel={puedeAdministrar ? 'Nueva Empresa' : undefined}
+          onAction={puedeAdministrar ? handleNuevaEmpresa : undefined}
+          actionIcon={puedeAdministrar ? <Add /> : undefined}
         />
+        <Button
+          variant="outlined"
+          startIcon={<Download />}
+          onClick={handleExportarExcel}
+          sx={{ mb: 1, textTransform: 'none', fontWeight: 600 }}
+        >
+          Exportar Excel
+        </Button>
       </Box>
 
       {/* =================================================
@@ -581,7 +602,7 @@ const handleConfirmarCambioEstado = async () => {
                     Nombre comercial: {empresa.nombre_comercial || 'Sin especificar'}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.75 }}>
-                    <Tooltip title={empresa.estado ? 'Desactivar empresa' : 'Reactivar empresa'}>
+                    {puedeAdministrar && <Tooltip title={empresa.estado ? 'Desactivar empresa' : 'Reactivar empresa'}>
                       <span>
                         <Switch
                           checked={Boolean(empresa.estado)}
@@ -593,7 +614,7 @@ const handleConfirmarCambioEstado = async () => {
                           }}
                         />
                       </span>
-                    </Tooltip>
+                    </Tooltip>}
                     <StatusChip
                       estado={empresa.estado}
                       activoLabel="Activo"
@@ -601,7 +622,7 @@ const handleConfirmarCambioEstado = async () => {
                     />
                   </Box>
                 </Box>
-                <Tooltip title="Editar empresa">
+                {puedeAdministrar && <Tooltip title="Editar empresa">
                   <IconButton
                     aria-label={`Editar ${empresa.descripcion}`}
                     onClick={() => handleEditarEmpresa(empresa)}
@@ -609,7 +630,7 @@ const handleConfirmarCambioEstado = async () => {
                   >
                     <Edit fontSize="small" />
                   </IconButton>
-                </Tooltip>
+                </Tooltip>}
               </Box>
             ))}
           </Box>

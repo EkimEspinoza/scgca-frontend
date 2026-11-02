@@ -78,7 +78,7 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 - Se confirmó que `usuarios` permite leer el perfil propio y ADMIN puede leer todos; `usuario_empresa` limita la lectura del usuario a sus asignaciones activas; `usuario_modulo` permite leer las asignaciones propias y ADMIN ve todas. Las escrituras están restringidas a ADMIN o a la Edge Function de usuarios con validación de ADMIN.
 - En `public.modulos`, usuarios activos pueden leer solo módulos activos y ADMIN puede leer y administrar todo. En `public.permiso`, se restringió SELECT: usuarios activos ven permisos activos y ADMIN ve también los inactivos. El catálogo de permisos sigue sin escritura directa por Data API; sus cambios se controlan con migraciones.
 - La migración `20261102202432_restrict_permission_catalog_reads_to_active_users` se aplicó a Supabase Central. Se verificó el resultado consultando `pg_policies`; no se hizo una prueba de sesión real con cada rol.
-- Las rutas y pantallas locales de ADMIN para **Módulos** y **Permisos** están implementadas (`/modulos`, `/permisos`). `npm run build` aprobó el 2026-11-02 (Vite transformó 11,773 módulos). No se hizo prueba manual de esas pantallas ni commit/push/despliegue del frontend.
+- Las rutas y pantallas de ADMIN para **Módulos** y **Permisos** están integradas en GitHub `main` mediante PR #63 (`/modulos`, `/permisos`). `npm run build` aprobó el 2026-11-02 (Vite transformó 11,773 módulos). No se hizo prueba manual de esas pantallas ni despliegue del frontend a hosting.
 ### Pendientes vigentes al 2 de noviembre
 
 - Alinear, según instrucción del usuario, las asignaciones de prueba: la base muestra prueba 1 WRITER, prueba 3 WRITER y prueba 2 sin asignación a Empresas.
@@ -148,7 +148,7 @@ RLS está habilitado en las 12 tablas observadas. PostgreSQL reporta versión 17
 
 ### Migraciones y funciones
 
-- Al 2026-11-02 hay 40 archivos de migración locales y 40 versiones registradas en Supabase; sus versiones coinciden, incluida `20261102202432_restrict_permission_catalog_reads_to_active_users`.
+- Al 2026-11-02 hay 40 archivos de migración locales y 40 versiones registradas en Supabase; los nombres y versiones coinciden tras renombrar cuatro archivos locales. La migración más reciente es `20261102202432_restrict_permission_catalog_reads_to_active_users`.
 - Edge Functions desplegadas y contrastadas con local: crear-usuario v9, actualizar-usuario v3 y consultar-tipo-cambio-bcrp v15.
 - Las funciones de usuarios tienen verify_jwt=false, pero usan middleware withSupabase({ auth: "user" }) y comprueban identidad y ADMIN activo antes de usar privilegios administrativos. BCRP tiene verify_jwt=true.
 - La migración 20261021222143_a03_restringir_privilegios_secuencias_public.sql está en local y en el historial remoto.
