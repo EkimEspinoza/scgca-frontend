@@ -1,6 +1,6 @@
 # Propuestas funcionales futuras — SCGCA Central
 
-**Actualizado:** 2026-11-02
+**Actualizado:** 2026-11-03
 Este registro acumula ideas y requisitos futuros. Estar aquí no significa que la propuesta esté aprobada ni que se haya iniciado. Cuando el usuario acuerde ejecutarla, mover su seguimiento al plan de trabajo y conservar aquí el origen y la decisión.
 
 **Escala de estimación:** días/persona o intervalo de esfuerzo, definido después de analizar alcance, dependencias y criterios. Hasta entonces se indica “Por estimar”; no se inventan fechas ni duraciones.
@@ -17,6 +17,7 @@ Este registro acumula ideas y requisitos futuros. Estar aquí no significa que l
 | PF-008 | Automatizar la venta SUNAT del último día calendario del mes | PENDIENTE (API ESTABLE) | Por definir | Por estimar | Hasta encontrar y validar una API directa de SUNAT, el formulario propone 1.000 y el ADMIN ingresa manualmente el valor. No sustituir la fuente por BCRP. |
 | PF-009 | Optimización de consultas y paginación de módulos | PROPUESTA | Por definir | Por estimar | Revisar módulos que descargan todos los registros y filtran/paginan en frontend; mover filtros, orden y paginación a Supabase, evaluar índices según consultas reales y definir una estrategia separada para exportaciones completas. |
 | PF-010 | Interfaz ADMIN para gestionar asignaciones de módulos y niveles QUERY/WRITER | IMPLEMENTADA EN GITHUB MAIN | Validar | Por estimar | Rutas `/modulos` y `/permisos` integradas mediante PR #63; build correcto el 2026-11-02. Falta validar los flujos manualmente y publicar el frontend en hosting. |
+| PF-011 | Optimizar el bundle JavaScript inicial mediante división de código y carga diferida | PROPUESTA | Por definir | Por estimar | Build del 2026-11-03: bundle principal de 736.44 KB minificado (230.36 KB gzip). Evaluar división por rutas/módulos, priorizando lo que reduzca carga inicial; medir el resultado y el efecto en la navegación. El umbral de 500 KB de Vite es una advertencia, no un objetivo obligatorio. |
 
 ## Plantilla para nuevas propuestas
 
