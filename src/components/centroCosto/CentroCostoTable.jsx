@@ -190,49 +190,49 @@ function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina,
 
                         <TableRow>
                             <TableCell
-                                sx={{ width: '12%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', backgroundColor: '#F8FAF9', color: '#1F2937', py: 0.5 }}>
+                                sx={{ width: '12%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', py: 0.5 }}>
                                 Empresa
                             </TableCell>
                             <TableCell
-                                sx={{ width: '8%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', backgroundColor: '#F8FAF9', color: '#1F2937', py: 0.5 }}>
+                                sx={{ width: '8%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', py: 0.5 }}>
                                 Código CC
                             </TableCell>
 
                             <TableCell
-                                sx={{ width: '21%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', backgroundColor: '#F8FAF9', color: '#1F2937', py: 0.5 }}>
+                                sx={{ width: '21%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap',  py: 0.5 }}>
                                 Descripción
                             </TableCell>
 
                             <TableCell
-                                sx={{ width: '13%',fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', backgroundColor: '#F8FAF9', color: '#1F2937', py: 0.5 }}>
+                                sx={{ width: '13%',fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap', py: 0.5 }}>
                                 Tipo CC
                             </TableCell>
 
                             <TableCell
-                                sx={{ width: '13%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', backgroundColor: '#F8FAF9', color: '#1F2937', py: 0.5 }}>
+                                sx={{ width: '13%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', py: 0.5 }}>
                                 Tipo Maquinaria
                             </TableCell>
 
                             <TableCell
-                                sx={{ width: '9%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', backgroundColor: '#F8FAF9', color: '#1F2937', py: 0.5 }}>
+                                sx={{ width: '9%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', py: 0.5 }}>
 
                                 Comparativo
                             </TableCell>
 
                             <TableCell
-                                sx={{ width: '7%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', backgroundColor: '#F8FAF9', color: '#1F2937', py: 0.5 }}>
+                                sx={{ width: '7%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', py: 0.5 }}>
                                 Variedad
                             </TableCell>
 
                             <TableCell
                                 align="center"
-                                sx={{ width: '8%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', backgroundColor: '#F8FAF9', color: '#1F2937', py: 0.5 }}>
+                                sx={{ width: '8%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', py: 0.5 }}>
                                 Estado
                             </TableCell>
 
                             <TableCell
                                 align="center"
-                                sx={{ width: '8%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', backgroundColor: '#F8FAF9', color: '#1F2937', py: 0.5 }}>
+                                sx={{ width: '8%', fontSize: '11px',fontWeight: 700, whiteSpace: 'nowrap', py: 0.5 }}>
                                 Acción
                             </TableCell>
                         </TableRow>
@@ -288,12 +288,11 @@ function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina,
                                             key={centro.cod_cc_pk}
                                             hover
                                             sx={{
-                                                backgroundColor: '#FFFFFF',
                                                 '&:hover': { backgroundColor: '#F8FAF9' },
                                                 '& td': { borderBottom: '1px solid #E8ECEA' },
                                                 '&:last-child td': { borderBottom: 'none' },
                                                 // Barra lateral de empresa.
-                                                '& td:first-of-type': { borderLeft: `4px solid ${colorEmpresa}` },
+                                                '&&& td:first-of-type': { borderLeft: `4px solid ${colorEmpresa}` },
                                             }}
                                         >
 

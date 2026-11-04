@@ -93,8 +93,9 @@ function MainLayout({ children, onLogout }) {
       md: 10,
     },
 
-    backgroundColor:
-      'background.default',
+    backgroundColor: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId)
+      ? 'transparent'
+      : theme.palette.background.default,
   }}
 >
         {children}

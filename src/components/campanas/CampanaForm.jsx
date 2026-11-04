@@ -257,7 +257,7 @@ function CampanaForm({
                         sx={{
                             mb: 1,
                             fontWeight: 700,
-                            color: '#1B5E20',
+                            color: 'primary.dark',
                         }}
                     >
                         Periodo operativo
@@ -330,7 +330,7 @@ function CampanaForm({
                         sx={{
                             mb: 1,
                             fontWeight: 700,
-                            color: '#1B5E20',
+                            color: 'primary.dark',
                         }}
                     >
                         Periodo CTB

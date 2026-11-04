@@ -514,7 +514,7 @@ function CentroCostoFilters({
                 borderRadius: 1,
                 '&:hover': {
                   backgroundColor:
-                    'rgba(46, 125, 50, 0.08)',
+                    'action.hover',
                 },
               }}
             >

@@ -323,7 +323,7 @@ function Comparativos() {
             width: '60%',
             cellSx: {
                 position: 'relative', pl: 1.5,
-                '&::before': { content: '""', position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, borderRadius: '0 0px 0px 0', backgroundColor: '#2E7D32' }
+                '&::before': { content: '""', position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, borderRadius: '0 0px 0px 0', backgroundColor: 'primary.main' }
             },
 
             render: (comparativo) => (
@@ -365,7 +365,7 @@ function Comparativos() {
             align: 'center',
             render: (comparativo) => (
                 <IconButton size="small" onClick={() => handleEditarComparativo(comparativo)}
-                    sx={{ p: 0.5, '&:hover': { backgroundColor: 'rgba(46, 125, 50, 0.08)' } }}>
+                    sx={{ p: 0.5, '&:hover': { backgroundColor: 'action.hover' } }}>
                     <Edit fontSize="small" />
                 </IconButton>
             ),
@@ -385,7 +385,14 @@ function Comparativos() {
 
     return (
         <CompactModuleTheme>
-<Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflowX: 'hidden', overflowY: 'auto' }}>
+        <Box sx={{ width: '100%',
+                height: '100%',
+                minWidth: 0,
+                minHeight: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                overflowX: 'hidden',
+                overflowY: 'auto' }}>
 
             {/* =====================================================
             ENCABEZADO
@@ -478,7 +485,7 @@ function Comparativos() {
                             fontWeight: 500,
                         }}
                     >
-                        {totalRegistros} {totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}
+                        <Box component="span" sx={(theme) => ({ color: theme.scgca?.themeId === 'dark' ? '#4ADE80' : 'primary.main', fontWeight: 700 })}>{totalRegistros}</Box>{' '}{totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}
                     </Typography>
                 </Box>
 

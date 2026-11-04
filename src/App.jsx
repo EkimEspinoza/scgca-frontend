@@ -96,7 +96,7 @@ function EstadoCuenta({
   const configuracionColor = {
     primary: {
       background:
-        'rgba(46, 125, 50, 0.10)',
+        'action.selected',
       iconColor:
         'primary.main',
     },
@@ -834,6 +834,7 @@ function App() {
       }
     >
     <Routes>
+
 
       {/* =========================================
           LOGIN

@@ -1,4 +1,4 @@
-import { Chip } from '@mui/material'
+import { Chip, Typography, useTheme } from '@mui/material'
 
 function StatusChip({
     estado,
@@ -9,11 +9,20 @@ function StatusChip({
     cerradoLabel = 'Cerrado',
     disabled = false,
 }) {
+    const theme = useTheme()
     const activo = Boolean(estado)
     const esCerrado = Boolean(cerrado)
     const esInteractivo =
         Boolean(onClick) &&
         !disabled
+
+    if (theme.scgca?.themeId === 'dark' && activo && !esCerrado && !esInteractivo) {
+        return (
+            <Typography component="span" variant="body2" sx={{ color: '#4ADE80', fontWeight: 600 }}>
+                {activoLabel}
+            </Typography>
+        )
+    }
 
 
     let label = activo

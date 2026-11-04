@@ -32,18 +32,24 @@ function DataTable({
             
             >
                 <TableHead>
-                    <TableRow sx={{ backgroundColor: '#F8FAF9' }}>
+                    <TableRow sx={(theme) => ({ backgroundColor: theme.palette.background.default })}>
                         {columns.map((column) => (
                             <TableCell
                                 key={column.key}
                                 align={column.align || 'left'}
-                                sx={{
+                                sx={(theme) => ({
                                     fontWeight: 700,
                                     color: 'text.secondary',
-                                    py: 1,
+                                    py: theme.scgca?.themeId === 'dark' ? 1.5 : 1,
+                                    ...(theme.scgca?.themeId === 'dark' ? {
+                                        fontSize: '0.68rem',
+                                        letterSpacing: '0.08em',
+                                        textTransform: 'uppercase',
+                                        color: 'text.primary',
+                                    } : {}),
                                     width: column.width,
-                                    ...(column.headerSx || {}),
-                                }}
+                                    ...column.headerSx,
+                                })}
                             >
                                 {column.label}
                             </TableCell>
@@ -87,12 +93,12 @@ function DataTable({
                                     <TableCell
                                         key={column.key}
                                         align={column.align || 'left'}
-                                        sx={{
-                                            py: 1,
+                                        sx={(theme) => ({
+                                            py: theme.scgca?.themeId === 'dark' ? 1.5 : 1,
                                             borderBottom: '1px solid',
                                             borderColor: 'divider',
                                             ...(column.cellSx || {}),
-                                        }}
+                                        })}
                                     >
                                         {typeof column.render === 'function'
                                             ? column.render(row)

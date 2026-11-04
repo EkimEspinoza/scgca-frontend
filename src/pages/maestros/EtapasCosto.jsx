@@ -269,7 +269,7 @@ function EtapasCosto() {
                     top: 0,
                     bottom: 0,
                     width: 4,
-                    backgroundColor: '#2E7D32',
+                    backgroundColor: 'primary.main',
                 },
             },
             render: (etapa) => (
@@ -313,7 +313,7 @@ function EtapasCosto() {
                     size="small"
                     onClick={() => handleEditarEtapa(etapa)}
                     aria-label={`Editar etapa ${etapa.cod_etapa}`}
-                    sx={{ p: 0.5, '&:hover': { backgroundColor: 'rgba(46, 125, 50, 0.08)' } }}
+                    sx={{ p: 0.5, '&:hover': { backgroundColor: 'action.hover' } }}
                 >
                     <EditIcon fontSize="small" />
                 </IconButton>
@@ -404,7 +404,7 @@ function EtapasCosto() {
                         aria-live="polite"
                         sx={{ ml: { xs: 'auto', sm: 0 }, whiteSpace: 'nowrap', fontWeight: 500 }}
                     >
-                        {totalRegistros} {totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}
+                        <Box component="span" sx={(theme) => ({ color: theme.scgca?.themeId === 'dark' ? '#4ADE80' : 'primary.main', fontWeight: 700 })}>{totalRegistros}</Box>{' '}{totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}
                     </Typography>
                 </Box>
                 {error && (

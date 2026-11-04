@@ -360,7 +360,7 @@ function CambiarContrasena() {
                 borderRadius: '50%',
 
                 backgroundColor:
-                  'rgba(46, 125, 50, 0.10)',
+                  'action.selected',
 
                 color:
                   'primary.main',
@@ -509,7 +509,7 @@ function CambiarContrasena() {
                               color:
                                 'primary.main',
                               backgroundColor:
-                                'rgba(46, 125, 50, 0.08)',
+                                'action.hover',
                             },
                           }}
                         >
@@ -582,7 +582,7 @@ function CambiarContrasena() {
                               color:
                                 'primary.main',
                               backgroundColor:
-                                'rgba(46, 125, 50, 0.08)',
+                                'action.hover',
                             },
                           }}
                         >

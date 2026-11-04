@@ -288,6 +288,27 @@ export function AuthProvider({ children }) {
     if (error) throw error
   }
 
+  const guardarPreferenciaTema = useCallback(async (preferences) => {
+    if (!user) throw new Error('Debes iniciar sesión para guardar tus preferencias.')
+
+    const themePreferences = typeof preferences === 'string'
+      ? { app_theme: preferences }
+      : preferences
+
+    const { data, error } = await supabase.auth.updateUser({
+      data: {
+        ...(user.user_metadata ?? {}),
+        app_theme_color: null,
+        app_theme_mode: null,
+        ...themePreferences,
+      },
+    })
+
+    if (error) throw error
+    if (data.user) setUser(data.user)
+    return data.user
+  }, [user])
+
   /*
    * Usuario y permiso habilitados para entrar.
    */
@@ -308,6 +329,7 @@ export function AuthProvider({ children }) {
         loading,
         esUsuarioActivo,
         cargarPerfil,
+        guardarPreferenciaTema,
         login,
         logout,
       }}

@@ -1,4 +1,4 @@
-import { createTheme } from '@mui/material/styles'
+import { alpha, createTheme } from '@mui/material/styles'
 
 import { tokens } from './tokens'
 import { componentOverrides } from './components'
@@ -109,141 +109,57 @@ const baseTheme = {
 }
 
 
-/*
- * =========================================================
- * CORPORATE GREEN
- * =========================================================
- */
-export const scgcaTheme = createTheme({
-  ...baseTheme,
+export const themeCatalog = [
+  { id: 'light', label: 'Claro', description: 'La apariencia clara actual, con superficies blancas y acento verde.' },
+  { id: 'dark', label: 'Oscuro', description: 'Fondos oscuros y superficies suaves para ambientes con poca luz.' },
+]
 
-  palette: {
-    mode: 'light',
+const themePalettes = {
+  light: { mode: 'light', primary: '#1F8A4C', primaryLight: '#4EAA72', primaryDark: '#176B3B', background: '#F5F6F8', paper: '#FFFFFF', sidebar: 'rgba(255, 255, 255, 0.76)', hover: '#EEF1F4', text: '#1F2937', secondaryText: '#6B7280', divider: '#E5E7EB' },
+  dark: { mode: 'dark', primary: '#1B8247', primaryLight: '#2FB468', primaryDark: '#16683B', background: '#101311', paper: 'rgba(28, 30, 29, 0.66)', sidebar: 'rgba(24, 26, 25, 0.72)', hover: '#262A27', text: '#E8E8EA', secondaryText: '#9A9AA2', divider: 'rgba(255, 255, 255, 0.18)' },
+}
 
-    primary: tokens.colors.primary,
+export function createScgcaTheme(themeId = 'light') {
+  const palette = themePalettes[themeId] ?? themePalettes.light
 
-    secondary: tokens.colors.secondary,
-
-    background: {
-      default: tokens.colors.background.default,
-      paper: tokens.colors.background.paper,
+  return createTheme({
+    ...baseTheme,
+    palette: {
+      mode: palette.mode,
+      primary: { main: palette.primary, light: palette.primaryLight, dark: palette.primaryDark, contrastText: '#FFFFFF' },
+      secondary: tokens.colors.secondary,
+      background: {
+        default: palette.background,
+        paper: palette.paper,
+      },
+      text: {
+        primary: palette.text,
+        secondary: palette.secondaryText,
+        disabled: palette.secondaryText,
+      },
+      divider: palette.divider,
+      action: {
+        hover: palette.hover ?? alpha(palette.primary, 0.08),
+        selected: alpha(palette.primary, 0.12),
+      },
+      success: { main: tokens.colors.status.success },
+      warning: { main: tokens.colors.status.warning },
+      error: { main: tokens.colors.status.error },
+      info: { main: tokens.colors.status.info },
     },
-
-    text: {
-      primary: tokens.colors.text.primary,
-      secondary: tokens.colors.text.secondary,
-      disabled: tokens.colors.text.disabled,
+    scgca: {
+      themeId,
+      tableHover: themeId === 'dark' ? 'rgba(255, 255, 255, 0.09)' : undefined,
+      surface: { ...tokens.colors.surface, sidebar: palette.sidebar },
+      sidebar: palette.sidebar,
+      border: { ...tokens.colors.border, main: palette.divider, light: palette.divider, dark: palette.divider },
+      shadows: tokens.shadows,
     },
+  })
+}
 
-    divider: tokens.colors.border.main,
+export const scgcaThemes = Object.fromEntries(themeCatalog.map(({ id }) => [id, createScgcaTheme(id)]))
 
-    action: {
-      hover: tokens.colors.action.hover,
-      selected: tokens.colors.action.selected,
-    },
-
-    success: {
-      main: tokens.colors.status.success,
-    },
-
-    warning: {
-      main: tokens.colors.status.warning,
-    },
-
-    error: {
-      main: tokens.colors.status.error,
-    },
-
-    info: {
-      main: tokens.colors.status.info,
-    },
-  },
-
-  /*
-   * Propiedades propias de SCGCA.
-   *
-   * Los componentes que necesiten estilos
-   * adicionales podrán acceder a theme.scgca.
-   */
-  scgca: {
-    surface: tokens.colors.surface,
-
-    border: tokens.colors.border,
-
-    shadows: tokens.shadows,
-  },
-})
-
-
-/*
- * =========================================================
- * CORPORATE BLUE
- * =========================================================
- *
- * Lo mantenemos para no perder el tema que ya existe.
- * Más adelante podremos terminar de ajustarlo al mismo
- * nivel visual que Corporate Green.
- */
-export const scgcaBlueTheme = createTheme({
-  ...baseTheme,
-
-  palette: {
-    mode: 'light',
-
-    primary: {
-      main: '#1565C0',
-      light: '#5E92F3',
-      dark: '#003C8F',
-      contrastText: '#FFFFFF',
-    },
-
-    secondary: {
-      main: '#546E7A',
-      light: '#819CA9',
-      dark: '#29434E',
-      contrastText: '#FFFFFF',
-    },
-
-    background: {
-      default: tokens.colors.background.default,
-      paper: tokens.colors.background.paper,
-    },
-
-    text: {
-      primary: tokens.colors.text.primary,
-      secondary: tokens.colors.text.secondary,
-      disabled: tokens.colors.text.disabled,
-    },
-
-    divider: tokens.colors.border.main,
-
-    action: {
-      hover: '#F2F6FA',
-      selected: '#E3F2FD',
-    },
-
-    success: {
-      main: tokens.colors.status.success,
-    },
-
-    warning: {
-      main: tokens.colors.status.warning,
-    },
-
-    error: {
-      main: tokens.colors.status.error,
-    },
-
-    info: {
-      main: tokens.colors.status.info,
-    },
-  },
-
-  scgca: {
-    surface: tokens.colors.surface,
-
-    border: tokens.colors.border,
-
-    shadows: tokens.shadows,
-  },
-})
+// Aliases kept for existing imports.
+export const scgcaTheme = scgcaThemes.light
+export const scgcaBlueTheme = scgcaThemes.light

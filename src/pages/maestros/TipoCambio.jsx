@@ -286,7 +286,7 @@ function TipoCambio() {
                     top: 0,
                     bottom: 0,
                     width: 4,
-                    backgroundColor: '#2E7D32'
+                    backgroundColor: 'primary.main'
                 }
             },
             render: (registro) => (
@@ -332,7 +332,7 @@ function TipoCambio() {
                     onClick={() => handleEditarTipo(registro)}
                     sx={{
                         p: 0.5,
-                        '&:hover': { backgroundColor: 'rgba(46, 125, 50, 0.08)' }
+                        '&:hover': { backgroundColor: 'action.hover' }
                     }}
                 >
                     <EditIcon fontSize="small" />

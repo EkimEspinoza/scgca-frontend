@@ -79,7 +79,6 @@ function Header({
     setAnchorEl(null)
   }
 
-
   const handleCambiarContrasena = () => {
     handleMenuClose()
 
@@ -135,8 +134,14 @@ function Header({
         borderColor:
           'divider',
 
-        backgroundColor:
-          'background.paper',
+        backgroundColor: (theme) => theme.scgca?.themeId === 'dark'
+          ? 'rgba(28, 30, 29, 0.78)'
+          : theme.scgca?.themeId === 'light' ? 'rgba(255, 255, 255, 0.78)' : theme.palette.background.paper,
+        backdropFilter: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId) ? 'blur(16px)' : 'none',
+        WebkitBackdropFilter: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId) ? 'blur(16px)' : 'none',
+        boxShadow: (theme) => theme.scgca?.themeId === 'dark'
+          ? 'inset 0 -1px 0 rgba(255, 255, 255, 0.06)'
+          : theme.scgca?.themeId === 'light' ? 'inset 0 -1px 0 rgba(255, 255, 255, 0.9)' : undefined,
 
         ml: {
           xs: 0,
@@ -491,6 +496,8 @@ function Header({
             {perfil?.apellido}
           </MenuItem>
 
+
+          <Divider />
 
           <Divider />
 

@@ -11,14 +11,14 @@ import { AppThemeProvider } from './context/ThemeContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AppThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
+    <AuthProvider>
+      <AppThemeProvider>
+        <BrowserRouter>
           <EmpresaProvider>
             <App />
           </EmpresaProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </AppThemeProvider>
+        </BrowserRouter>
+      </AppThemeProvider>
+    </AuthProvider>
   </StrictMode>,
 )

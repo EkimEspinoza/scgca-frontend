@@ -292,12 +292,11 @@ function CampanaTable({
                                         key={campana.id_campana}
                                         hover
                                         sx={{
-                                            backgroundColor: '#FFFFFF',
                                             '&:hover': { backgroundColor: '#F8FAF9' },
                                             '& td': { borderBottom: '1px solid #E8ECEA' },
                                             '&:last-child td': { borderBottom: 'none' },
                                             // Barra lateralde empresa
-                                            '& td:first-of-type':{ borderLeft: `4px solid ${colorEmpresa}` },
+                                            '&&& td:first-of-type': { borderLeft: `4px solid ${colorEmpresa}` },
                                         }}
                                     >
                                         {/* ======================================

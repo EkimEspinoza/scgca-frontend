@@ -1,13 +1,15 @@
 # Pruebas y calidad — SCGCA Central
 
-**Actualizado:** 2026-11-02
+**Actualizado:** 2026-11-03
 
 ## 08. Pruebas y calidad
 
 ### Evidencia reciente
 
-- **2026-11-02, sincronización:** `supabase migration list --linked` confirmó 42 versiones locales y remotas coincidentes. `supabase functions list` confirmó `crear-usuario` v9 y `actualizar-usuario` v3, sin `consultar-tipo-cambio-bcrp`. El build de frontend se ejecutará antes del commit; GitHub Actions en push a `main` ejecuta pruebas, lint y build.
-- **2026-11-02, frontend previo a integración:** `npm run build` aprobó con Vite 8.2.2 (11,773 módulos transformados). `npm run lint` terminó con código 0 y advertencias existentes de variables/imports no usados y `set-state-in-effect`; no se ejecutó `npm test` localmente. El workflow de GitHub ejecutará la suite de pruebas tras el push a `main`.
+- **2026-11-03, temas y sincronización:** `npm test` aprobó 65/65; `npm run lint` terminó con código 0 y advertencias no bloqueantes (incluidos `no-unused-vars`, `no-extra-boolean-cast` y `set-state-in-effect`); `npm run build` aprobó con Vite 8.2.2 y 11,774 módulos transformados, con advertencia no bloqueante de bundle principal mayor a 500 KB. Supabase Central confirmó 42/42 migraciones locales/remotas idénticas y Edge Functions `crear-usuario` v9 / `actualizar-usuario` v3. No hubo cambios de esquema o funciones para la preferencia de tema.
+- **2026-11-02, exportaciones Excel y corrección CI (`c03dd32`):** se añadieron exports para maestros en `main`. La primera ejecución (`0cfa0c0`) falló en pruebas porque `supabase/functions/consultar-tipo-cambio-bcrp/authorization.test.js` importaba `authorization.js`, módulo de una Edge Function retirada intencionalmente. Se eliminó la prueba huérfana en `c03dd32`; GitHub Actions terminó en **success**: pruebas unitarias, lint y compilación aprobados ([ejecución 41539595160](https://github.com/EkimEspinoza/scgca-frontend/actions/runs/41539595160)). El build local aprobó y mostró una advertencia no bloqueante: bundle principal mayor a 500 KB minificado. No se encontró workflow de despliegue frontend; el push no verifica publicación en hosting.
+- **2026-11-02, sincronización:** `supabase migration list --linked` confirmó 42 versiones locales y remotas coincidentes. `supabase functions list` confirmó `crear-usuario` v9 y `actualizar-usuario` v3, sin `consultar-tipo-cambio-bcrp`.
+- **2026-11-02, frontend previo a integración:** `npm run build` aprobó con Vite 8.2.2 (11,773 módulos transformados). `npm run lint` terminó con código 0 y advertencias existentes de variables/imports no usados y `set-state-in-effect`; no se ejecutó `npm test` localmente. El resultado de CI del commit posterior se registra arriba.
 - **2026-11-02, RLS de roles/catálogos:** la migración `20261102202432_restrict_permission_catalog_reads_to_active_users` se aplicó a Supabase Central. Consulta posterior de `pg_policies` confirmó que usuarios activos leen permisos activos, ADMIN puede leer todos; `usuarios`, `usuario_empresa`, `usuario_modulo` y `modulos` mantienen acceso propio/activo y administración ADMIN según corresponda. **Verificación SQL de metadatos aprobada; no se simuló sesión real por rol.**
 - **2026-11-02, rutas de Maestros:** `npm run build` aprobó con Vite 8.2.2 y 11,773 módulos transformados después de alinear las nueve rutas a ADMIN y módulo activo. `git diff --check` no reportó errores; mostró avisos LF/CRLF en archivos preexistentes. No se ejecutaron pruebas unitarias ni prueba manual de navegación/autorización.
 - **2026-11-02, módulos/permisos:** `npm run build` incluyó `/modulos` y `/permisos`; confirma compilación local, no sus flujos funcionales.

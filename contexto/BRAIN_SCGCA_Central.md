@@ -1,6 +1,6 @@
 # BRAIN maestro de SCGCA Central
 
-**Actualizado:** 2026-11-02
+**Actualizado:** 2026-11-03
 **Estado:** documento formal e índice del conocimiento consolidado del proyecto.
 **Regla de actualización:** cuando el usuario diga **BRAIN OK**, incorporar los acuerdos y avances recientes en los archivos pertinentes. Actualizar todos los archivos afectados por un cambio, sin duplicar información innecesariamente.
 
@@ -47,7 +47,7 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 - Repositorio local: C:\Users\cespinoza\scgca-frontend.
 - Supabase Central está activo en us-east-1, PostgreSQL 17.6.
 - Las 32 migraciones locales coinciden por versión con las 32 registradas en Supabase.
-- Las tres Edge Functions activas coinciden con sus fuentes locales: crear-usuario v9, actualizar-usuario v3 y consultar-tipo-cambio-bcrp v15.
+- Las Edge Functions desplegadas verificadas son crear-usuario v9 y actualizar-usuario v3. consultar-tipo-cambio-bcrp fue retirada de Supabase y del repositorio.
 - El frontend aún no está publicado en ningún hosting. GitHub contiene el código; Supabase provee la base de datos y la autenticación. Falta elegir y configurar el servicio que publicará la interfaz.
 - El usuario quiere primero ordenar el contexto. Todavía no se ha acordado un plan de trabajo nuevo.
 
@@ -82,6 +82,19 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 - Se simplificó el rol global a `ADMIN` y `USUARIO`; `QUERY` y `WRITER` quedan exclusivamente como niveles de `usuario_modulo`. La migración `20261102205813_simplify_global_user_roles` aparece aplicada en Supabase.
 - Tipo de Cambio usa ahora precisión de tres decimales (`numeric(10,3)`), aplicada con `20261102213154_tipo_cambio_tres_decimales`. La Edge Function `consultar-tipo-cambio-bcrp` fue retirada de Supabase y del repositorio. El formulario propone `1.000` y el ADMIN debe reemplazarlo manualmente por la venta oficial SUNAT del último día del mes; encontrar una API estable de SUNAT sigue pendiente.
 - A la fecha, las 42 migraciones locales coinciden con las 42 registradas en Supabase. Las funciones desplegadas verificadas son `crear-usuario` v9 y `actualizar-usuario` v3.
+- Se añadieron exportaciones a Excel para Variedades, Tipos de Maquinaria, Tipos de Centro de Costo, Etapas de Costo, Empresas y Comparativos. Exportan los resultados de los filtros activos; el botón queda junto a la acción de creación cuando aplica.
+- Los cambios de exportación se publicaron en GitHub `main` en el commit `0cfa0c0` (`feat: add Excel exports to master data`). La primera ejecución de CI encontró una prueba huérfana de la función ya retirada, que aún importaba `authorization.js`.
+- Se eliminó `supabase/functions/consultar-tipo-cambio-bcrp/authorization.test.js`, la última referencia ejecutable a esa función, y se publicó en `main` el commit `c03dd32` (`chore: remove test for retired exchange function`). El CI de ese commit terminó en éxito: pruebas, lint y build aprobados. Ejecución: [GitHub Actions](https://github.com/EkimEspinoza/scgca-frontend/actions/runs/41539595160).
+- `npm run build` local también aprobó. Vite informó que el bundle principal supera 500 KB minificado; es una advertencia de tamaño, no un fallo. No se encontró workflow de despliegue frontend en el repositorio; el push a `main` no confirma publicación en hosting.
+
+### Avances verificados al 3 de noviembre de 2026
+
+- Se consolidó la personalización visual en dos temas completos: claro y oscuro. El tema del usuario se guarda en `user_metadata.app_theme` de Supabase Auth; la selección se controla desde el switch inferior del sidebar. La transición circular empieza en el clic y calcula el radio para cubrir la ventana.
+- Los temas claro y oscuro usan superficies con efecto glass; el tema de alto contraste y el catálogo de colores independientes se retiraron. No se requirieron cambios de esquema, migraciones ni Edge Functions para esta preferencia de Auth.
+- Se corrigió la prioridad de estilos de las barras de color por empresa en las tablas de Centro de Costos y Campañas.
+- Los cambios se integraron en GitHub `main` el 2026-11-03. `npm test` aprobó 65/65 pruebas; `npm run lint` terminó con código 0 y advertencias no bloqueantes; `npm run build` aprobó con 11,774 módulos transformados y la advertencia no bloqueante de bundle principal superior a 500 KB minificado.
+- La verificación de Supabase Central confirmó 42 migraciones locales y 42 remotas con las mismas versiones. Las Edge Functions siguen alineadas: `crear-usuario` v9 y `actualizar-usuario` v3. El repositorio no tiene despliegue automático del frontend; publicar el código en GitHub no publica la interfaz.
+
 ### Pendientes vigentes al 2 de noviembre
 
 - Alinear, según instrucción del usuario, las asignaciones de prueba: la base muestra prueba 1 WRITER, prueba 3 WRITER y prueba 2 sin asignación a Empresas.

@@ -1,14 +1,15 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
     Dashboard as DashboardIcon,
     Assessment,
-    Settings,
     Logout,
     Menu,
     ExpandMore,
     ChevronRight,
     Category,
     AdminPanelSettings,
+    LightMode,
+    DarkMode,
 } from '@mui/icons-material'
 import {
     Box,
@@ -22,14 +23,69 @@ import {
     Typography,
     Divider,
     Tooltip,
+    Switch,
     useMediaQuery,
     useTheme,
 } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
+import { useAppTheme } from '../../context/useAppTheme'
 
 const drawerWidth = 240
 const collapsedWidth = 72
+
+function ThemeToggle({ collapsed = false }) {
+    const { themeName, cambiarTema, guardandoTema } = useAppTheme()
+    const clickOrigin = useRef(null)
+    const isDark = themeName === 'dark'
+    const ModeIcon = isDark ? DarkMode : LightMode
+
+    const handleChange = async (_event, checked) => {
+        try {
+            await cambiarTema(checked ? 'dark' : 'light', clickOrigin.current)
+        } catch (error) {
+            console.error('Error guardando la preferencia de tema:', error)
+        } finally {
+            clickOrigin.current = null
+        }
+    }
+
+    const captureClickOrigin = (event) => {
+        clickOrigin.current = { x: event.clientX, y: event.clientY }
+    }
+
+    const toggle = (
+        <Switch
+            size="small"
+            checked={isDark}
+            onChange={handleChange}
+            onClickCapture={captureClickOrigin}
+            disabled={guardandoTema}
+            inputProps={{ 'aria-label': 'Cambiar entre tema claro y oscuro' }}
+        />
+    )
+
+    if (collapsed) {
+        return (
+            <Tooltip title={isDark ? 'Tema oscuro: cambiar a claro' : 'Tema claro: cambiar a oscuro'} placement="right">
+                <Box sx={{ minHeight: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
+                    <ModeIcon fontSize="small" color="action" />
+                    {toggle}
+                </Box>
+            </Tooltip>
+        )
+    }
+
+    return (
+        <Box sx={{ minHeight: 42, display: 'flex', alignItems: 'center', px: 2 }}>
+            <ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: 'center', color: 'text.secondary' }}>
+                <ModeIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary="Tema oscuro" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
+            {toggle}
+        </Box>
+    )
+}
 
 function Sidebar({
     collapsed,
@@ -86,12 +142,6 @@ function Sidebar({
             text: 'Reportes',
             icon: <Assessment fontSize="small" />,
             path: '/reportes',
-        },
-        {
-            text: 'Configuración',
-            icon: <Settings fontSize="small" />,
-            path: '/configuracion',
-            permissions: ['ADMIN'],
         },
     ]
 
@@ -243,7 +293,12 @@ function Sidebar({
                         width: drawerWidth,
                         boxSizing: 'border-box',
                         overflowX: 'hidden',
-                        backgroundColor: 'background.paper',
+                        backgroundColor: 'scgca.sidebar',
+                        backdropFilter: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId) ? 'blur(18px)' : 'none',
+                        WebkitBackdropFilter: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId) ? 'blur(18px)' : 'none',
+                        boxShadow: (theme) => theme.scgca?.themeId === 'dark'
+                            ? 'inset -1px 0 rgba(255, 255, 255, 0.05)'
+                            : theme.scgca?.themeId === 'light' ? 'inset -1px 0 rgba(31, 41, 55, 0.06)' : undefined,
                         borderRight: '1px solid',
                         borderColor: 'divider',
                     },
@@ -411,6 +466,8 @@ function Sidebar({
                 {/* FOOTER MÓVIL */}
                 <Box sx={{ marginTop: 'auto' }}>
                     <Divider />
+                    <ThemeToggle />
+                    <Divider />
                     <ListItemButton
                         onClick={handleLogout}
                         sx={{
@@ -458,7 +515,12 @@ function Sidebar({
                         theme.transitions.create('width', {
                             duration: theme.transitions.duration.shortest,
                         }),
-                    backgroundColor: 'background.paper',
+                    backgroundColor: 'scgca.sidebar',
+                    backdropFilter: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId) ? 'blur(18px)' : 'none',
+                    WebkitBackdropFilter: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId) ? 'blur(18px)' : 'none',
+                    boxShadow: (theme) => theme.scgca?.themeId === 'dark'
+                        ? 'inset -1px 0 rgba(255, 255, 255, 0.05)'
+                        : theme.scgca?.themeId === 'light' ? 'inset -1px 0 rgba(31, 41, 55, 0.06)' : undefined,
                     borderRight: '1px solid',
                     borderColor: 'divider',
                 },
@@ -687,6 +749,8 @@ function Sidebar({
 
             {/* FOOTER DESKTOP */}
             <Box sx={{ marginTop: 'auto' }}>
+                <Divider />
+                <ThemeToggle collapsed={collapsed} />
                 <Divider />
                 <Tooltip
                     title={collapsed ? 'Cerrar sesión' : ''}
