@@ -92,7 +92,7 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 - Se consolidó la personalización visual en dos temas completos: claro y oscuro. El tema del usuario se guarda en `user_metadata.app_theme` de Supabase Auth; la selección se controla desde el switch inferior del sidebar. La transición circular empieza en el clic y calcula el radio para cubrir la ventana.
 - Los temas claro y oscuro usan superficies con efecto glass; el tema de alto contraste y el catálogo de colores independientes se retiraron. No se requirieron cambios de esquema, migraciones ni Edge Functions para esta preferencia de Auth.
 - Se corrigió la prioridad de estilos de las barras de color por empresa en las tablas de Centro de Costos y Campañas.
-- Los cambios se integraron en GitHub `main` el 2026-11-03. `npm test` aprobó 65/65 pruebas; `npm run lint` terminó con código 0 y advertencias no bloqueantes; `npm run build` aprobó con 11,774 módulos transformados y la advertencia no bloqueante de bundle principal superior a 500 KB minificado.
+- Los cambios se integraron en GitHub `main` el 2026-11-03 en `09de31a` (`feat: permitir temas claro y oscuro personalizables`). `npm test` aprobó 65/65 pruebas; `npm run lint` terminó con código 0 y advertencias no bloqueantes; `npm run build` aprobó con 11,774 módulos transformados y la advertencia no bloqueante de bundle principal superior a 500 KB minificado.
 - La verificación de Supabase Central confirmó 42 migraciones locales y 42 remotas con las mismas versiones. Las Edge Functions siguen alineadas: `crear-usuario` v9 y `actualizar-usuario` v3. El repositorio no tiene despliegue automático del frontend; publicar el código en GitHub no publica la interfaz.
 
 ### Pendientes vigentes al 2 de noviembre
