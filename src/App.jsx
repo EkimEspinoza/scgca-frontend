@@ -25,22 +25,22 @@ import {
 
 import { useAuth } from './context/useAuth'
 import MainLayout from './components/common/MainLayout'
-import EtapasCosto from './pages/maestros/EtapasCosto'
-import TipoCambio from './pages/maestros/TipoCambio'
-
+const EtapasCosto = lazy(() => import('./pages/maestros/EtapasCosto'))
+const TipoCambio = lazy(() => import('./pages/maestros/TipoCambio'))
 const Variedades = lazy(() => import('./pages/maestros/Variedades'))
 const TiposMaquinaria = lazy(() => import('./pages/maestros/TiposMaquinaria'))
 const TiposCentroCosto = lazy(() => import('./pages/maestros/TiposCentroCosto'))
 const Empresa = lazy(() => import('./pages/maestros/Empresa'))
-const CentroCostos = lazy(() => import('./pages/CentroCostos'))
+const CentroCostos = lazy(() => import('./pages/maestros/CentroCostos'))
 const Login = lazy(() => import('./pages/Login'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const CambiarContrasena = lazy(() => import('./pages/CambiarContrasena'))
-const Usuarios = lazy(() => import('./pages/Usuarios'))
-const CatalogoModulos = lazy(() => import('./pages/CatalogoModulos'))
-const PermisosPorModulo = lazy(() => import('./pages/PermisosPorModulo'))
-const Campanas = lazy(() => import('./pages/Campanas'))
+const Usuarios = lazy(() => import('./pages/accesos/Usuarios'))
+const CatalogoModulos = lazy(() => import('./pages/accesos/CatalogoModulos'))
+const PermisosPorModulo = lazy(() => import('./pages/accesos/PermisosPorModulo'))
+const Campanas = lazy(() => import('./pages/maestros/Campanas'))
 const Comparativos = lazy(() => import('./pages/maestros/Comparativos'))
+const Distribucion = lazy(() => import('./pages/procesos/Distribucion'))
 
 /*
  * =========================================
@@ -894,6 +894,18 @@ function App() {
           ADMIN / QUERY / WRITER ASIGNADO
       ========================================== */}
 
+      <Route
+        path="/distribucion"
+        element={
+          <ProtectedRoute>
+            <PermissionRoute moduleCode="DISTRIBUCION" requiredLevel="QUERY">
+              <MainLayout onLogout={logout}>
+                <Distribucion />
+              </MainLayout>
+            </PermissionRoute>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/empresas"
         element={

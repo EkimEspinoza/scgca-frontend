@@ -10,16 +10,16 @@ import {
 } from '@mui/material'
 import { Save, Security } from '@mui/icons-material'
 
-import CompactModuleTheme from '../components/common/CompactModuleTheme'
-import DataTable from '../components/common/DataTable'
-import PageHeader from '../components/common/PageHeader'
-import { obtenerEtiquetaPermiso } from '../components/usuarios/usuarioRules'
+import CompactModuleTheme from '../../components/common/CompactModuleTheme'
+import DataTable from '../../components/common/DataTable'
+import PageHeader from '../../components/common/PageHeader'
+import { obtenerEtiquetaPermiso } from '../../components/usuarios/usuarioRules'
 import {
   obtenerAsignacionesUsuario,
   obtenerModulos,
   obtenerUsuariosParaPermisos,
   guardarPermisosPorModulo,
-} from '../services/accesoService'
+} from '../../services/accesoService'
 
 function nombreUsuario(usuario) {
   return [usuario.nombre, usuario.apellido].filter(Boolean).join(' ')

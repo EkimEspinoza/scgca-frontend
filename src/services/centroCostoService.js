@@ -88,7 +88,7 @@ export async function obtenerCentrosCosto({
         created_at,
         updated_at,
 
-        empresa:Dim_Empresa(
+        empresa:Dim_Empresa!fk_centro_costo_empresa(
           id_empresa,
           descripcion,
           nombre_comercial
@@ -955,7 +955,7 @@ export async function obtenerCentrosCostoParaExportar({
             id_variedad,
             estado,
 
-            empresa:Dim_Empresa(
+            empresa:Dim_Empresa!fk_centro_costo_empresa(
               id_empresa,
               descripcion,
               nombre_comercial

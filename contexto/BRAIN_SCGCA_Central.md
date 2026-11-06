@@ -1,6 +1,6 @@
 # BRAIN maestro de SCGCA Central
 
-**Actualizado:** 2026-11-03
+**Actualizado:** 2026-11-05
 **Estado:** documento formal e índice del conocimiento consolidado del proyecto.
 **Regla de actualización:** cuando el usuario diga **BRAIN OK**, incorporar los acuerdos y avances recientes en los archivos pertinentes. Actualizar todos los archivos afectados por un cambio, sin duplicar información innecesariamente.
 
@@ -96,13 +96,35 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 - El build midió el bundle JavaScript principal en 736.44 KB minificado y 230.36 KB comprimido con gzip. Se registra como oportunidad de optimización de código mediante división de código (*code splitting*) y carga diferida (*lazy loading*). Los 500 KB son el umbral de advertencia configurado en Vite, no un límite obligatorio ni un requisito de aceptación.
 - La verificación de Supabase Central confirmó 42 migraciones locales y 42 remotas con las mismas versiones. Las Edge Functions siguen alineadas: `crear-usuario` v9 y `actualizar-usuario` v3. El repositorio no tiene despliegue automático del frontend; publicar el código en GitHub no publica la interfaz.
 
-### Pendientes vigentes al 2 de noviembre
+### Avances verificados al 4 de noviembre de 2026
+
+- Se refactorizaron localmente Empresa, Comparativos, Etapas de Costo, Tipos de Centro de Costo, Tipos de Maquinaria y Variedades: cada página coordina componentes de filtros, tabla y formulario; la lógica de datos, formularios y acciones quedó en hooks. Las pantallas usan tokens semánticos del tema en lugar de ramificaciones por tema para varios colores.
+- Campañas y Centro de Costos, además de Usuarios, Catálogo de Módulos y Permisos por Módulo, se ubicaron bajo `src/pages/maestros` o `src/pages/accesos`. Se actualizaron las rutas de `App.jsx` y las importaciones relativas internas para reflejar las ubicaciones nuevas.
+- Se difirió la importación de `excelService` en los hooks de los maestros: `xlsx` se descarga solo cuando se solicita exportar. Campañas y Centro de Costos ya tenían exportación dinámica. Etapas de Costo y Tipo de Cambio ahora también se cargan bajo demanda desde `App.jsx`.
+- `npm run build` pasó el 2026-11-04 con Vite 8.2.2 y 11,798 módulos transformados. El chunk de entrada pasó de 738.90 KB minificados (231.30 KB gzip) a 353.86 KB (108.65 KB gzip); `excelService` quedó en un chunk diferido de 331.07 KB (107.71 KB gzip). No hubo advertencia de chunk superior a 500 KB. Supabase quedó en un chunk separado de 332.09 KB (90.88 KB gzip); no se midió la transferencia real del navegador.
+- `git diff --check` terminó sin errores; informó advertencias LF/CRLF en archivos modificados. No se ejecutaron pruebas unitarias ni lint. Los cambios están locales y sin commit; estas modularizaciones no modificaron Supabase ni se publicó el frontend. Distribución sí recibió cambios en Supabase. GitHub no está confirmado como alineado.
+
+### Distribución mensual — estado al 5 de noviembre de 2026
+
+- Reglas confirmadas: un registro por empresa y centro de costo; COD_CC_Dist es el código local y Cod_CC_PK_Dist identifica el centro global. PORCENTAJE es el dato contable referencial y suma 100 % por empresa/mes. FECHA es fin de mes. Num_Hec proviene de centros LEVANTE con campaña operativa en la fecha. Porcentaje_Hec es la participación de hectáreas de cada centro sobre el total elegible de su empresa y mes; si PORCENTAJE = 0, el centro queda fuera del cálculo de Porcentaje_Hec y recibe 0.0000 %. Los restantes centros reparten 100.0000 % por hectáreas. Se guarda como fracción a cuatro decimales con redondeo determinista.
+- Datos cargados: Dim_PorcentajeDist contiene 1,950 filas entre enero de 2017 y octubre de 2026, en 471 grupos empresa/mes. Ambos porcentajes suman 1.0000 en todos los grupos verificados al 2026-11-05.
+- Supabase: distribucion_mes guarda estado por empresa/mes y distribucion_evento lleva la bitácora; no duplican los datos de distribución. Las tres tablas tienen RLS. Usuarios consultan su empresa asignada y ADMIN puede ver todas; el flujo de escritura usa RPC.
+- Los RPC de listar empresas, vista previa, guardar/cerrar y reabrir están desplegados. La migración `20261105205941_porcentaje_hec_excluye_porcentaje_cero` actualizó `previsualizar_distribucion_mes`; una consulta SQL del ejemplo con cinco centros confirmó 0.0000 % para el centro con PORCENTAJE 0 y 25.0000 % para cada uno de los otros cuatro. Los meses cerrados mantienen su snapshot; el recálculo ocurre en meses abiertos o al reabrir.
+- La interfaz multimes existe localmente: rango desde enero de 2017, máximo tres meses, hectáreas independientes por cada mes, subtotal y validación en línea, cierre individual por mes, y reapertura ADMIN del mes y los posteriores de la empresa. Solo muestra COD_CC_PK_Dist y descripción como columnas fijas; no muestra COD_CC_Dist ni Nº. La edición muestra porcentaje como 0–100 % y recalcula Porcentaje_Hec inmediatamente al poner PORCENTAJE en 0.
+- La interfaz no incluye importación/exportación Excel, ambas quedan como implementaciones futuras. No se requiere mostrar Variedad. No hay selector de campaña: Num_Hec se calcula automáticamente con todas las campañas operativas en la fecha de cada mes; no se filtrará por campaña.
+- El mínimo de enero de 2017 se pasa a los inputs nativos mediante `slotProps.htmlInput` (MUI 9); el selector visual del navegador no se pudo comprobar tras un fallo de inicialización de la herramienta CUA. Compilación local aprobada después de los últimos cambios; no se probaron en navegador guardado, cierres ni reaperturas.
+- Alineación completada el 2026-11-05: GitHub `main`, local y Supabase comparten el estado de Distribución; Supabase y local registran 49 versiones de migración. Los SQL históricos locales se reconciliaron con las versiones ya aplicadas; no se reaplicaron migraciones en producción. El frontend quedó integrado en GitHub `main`; no se hizo despliegue a hosting.
+
+### Pendientes vigentes al 5 de noviembre
 
 - Alinear, según instrucción del usuario, las asignaciones de prueba: la base muestra prueba 1 WRITER, prueba 3 WRITER y prueba 2 sin asignación a Empresas.
 - Probar manualmente las pantallas ADMIN de Módulos y Permisos y sus flujos de asignación; el build solo verifica compilación.
-- Decidir el siguiente módulo de negocio para extender autorización granular por módulo en RLS; los nueve maestros siguen con administración ADMIN y lectura para perfiles activos.
+- Mov_Tareo es el siguiente módulo de negocio acordado. Al diseñarlo, decidir el alcance de permisos/RLS; los nueve maestros siguen con administración ADMIN y lectura para perfiles activos.
 - Revisar si QUERY/WRITER globales seguirán siendo necesarios cuando las asignaciones por módulo estén completas.
-- Distribución mensual tiene decisiones de negocio y diseño abiertas.
+- Validar visualmente Distribución en navegador; probar carga/guardado, cierre mensual, reapertura ADMIN y validaciones por rol.
+- La importación y exportación Excel de Distribución quedan registradas como implementaciones futuras. No se mostrará Variedad y las campañas no filtrarán hectáreas.
+- El siguiente módulo acordado es Mov_Tareo: registro de horas trabajadas por maquinaria para centros de costo de inversión Campo, Vivero y LEVANTE. Falta definir su estructura y reglas antes de desarrollar.
+- El diagrama visual de tablas en Supabase sigue sin ordenarse; la conexión SQL no permite mover las tarjetas y la herramienta de navegador no inició.
 - Encontrar una API estable para obtener directamente de SUNAT la venta del último día de cada mes; hasta entonces el Tipo de Cambio se ingresa manualmente.
 - Siguen abiertas alertas de Advisors y preguntas de auditoría.
 - No se toma como vigente ningún porcentaje histórico de avance (30%, 55% o 58%).
@@ -111,7 +133,7 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 
 ### Módulos identificados
 
-En el código: login, cambio de contraseña, Dashboard, Usuarios, Empresas, Variedades, Tipos de Centro de Costo, Tipos de Maquinaria, Etapas de Costo, Tipo de Cambio, Campañas, Comparativos y Centro de Costos.
+En el código: login, cambio de contraseña, Dashboard, Usuarios, Empresas, Variedades, Tipos de Centro de Costo, Tipos de Maquinaria, Etapas de Costo, Tipo de Cambio, Campañas, Comparativos, Centro de Costos y Distribución. Mov_Tareo es el siguiente módulo acordado y aún no está implementado.
 
 En los requisitos también aparecen Almacén, importación de Excel, Distribución mensual, reportes y Power BI. SCIRE y XRAY son integraciones futuras.
 
@@ -131,16 +153,7 @@ En los requisitos también aparecen Almacén, importación de Excel, Distribuci�
 
 ### Distribución mensual
 
-Es un área crítica pendiente. No diseñar tablas ni SQL hasta resolver:
-
-- Qué representa COD_CC_Dist: origen, agrupación u otra entidad. Cod_CC_PK_Dist está descrito como destino.
-- Qué valor de Dim_TipoCC identifica LEVANTE.
-- Cómo guardar cierres y rangos reabiertos o modificados si no se crea tabla de historial.
-- Qué regla de redondeo garantiza que Porcentaje_Hec sume 100% de forma determinista.
-- Qué tablas de costos deben recalcularse y cómo hacerlo dentro de una transacción.
-
-Reglas propuestas: PORCENTAJE es el dato contable y debe sumar 100% por empresa y mes; cero puede ser válido y NULL no equivale a cero. PORCENTAJE_HEC se calcula desde hectáreas vigentes. El cierre corresponde al último día del mes y debe ser correlativo. Debe haber vista previa; si falla un mes de un rango, toda la operación debe revertirse. ADMIN podría reabrir y editar PORCENTAJE. Estas reglas requieren confirmación funcional y técnica antes de implementarse.
-
+Las reglas acordadas y el estado técnico vigente se detallan arriba en “Distribución mensual — estado al 5 de noviembre de 2026”. El esquema/RPC y una interfaz multimes compacta están implementados localmente; la regla de excluir centros con PORCENTAJE = 0 se desplegó en Supabase. Falta validación manual de UI, completar Excel/variedad de la referencia y reconciliar migraciones antes de publicar.
 ### Tipo de cambio
 
 - El valor requerido es la **venta SUNAT del último día calendario del mes**. El usuario confirmó como referencias julio de 2026: 3.399; agosto: 3.356; septiembre: 3.450.
@@ -158,13 +171,13 @@ Reglas propuestas: PORCENTAJE es el dato contable y debe sumar 100% por empresa 
 
 ### Tablas vistas en public
 
-Inventario base de 12 tablas: permiso, usuarios, Dim_Empresa, usuario_empresa, Dim_TipoCC, dim_tipo_maq, dim_comparativo, dim_variedad, dim_centro_costo, Dim_Campana, Dim_Etapa_Costo y TipoCambio. Al 2026-10-31 se añadieron `modulos` y `usuario_modulo` (14 tablas conocidas en public; falta una inspección integral nueva del catálogo).
+Inventario base de 12 tablas: permiso, usuarios, Dim_Empresa, usuario_empresa, Dim_TipoCC, dim_tipo_maq, dim_comparativo, dim_variedad, dim_centro_costo, Dim_Campana, Dim_Etapa_Costo y TipoCambio. Se conocen además modulos, usuario_modulo y las tres tablas de Distribución (17 tablas conocidas en public; falta una inspección integral nueva del catálogo).
 
-RLS está habilitado en las 12 tablas observadas. PostgreSQL reporta versión 17.6. No se ejecutaron migraciones ni consultas de escritura durante las revisiones de contexto.
+RLS estaba habilitado en las 12 tablas originales observadas; el 2026-11-04 también se confirmó RLS en las tres tablas de Distribución. No es una auditoría integral nueva de las 17 tablas. PostgreSQL reporta versión 17.6.
 
 ### Migraciones y funciones
 
-- Al 2026-11-02 hay 42 archivos de migración locales y 42 versiones registradas en Supabase; las versiones coinciden. Las más recientes son `20261102205813_simplify_global_user_roles` y `20261102213154_tipo_cambio_tres_decimales`.
+- Al 2026-11-05 Supabase registra 49 migraciones y local contiene 48 archivos. `20261105205941_porcentaje_hec_excluye_porcentaje_cero` coincide local/remoto; falta el archivo local `20261104220325` y cuatro archivos tienen prefijos distintos de las versiones remotas. GitHub no se verificó.
 - Edge Functions desplegadas y contrastadas: `crear-usuario` v9 y `actualizar-usuario` v3. `consultar-tipo-cambio-bcrp` fue eliminada.
 - Las funciones de usuarios tienen verify_jwt=false, pero usan middleware withSupabase({ auth: "user" }) y comprueban identidad y ADMIN activo antes de usar privilegios administrativos.
 - La migración 20261021222143_a03_restringir_privilegios_secuencias_public.sql está en local y en el historial remoto.

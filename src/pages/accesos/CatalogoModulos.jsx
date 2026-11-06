@@ -16,16 +16,16 @@ import {
 } from '@mui/material'
 import { Add, Apps, Close, Edit, Save } from '@mui/icons-material'
 
-import CompactModuleTheme from '../components/common/CompactModuleTheme'
-import DataTable from '../components/common/DataTable'
-import PageHeader from '../components/common/PageHeader'
-import { useAuth } from '../context/useAuth'
+import CompactModuleTheme from '../../components/common/CompactModuleTheme'
+import DataTable from '../../components/common/DataTable'
+import PageHeader from '../../components/common/PageHeader'
+import { useAuth } from '../../context/useAuth'
 import {
   actualizarEstadoModulo,
   actualizarModulo,
   crearModulo,
   obtenerModulos,
-} from '../services/accesoService'
+} from '../../services/accesoService'
 
 const formularioInicial = {
   codigo: '',

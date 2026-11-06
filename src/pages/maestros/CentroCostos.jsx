@@ -1,12 +1,12 @@
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Snackbar, Typography, } from '@mui/material'
 import { Add as AddIcon, Storage as StorageIcon, TableView as TableViewIcon } from '@mui/icons-material'
 
-import { useCentroCosto } from '../hooks/useCentroCosto'
+import { useCentroCosto } from '../../hooks/useCentroCosto'
 
-import CentroCostoFilters from '../components/centroCosto/CentroCostoFilters'
-import CentroCostoTable from '../components/centroCosto/CentroCostoTable'
-import CentroCostoForm from '../components/centroCosto/CentroCostoForm'
-import CompactModuleTheme from '../components/common/CompactModuleTheme'
+import CentroCostoFilters from '../../components/centroCosto/CentroCostoFilters'
+import CentroCostoTable from '../../components/centroCosto/CentroCostoTable'
+import CentroCostoForm from '../../components/centroCosto/CentroCostoForm'
+import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 
 
 function CentroCostos() {

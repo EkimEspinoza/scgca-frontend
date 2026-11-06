@@ -2,12 +2,12 @@ import {Alert,Box,Button,Dialog,DialogActions,DialogContent,DialogTitle,Paper,Sn
 import {Add as AddIcon,Campaign,TableView as TableViewIcon} from '@mui/icons-material'
 import { useSearchParams } from 'react-router-dom'
 
-import Pagination from '../components/common/Pagination'
-import CampanaFilters from '../components/campanas/CampanaFilters'
-import CampanaForm from '../components/campanas/CampanaForm'
-import CampanaTable from '../components/campanas/CampanaTable'
-import useCampana from '../hooks/useCampana'
-import CompactModuleTheme from '../components/common/CompactModuleTheme'
+import Pagination from '../../components/common/Pagination'
+import CampanaFilters from '../../components/campanas/CampanaFilters'
+import CampanaForm from '../../components/campanas/CampanaForm'
+import CampanaTable from '../../components/campanas/CampanaTable'
+import useCampana from '../../hooks/useCampana'
+import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 
 
 function Campanas() {

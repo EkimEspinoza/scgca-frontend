@@ -11,11 +11,11 @@ import {
   People as PeopleIcon,
 } from '@mui/icons-material'
 
-import { useUsuarios } from '../hooks/useUsuarios'
+import { useUsuarios } from '../../hooks/useUsuarios'
 
-import UsuariosFilters from '../components/usuarios/UsuariosFilters'
-import UsuarioTable from '../components/usuarios/UsuarioTable'
-import UsuarioForm from '../components/usuarios/UsuarioForm'
+import UsuariosFilters from '../../components/usuarios/UsuariosFilters'
+import UsuarioTable from '../../components/usuarios/UsuarioTable'
+import UsuarioForm from '../../components/usuarios/UsuarioForm'
 
 function Usuarios() {
   const {

@@ -1,8 +1,8 @@
 # Inventario de base de datos — SCGCA Central
 
-**Fuente:** fotografía base de Supabase Central al 2026-10-27, con deltas RBAC y RLS verificados en vivo al 2026-11-02.
+**Fuente:** fotografía base de Supabase Central al 2026-10-27, con deltas RBAC/RLS y Distribución verificados en vivo hasta 2026-11-04.
 **Proyecto:** ajzmheqoanihdujmgbhv, esquema public, PostgreSQL 17.6.
-**Cobertura:** fotografía de 12 tablas, más las tablas `modulos` y `usuario_modulo` añadidas el 2026-10-31 y los cambios posteriores de `permiso` y `Dim_Empresa`. El catálogo completo requiere nueva inspección.
+**Cobertura:** fotografía base de 12 tablas; deltas conocidos incluyen modulos, usuario_modulo, cambios de permiso/Dim_Empresa y las tres tablas de Distribución añadidas en noviembre. Conteo conocido: 17 tablas en public; no es una inspección integral del catálogo.
 
 Este inventario es una fotografía del catálogo en la fecha indicada. Antes de migrar, cotejar con las migraciones versionadas y verificar índices, grants, ownership, secuencias, funciones, vistas, extensiones y consumidores en frontend/RPC/Edge Functions. Las instrucciones son especificaciones para generar migraciones, no SQL listo para ejecutar.
 
@@ -244,3 +244,29 @@ Cada bloque es una instrucción independiente para generar una migración en otr
 #### Reconstruir tabla TipoCambio
 
 > En el proyecto/base de datos destino, reconstruye la tabla `public.TipoCambio` según esta especificación: columnas [id_tipo_cambio bigint NOT NULL IDENTITY; anho integer NOT NULL CHECK(anho >= 2000 AND anho <= 2100); mes integer NOT NULL CHECK(mes >= 1 AND mes <= 12); tipo_cambio numeric(10,3) NOT NULL CHECK(tipo_cambio > 0::numeric); created_at timestamp with time zone NOT NULL DEFAULT now(); updated_at timestamp with time zone NOT NULL DEFAULT now()], clave primaria [id_tipo_cambio], relaciones salientes [ninguna]. Habilita RLS. Define estas políticas en modo y alcance equivalentes: [admin_actualizar_tipo_cambio; UPDATE; roles authenticated; USING private.is_admin(); WITH CHECK private.is_admin() || admin_eliminar_tipo_cambio; DELETE; roles authenticated; USING private.is_admin(); WITH CHECK — || admin_insertar_tipo_cambio; INSERT; roles authenticated; USING —; WITH CHECK private.is_admin() || usuarios_activos_ver_tipo_cambio; SELECT; roles authenticated; USING (private.get_my_permission() IS NOT NULL); WITH CHECK —]. Triggers requeridos [trg_actualizar_fecha_tipo_cambio: CREATE TRIGGER trg_actualizar_fecha_tipo_cambio BEFORE UPDATE ON public."TipoCambio" FOR EACH ROW EXECUTE FUNCTION fn_actualizar_fecha_tipo_cambio() || trg_impedir_cambio_periodo_tipo_cambio: CREATE TRIGGER trg_impedir_cambio_periodo_tipo_cambio BEFORE UPDATE OF anho, mes ON public."TipoCambio" FOR EACH ROW EXECUTE FUNCTION impedir_cambio_periodo_tipo_cambio() || trg_validar_correlatividad_tipo_cambio: CREATE TRIGGER trg_validar_correlatividad_tipo_cambio BEFORE INSERT ON public."TipoCambio" FOR EACH ROW EXECUTE FUNCTION fn_validar_correlatividad_tipo_cambio()]. Antes de generar SQL, resuelve dependencias de funciones y tablas referenciadas, verifica que helpers como private.is_admin() y private.get_my_permission() existan y tengan implementación equivalente, identifica índices/grants/privilegios de secuencias y localiza migraciones fuente. No inventes comportamiento que no esté definido. Entrega una migración idempotente o repetible según convención del proyecto destino, explica diferencias de motor/versión/case-sensitivity y lista pruebas de estructura y autorización. No la apliques ni despliegues sin aprobación explícita.>
+## Delta verificado 2026-11-04 — Distribución
+
+Proyecto Supabase Central ajzmheqoanihdujmgbhv.
+
+### Dim_PorcentajeDist
+
+Columnas: id_Empresa_Dist bigint, COD_CC_Dist bigint, Cod_CC_PK_Dist bigint, PORCENTAJE numeric(9,4), FECHA date, Num_Hec numeric(20,8), Porcentaje_Hec numeric(9,4). PK empresa/código global/fecha; unicidad empresa/código local/fecha; FK a Dim_Empresa y dim_centro_costo. Checks para porcentajes 0..1, hectáreas no negativas y fecha fin de mes. RLS habilitado: ADMIN consulta globalmente; usuarios con permiso y asociación activa consultan sus empresas. Escritura directa ADMIN.
+
+### Tablas auxiliares
+
+distribucion_mes guarda estado ABIERTO/CERRADO por empresa y fecha, marcas de tiempo y usuario de cierre/reapertura. PK empresa/fecha.
+distribucion_evento guarda acción, actor, fecha/hora y detalle JSON con snapshot al guardar/cerrar.
+Ambas tienen RLS de lectura por empresa y acceso global para ADMIN; escritura directa revocada.
+RPC desplegados: obtener_empresas_distribucion(), previsualizar_distribucion_mes(bigint,date), guardar_distribucion_mes(bigint,date,jsonb,boolean), reabrir_distribucion_mes(bigint,date).
+
+Dim_PorcentajeDist contiene 1,950 filas entre 2017-01-31 y 2026-10-31; 471 grupos empresa/mes. Ambos porcentajes suman 1.0000 en todos los grupos verificados el 2026-11-05. La vista previa fue invocada con contexto ADMIN y devolvió filas tras corregir varchar/text.
+
+Migraciones nuevas de Distribución: 20261104212541, 20261104220325, 20261104222626, 20261104224039, 20261104224404, 20261104224750 y 20261105205941. Al 2026-11-05, las 49 versiones locales coinciden con las 49 registradas en Supabase; el contenido SQL de las siete migraciones de Distribución se comparó y coincide. La interfaz y el BRAIN quedan integrados a GitHub `main` en esta actualización; no se desplegó frontend a hosting.
+
+## Delta verificado 2026-11-05 — RPC Distribución
+
+Se aplicó en Supabase Central la migración `20261105205941_porcentaje_hec_excluye_porcentaje_cero`; Supabase registra esa versión y el archivo local tiene el mismo prefijo. Reemplaza `public.previsualizar_distribucion_mes(bigint,date)` conservando validaciones de usuario, módulo, empresa y fecha de cierre de mes, además de la rama de snapshot para períodos cerrados.
+
+Para períodos abiertos, `Porcentaje_Hec` se calcula sobre hectáreas solo de centros con `PORCENTAJE IS DISTINCT FROM 0`. Un porcentaje contable 0 produce `Porcentaje_Hec = 0`; valores NULL de períodos nuevos siguen participando provisionalmente mientras se completa la distribución. El redondeo de mayores residuos conserva cuatro decimales y suma 1.0000 entre centros elegibles. Una consulta de ejemplo confirmó cinco filas con 0.0000 para el centro de porcentaje cero y 0.2500 para cada uno de los cuatro restantes.
+
+Al corte de esta actualización, Supabase registra 49 migraciones y el directorio local contiene 48 archivos. Continúa faltando el archivo local `20261104220325_alinear_rls_porcentaje_dist_centro_costo`; cuatro prefijos locales previos no coinciden con versiones remotas. GitHub no se cotejó.

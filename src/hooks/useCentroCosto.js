@@ -224,8 +224,11 @@ export function useCentroCosto() {
                 setTotal(resultado.count ?? 0)
             } catch (err) {
                 if (!vigente) return
-                console.error(err)
-                setError('No se pudieron cargar los centros de costo.')
+                console.error('Error cargando los centros de costo:', err)
+                const detalle = [err?.code, err?.message].filter(Boolean).join(' — ')
+                setError(import.meta.env.DEV && detalle
+                    ? `No se pudieron cargar los centros de costo. ${detalle}`
+                    : 'No se pudieron cargar los centros de costo.')
             } finally {
                 if (vigente) { setLoading(false) }
             }

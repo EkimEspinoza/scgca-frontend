@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import {
     Dashboard as DashboardIcon,
     Assessment,
+    Percent,
     Logout,
     Menu,
     ExpandMore,
@@ -139,6 +140,13 @@ function Sidebar({
             path: '/dashboard',
         },
         {
+            text: 'Distribución',
+            icon: <Percent fontSize="small" />,
+            path: '/distribucion',
+            moduleCode: 'DISTRIBUCION',
+        },
+
+        {
             text: 'Reportes',
             icon: <Assessment fontSize="small" />,
             path: '/reportes',
@@ -215,8 +223,9 @@ function Sidebar({
      * Filtrar opciones según el permiso del usuario.
      */
     const itemsVisibles = menuItems.filter((item) => {
-        if (!item.permissions) return true
-        return item.permissions.includes(permiso)
+        if (item.permissions && !item.permissions.includes(permiso)) return false
+        if (!item.moduleCode) return true
+        return perfil?.modulos?.some((modulo) => modulo.codigo === item.moduleCode && (permiso === 'ADMIN' || ['QUERY', 'WRITER'].includes(modulo.nivel)))
     })
     const maestrosVisibles = maestrosItems.filter((item) => {
         if (item.permissions && !item.permissions.includes(permiso)) {
