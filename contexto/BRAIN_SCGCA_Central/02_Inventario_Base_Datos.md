@@ -1,6 +1,6 @@
 # Inventario de base de datos — SCGCA Central
 
-**Fuente:** fotografía base de Supabase Central al 2026-10-27, con deltas RBAC/RLS y Distribución verificados en vivo hasta 2026-11-04.
+**Fuente:** fotografía base de Supabase Central al 2026-10-27, con deltas RBAC/RLS y Distribución verificados hasta 2026-11-05 y Mov_Tareo al 2026-11-12.
 **Proyecto:** ajzmheqoanihdujmgbhv, esquema public, PostgreSQL 17.6.
 **Cobertura:** fotografía base de 12 tablas; deltas conocidos incluyen modulos, usuario_modulo, cambios de permiso/Dim_Empresa y las tres tablas de Distribución añadidas en noviembre. Conteo conocido: 17 tablas en public; no es una inspección integral del catálogo.
 
@@ -270,3 +270,16 @@ Se aplicó en Supabase Central la migración `20261105205941_porcentaje_hec_excl
 Para períodos abiertos, `Porcentaje_Hec` se calcula sobre hectáreas solo de centros con `PORCENTAJE IS DISTINCT FROM 0`. Un porcentaje contable 0 produce `Porcentaje_Hec = 0`; valores NULL de períodos nuevos siguen participando provisionalmente mientras se completa la distribución. El redondeo de mayores residuos conserva cuatro decimales y suma 1.0000 entre centros elegibles. Una consulta de ejemplo confirmó cinco filas con 0.0000 para el centro de porcentaje cero y 0.2500 para cada uno de los cuatro restantes.
 
 Al corte de esta actualización, Supabase registra 49 migraciones y el directorio local contiene 48 archivos. Continúa faltando el archivo local `20261104220325_alinear_rls_porcentaje_dist_centro_costo`; cuatro prefijos locales previos no coinciden con versiones remotas. GitHub no se cotejó.
+
+## Delta verificado 2026-11-12 — Mov_Tareo
+
+Proyecto Supabase Central `ajzmheqoanihdujmgbhv`.
+
+- `public.mov_tareo`: movimientos válidos. Tiene `id_mov_tareo` PK identity, `nro_parte` UNIQUE como clave de idempotencia, códigos locales/globales del centro operativo y maquinaria, `hora numeric(10,2) CHECK hora > 0`, fecha, etapa fuente, empresa, observación original, `estado smallint` original y marcas de tiempo. FK a empresa y a `dim_centro_costo` por ambos códigos globales.
+- `public.mov_tareo_pendiente`: filas observadas; conserva el origen, `nro_parte` y errores JSON. Acepta `hora >= 0` para poder conservar HORA_CERO. Motivos acordados: centro inexistente, maquinaria inexistente, campaña faltante para LEVANTE y hora cero.
+- `public.mov_tareo_historial`: bitácora con campos modificados, snapshots JSON anterior/nuevo, usuario y fecha. Se llena con trigger al actualizar filas de `mov_tareo`; lectura para ADMIN o QUERY/WRITER con empresa asignada.
+- Las tres tablas tienen RLS. Lectura: ADMIN o QUERY/WRITER en MOV_TAREO con vínculo activo a la empresa. Escritura de movimientos/pendientes: WRITER. Borrado: ADMIN. El historial no permite escritura directa.
+- Triggers revalidan pendientes al editar la fila, crear/actualizar el centro o insertar/actualizar una campaña. Al pasar las validaciones se inserta/actualiza el movimiento en `mov_tareo` y se elimina de pendientes. Que un centro o maquinaria exista es suficiente aunque esté inactivo.
+- `mov_tareo` y `mov_tareo_pendiente` están en la publicación `supabase_realtime`.
+- Migraciones: `20261107000440`, `20261107000709`, `20261107000836`, `20261107001649`, `20261107001922`, `20261107004536`, `20261107010252`, `20261107010552`. Consulta de solo lectura el 2026-11-12: 57 versiones locales y 57 remotas sin faltantes; tres tablas con RLS y nueve políticas. Conteo de filas: 3,678 cargadas, 0 pendientes y 0 cambios manuales auditados.
+- RLS/metadatos/conteos verificados en vivo el 2026-11-12. No se simuló una sesión por nivel; la promoción automática se invocó mediante la función interna de revalidación.

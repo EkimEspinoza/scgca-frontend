@@ -41,6 +41,7 @@ const PermisosPorModulo = lazy(() => import('./pages/accesos/PermisosPorModulo')
 const Campanas = lazy(() => import('./pages/maestros/Campanas'))
 const Comparativos = lazy(() => import('./pages/maestros/Comparativos'))
 const Distribucion = lazy(() => import('./pages/procesos/Distribucion'))
+const Tareo = lazy(() => import('./pages/Tareo'))
 
 /*
  * =========================================
@@ -901,6 +902,18 @@ function App() {
             <PermissionRoute moduleCode="DISTRIBUCION" requiredLevel="QUERY">
               <MainLayout onLogout={logout}>
                 <Distribucion />
+              </MainLayout>
+            </PermissionRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mov-tareo"
+        element={
+          <ProtectedRoute>
+            <PermissionRoute moduleCode="MOV_TAREO" requiredLevel="QUERY">
+              <MainLayout onLogout={logout}>
+                <Tareo />
               </MainLayout>
             </PermissionRoute>
           </ProtectedRoute>

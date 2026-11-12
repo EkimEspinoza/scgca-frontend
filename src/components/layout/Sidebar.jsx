@@ -9,6 +9,7 @@ import {
     ChevronRight,
     Category,
     AdminPanelSettings,
+    AccessTime,
     LightMode,
     DarkMode,
 } from '@mui/icons-material'
@@ -126,6 +127,9 @@ function Sidebar({
         location.pathname.startsWith(path)
     )
     const [maestrosOpen, setMaestrosOpen] = useState(maestrosActivo)
+    const rutasTareos = ['/mov-tareo']
+    const tareosActivo = rutasTareos.some((path) => location.pathname.startsWith(path))
+    const [tareosOpen, setTareosOpen] = useState(tareosActivo)
     const rutasAccesos = ['/usuarios', '/modulos', '/permisos']
     const accesosActivo = rutasAccesos.some((path) => location.pathname.startsWith(path))
     const [accesosOpen, setAccesosOpen] = useState(accesosActivo)
@@ -213,6 +217,14 @@ function Sidebar({
         },
     ]
 
+    const tareosItems = [
+        {
+            text: 'Mov. Tareo',
+            path: '/mov-tareo',
+            moduleCode: 'MOV_TAREO',
+        },
+    ]
+
     const accesosItems = [
         { text: 'Usuarios', path: '/usuarios' },
         { text: 'Módulos', path: '/modulos' },
@@ -239,6 +251,12 @@ function Sidebar({
         }
         return true
     })
+    const tareosVisibles = tareosItems.filter((item) =>
+        perfil?.modulos?.some((modulo) =>
+            modulo.codigo === item.moduleCode &&
+            (permiso === 'ADMIN' || ['QUERY', 'WRITER'].includes(modulo.nivel)),
+        ),
+    )
 
     /*
      * Navegar a una ruta y cerrar el menú móvil cuando corresponda.
@@ -271,6 +289,15 @@ function Sidebar({
             return
         }
         setMaestrosOpen((prev) => !prev)
+    }
+
+    const handleTareosToggle = () => {
+        if (!isMobile && collapsed) {
+            onToggle()
+            setTareosOpen(true)
+            return
+        }
+        setTareosOpen((prev) => !prev)
     }
 
     const handleAccesosToggle = () => {
@@ -385,6 +412,30 @@ function Sidebar({
                             </ListItemButton>
                         )
                     })}
+
+                    {tareosVisibles.length > 0 && (
+                        <>
+                            <ListItemButton
+                                onClick={handleTareosToggle}
+                                sx={{ minHeight: 42, px: 2, backgroundColor: tareosActivo ? 'action.hover' : 'transparent', '&:hover': { backgroundColor: 'action.hover' } }}
+                            >
+                                <ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: 'center' }}>
+                                    <AccessTime fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText primary="Tareos" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
+                                {tareosOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
+                            </ListItemButton>
+                            <Collapse in={tareosOpen} timeout="auto" unmountOnExit>
+                                <List component="div" disablePadding>
+                                    {tareosVisibles.map((item) => (
+                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': { backgroundColor: 'primary.main', color: 'primary.contrastText', '&:hover': { backgroundColor: 'primary.dark' } } }}>
+                                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
+                                        </ListItemButton>
+                                    ))}
+                                </List>
+                            </Collapse>
+                        </>
+                    )}
 
                     {/* GRUPO MAESTROS */}
                     <ListItemButton
@@ -622,6 +673,45 @@ function Sidebar({
                     }
                     return button
                 })}
+
+                {tareosVisibles.length > 0 && (
+                    <>
+                        {!collapsed && (
+                            <ListItemButton
+                                onClick={handleTareosToggle}
+                                sx={{ minHeight: 42, px: 2, backgroundColor: tareosActivo ? 'action.hover' : 'transparent', '&:hover': { backgroundColor: 'action.hover' } }}
+                            >
+                                <ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: 'center' }}>
+                                    <AccessTime fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText primary="Tareos" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
+                                {tareosOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
+                            </ListItemButton>
+                        )}
+                        {!collapsed && (
+                            <Collapse in={tareosOpen} timeout="auto" unmountOnExit>
+                                <List component="div" disablePadding>
+                                    {tareosVisibles.map((item) => (
+                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': { backgroundColor: 'primary.main', color: 'primary.contrastText', '&:hover': { backgroundColor: 'primary.dark' } } }}>
+                                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
+                                        </ListItemButton>
+                                    ))}
+                                </List>
+                            </Collapse>
+                        )}
+                        {collapsed && (
+                            <Tooltip title="Tareos" placement="right">
+                                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <ListItemButton onClick={handleTareosToggle} sx={{ minHeight: 42, justifyContent: 'center', px: 2, backgroundColor: tareosActivo ? 'action.hover' : 'transparent' }}>
+                                        <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
+                                            <AccessTime fontSize="small" />
+                                        </ListItemIcon>
+                                    </ListItemButton>
+                                </Box>
+                            </Tooltip>
+                        )}
+                    </>
+                )}
 
                 {/* GRUPO MAESTROS DESKTOP */}
                 <ListItemButton

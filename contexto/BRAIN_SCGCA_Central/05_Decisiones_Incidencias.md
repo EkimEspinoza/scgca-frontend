@@ -1,6 +1,6 @@
 # Decisiones e incidencias — SCGCA Central
 
-**Actualizado:** 2026-11-05
+**Actualizado:** 2026-11-12
 
 ## 09. Decisiones, incidencias e historial del BRAIN
 
@@ -52,6 +52,11 @@
 - **2026-11-05 — Alineación de Distribución:** se reconstruyó el archivo histórico `20261104220325` desde el SQL registrado en Supabase y se alinearon los nombres/versiones de las migraciones locales. No se reaplicó ninguna migración de producción.
 - **2026-11-05 — Distribución, alcance acordado:** no se requiere mostrar Variedad ni filtrar por campaña. Num_Hec seguirá considerando todas las campañas operativas en la fecha de cada mes. La importación del PORCENTAJE contable y la exportación del rango completo a Excel son implementaciones futuras.
 - **2026-11-05 — Siguiente módulo:** después de alinear local, GitHub y Supabase, el siguiente módulo será Mov_Tareo para registrar horas trabajadas de maquinaria por centro de costo de inversión de Campo, Vivero y LEVANTE. El modelo y las reglas se definirán al iniciar el trabajo.
+
+- **2026-11-12 — Mov_Tareo, pendientes:** solo maquinaria/centro inexistente, campaña faltante para LEVANTE y hora cero envían filas a Pendientes. Si maquinaria existe pasa a Cargados aunque esté inactiva. Al resolver una causa se revalida y promueve automáticamente.
+- **2026-11-12 — Mov_Tareo, estado/observación:** Cargados muestra la observación fuente; el formulario llama **Estado** al campo origen `estado`. Las correcciones manuales deben conservarse en historial con valores anteriores y nuevos.
+- **2026-11-12 — Mov_Tareo, paginación:** el contenedor de filas podía comprimir el pie `TablePagination`; se fijó `flexShrink: 0` para mantenerlo visible. Build aprobado; falta observar el navegador.
+- **2026-11-12 — Sincronización:** Supabase registra 57 migraciones y local contiene las mismas versiones. GitHub `main` parte de `185c5d0` previo a integrar Tareo; el commit/push está pendiente de verificar.
 
 ### Regla BRAIN OK
 

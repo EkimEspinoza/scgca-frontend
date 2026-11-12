@@ -1,6 +1,6 @@
 # BRAIN maestro de SCGCA Central
 
-**Actualizado:** 2026-11-05
+**Actualizado:** 2026-11-12
 **Estado:** documento formal e índice del conocimiento consolidado del proyecto.
 **Regla de actualización:** cuando el usuario diga **BRAIN OK**, incorporar los acuerdos y avances recientes en los archivos pertinentes. Actualizar todos los archivos afectados por un cambio, sin duplicar información innecesariamente.
 
@@ -115,15 +115,27 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 - El mínimo de enero de 2017 se pasa a los inputs nativos mediante `slotProps.htmlInput` (MUI 9); el selector visual del navegador no se pudo comprobar tras un fallo de inicialización de la herramienta CUA. Compilación local aprobada después de los últimos cambios; no se probaron en navegador guardado, cierres ni reaperturas.
 - Alineación completada el 2026-11-05: GitHub `main`, local y Supabase comparten el estado de Distribución; Supabase y local registran 49 versiones de migración. Los SQL históricos locales se reconciliaron con las versiones ya aplicadas; no se reaplicaron migraciones en producción. El frontend quedó integrado en GitHub `main`; no se hizo despliegue a hosting.
 
-### Pendientes vigentes al 5 de noviembre
+### Mov_Tareo — estado verificado al 12 de noviembre de 2026
+
+- Se implementaron el acceso bajo el grupo **Tareos** con icono de reloj, pestañas **Cargados** y **Pendientes**, búsqueda por número/centro, rango de fechas, tabla y edición de Cargados. La observación fuente se presenta en su propia columna; el formulario identifica `estado` como **Estado** y oculta los controles incrementales en campos numéricos.
+- La edición resuelve los códigos local/global de centro operativo y maquinaria y exige campaña vigente si el centro es de tipo LEVANTE. Si centro o maquinaria existe, puede pasar a Cargados aunque esté inactivo.
+- Supabase tiene `mov_tareo` (válidos), `mov_tareo_pendiente` (observaciones por resolver) y `mov_tareo_historial` (auditoría de cambios). Las tres tablas tienen RLS; MOV_TAREO usa niveles QUERY/WRITER y acceso por empresa, con ADMIN global. El historial es de lectura autorizada y se llena desde un trigger.
+- Las únicas causas de Pendientes acordadas son `MAQUINARIA_NO_EXISTE`, `CENTRO_COSTO_NO_EXISTE`, `CAMPANA_NO_EXISTE` y `HORA_CERO`. Triggers revalidan automáticamente pendientes al crear/actualizar centros o campañas y promueven los válidos a `mov_tareo`.
+- En la primera revalidación, 62 filas pasaron de Pendientes a Cargados. Consulta de Supabase del 2026-11-12 verificó 3,678 cargados, 0 pendientes y 0 eventos de auditoría manual.
+- La paginación fue reservada en el pie de la tabla (`flexShrink: 0`) para evitar que la tabla la recorte. El ajuste de frontend requiere compilación y confirmación visual en navegador.
+- Al iniciar la sincronización, local `main` y `origin/main` apuntaban al mismo commit `185c5d0`; el código Tareo y ocho migraciones estaban sin publicar. Supabase Central y local registran 57 versiones de migración coincidentes. El push pendiente no publica el frontend en hosting.
+
+### Pendientes vigentes al 12 de noviembre
 
 - Alinear, según instrucción del usuario, las asignaciones de prueba: la base muestra prueba 1 WRITER, prueba 3 WRITER y prueba 2 sin asignación a Empresas.
 - Probar manualmente las pantallas ADMIN de Módulos y Permisos y sus flujos de asignación; el build solo verifica compilación.
-- Mov_Tareo es el siguiente módulo de negocio acordado. Al diseñarlo, decidir el alcance de permisos/RLS; los nueve maestros siguen con administración ADMIN y lectura para perfiles activos.
+- Completar la importación de Excel para Mov_Tareo: validar maestros, centro operativo, maquinaria, campaña LEVANTE y horas; recargar solo el diferencial y permitir correcciones mostrando los valores anteriores y nuevos.
+- Completar la interfaz para resolver Pendientes y verificar su promoción automática al corregirse una observación.
+- Mostrar/consultar el historial de cambios manuales de registros cargados.
+- Confirmar manualmente en navegador que la paginación de Mov_Tareo se muestra y navega correctamente.
 - Revisar si QUERY/WRITER globales seguirán siendo necesarios cuando las asignaciones por módulo estén completas.
 - Validar visualmente Distribución en navegador; probar carga/guardado, cierre mensual, reapertura ADMIN y validaciones por rol.
 - La importación y exportación Excel de Distribución quedan registradas como implementaciones futuras. No se mostrará Variedad y las campañas no filtrarán hectáreas.
-- El siguiente módulo acordado es Mov_Tareo: registro de horas trabajadas por maquinaria para centros de costo de inversión Campo, Vivero y LEVANTE. Falta definir su estructura y reglas antes de desarrollar.
 - El diagrama visual de tablas en Supabase sigue sin ordenarse; la conexión SQL no permite mover las tarjetas y la herramienta de navegador no inició.
 - Encontrar una API estable para obtener directamente de SUNAT la venta del último día de cada mes; hasta entonces el Tipo de Cambio se ingresa manualmente.
 - Siguen abiertas alertas de Advisors y preguntas de auditoría.
@@ -133,7 +145,7 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 
 ### Módulos identificados
 
-En el código: login, cambio de contraseña, Dashboard, Usuarios, Empresas, Variedades, Tipos de Centro de Costo, Tipos de Maquinaria, Etapas de Costo, Tipo de Cambio, Campañas, Comparativos, Centro de Costos y Distribución. Mov_Tareo es el siguiente módulo acordado y aún no está implementado.
+En el código: login, cambio de contraseña, Dashboard, Usuarios, Empresas, Variedades, Tipos de Centro de Costo, Tipos de Maquinaria, Etapas de Costo, Tipo de Cambio, Campañas, Comparativos, Centro de Costos, Distribución y una primera versión de Mov_Tareo. La importación Excel y la interfaz para corregir pendientes siguen pendientes.
 
 En los requisitos también aparecen Almacén, importación de Excel, Distribución mensual, reportes y Power BI. SCIRE y XRAY son integraciones futuras.
 
@@ -153,7 +165,7 @@ En los requisitos también aparecen Almacén, importación de Excel, Distribuci�
 
 ### Distribución mensual
 
-Las reglas acordadas y el estado técnico vigente se detallan arriba en “Distribución mensual — estado al 5 de noviembre de 2026”. El esquema/RPC y una interfaz multimes compacta están implementados localmente; la regla de excluir centros con PORCENTAJE = 0 se desplegó en Supabase. Falta validación manual de UI, completar Excel/variedad de la referencia y reconciliar migraciones antes de publicar.
+Las reglas acordadas y el estado técnico vigente se detallan arriba en “Distribución mensual — estado al 5 de noviembre de 2026”. El esquema/RPC y la interfaz multimes compacta están implementados; la regla de excluir centros con PORCENTAJE = 0 está en Supabase. Importación/exportación Excel son futuras; no se muestra variedad ni se filtra por campaña.
 ### Tipo de cambio
 
 - El valor requerido es la **venta SUNAT del último día calendario del mes**. El usuario confirmó como referencias julio de 2026: 3.399; agosto: 3.356; septiembre: 3.450.
@@ -171,13 +183,13 @@ Las reglas acordadas y el estado técnico vigente se detallan arriba en “Distr
 
 ### Tablas vistas en public
 
-Inventario base de 12 tablas: permiso, usuarios, Dim_Empresa, usuario_empresa, Dim_TipoCC, dim_tipo_maq, dim_comparativo, dim_variedad, dim_centro_costo, Dim_Campana, Dim_Etapa_Costo y TipoCambio. Se conocen además modulos, usuario_modulo y las tres tablas de Distribución (17 tablas conocidas en public; falta una inspección integral nueva del catálogo).
+Inventario inicial de 12 tablas: permiso, usuarios, Dim_Empresa, usuario_empresa, Dim_TipoCC, dim_tipo_maq, dim_comparativo, dim_variedad, dim_centro_costo, Dim_Campana, Dim_Etapa_Costo y TipoCambio. Se añadieron modulos, usuario_modulo, tres tablas de Distribución y tres de Mov_Tareo (20 tablas conocidas en public; falta una inspección integral nueva del catálogo).
 
-RLS estaba habilitado en las 12 tablas originales observadas; el 2026-11-04 también se confirmó RLS en las tres tablas de Distribución. No es una auditoría integral nueva de las 17 tablas. PostgreSQL reporta versión 17.6.
+RLS estaba habilitado en las 12 tablas originales observadas; luego se verificó en Distribución y Mov_Tareo. No es una auditoría integral nueva de las 20 tablas. PostgreSQL reporta versión 17.6.
 
 ### Migraciones y funciones
 
-- Al 2026-11-05 Supabase registra 49 migraciones y local contiene 48 archivos. `20261105205941_porcentaje_hec_excluye_porcentaje_cero` coincide local/remoto; falta el archivo local `20261104220325` y cuatro archivos tienen prefijos distintos de las versiones remotas. GitHub no se verificó.
+- Al 2026-11-12 Supabase registra 57 migraciones y local contiene 57 archivos. Las versiones locales y remotas se cotejaron; las ocho migraciones de Mov_Tareo ya están aplicadas en Supabase. GitHub `main` parte de `185c5d0` previo a integrar Tareo; el push está incluido en la sincronización actual.
 - Edge Functions desplegadas y contrastadas: `crear-usuario` v9 y `actualizar-usuario` v3. `consultar-tipo-cambio-bcrp` fue eliminada.
 - Las funciones de usuarios tienen verify_jwt=false, pero usan middleware withSupabase({ auth: "user" }) y comprueban identidad y ADMIN activo antes de usar privilegios administrativos.
 - La migración 20261021222143_a03_restringir_privilegios_secuencias_public.sql está en local y en el historial remoto.

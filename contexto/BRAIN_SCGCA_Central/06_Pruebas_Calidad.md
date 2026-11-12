@@ -1,10 +1,12 @@
 # Pruebas y calidad — SCGCA Central
 
-**Actualizado:** 2026-11-05
+**Actualizado:** 2026-11-12
 
 ## 08. Pruebas y calidad
 
 ### Evidencia reciente
+
+- **2026-11-12, Mov_Tareo:** `npm run build` aprobado con Vite 8.2.2 y 11,807 módulos. Entrada: 358.19 KB minificado / 109.28 KB gzip; Tareo: 29.69 KB / 10.32 KB. `git diff --check` aprobado. Se ajustó la paginación para no contraerse debajo de la tabla. No se hizo prueba visual, unitaria, lint ni prueba por rol.
 
 - **2026-11-05, Distribución:** `npm run build` aprobó con Vite 8.2.2 y 11,802 módulos transformados después de los ajustes de matriz mensual, columnas fijas, compactación, rango máximo de 3 meses y mínimo `2017-01`. No se ejecutaron pruebas unitarias ni lint. El navegador no se verificó manualmente; la herramienta CUA no inició.
 - **2026-11-05, Centro de Costos y alineación:** `npm run build` aprobó con Vite 8.2.2 (11,802 módulos) después de precisar el embed de empresa con `fk_centro_costo_empresa`. `git diff --check` y la comparación de las 49 versiones locales/remotas pasaron; los siete SQL de Distribución coinciden con el historial de Supabase. Sin prueba manual de navegador ni despliegue a hosting.
