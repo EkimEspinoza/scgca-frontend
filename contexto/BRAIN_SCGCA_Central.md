@@ -123,7 +123,7 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 - Las únicas causas de Pendientes acordadas son `MAQUINARIA_NO_EXISTE`, `CENTRO_COSTO_NO_EXISTE`, `CAMPANA_NO_EXISTE` y `HORA_CERO`. Triggers revalidan automáticamente pendientes al crear/actualizar centros o campañas y promueven los válidos a `mov_tareo`.
 - En la primera revalidación, 62 filas pasaron de Pendientes a Cargados. Consulta de Supabase del 2026-11-12 verificó 3,678 cargados, 0 pendientes y 0 eventos de auditoría manual.
 - La paginación fue reservada en el pie de la tabla (`flexShrink: 0`) para evitar que la tabla la recorte. El ajuste de frontend requiere compilación y confirmación visual en navegador.
-- Al iniciar la sincronización, local `main` y `origin/main` apuntaban al mismo commit `185c5d0`; el código Tareo y ocho migraciones estaban sin publicar. Supabase Central y local registran 57 versiones de migración coincidentes. El push pendiente no publica el frontend en hosting.
+- Sincronización terminada el 2026-11-12: Mov_Tareo se publicó en GitHub `main` con `dabf949` (`feat: add Mov Tareo module`); el mismo commit quedó en local. Supabase y local tienen las mismas 57 versiones de migración. El push no publica el frontend en hosting.
 
 ### Pendientes vigentes al 12 de noviembre
 
@@ -189,7 +189,7 @@ RLS estaba habilitado en las 12 tablas originales observadas; luego se verificó
 
 ### Migraciones y funciones
 
-- Al 2026-11-12 Supabase registra 57 migraciones y local contiene 57 archivos. Las versiones locales y remotas se cotejaron; las ocho migraciones de Mov_Tareo ya están aplicadas en Supabase. GitHub `main` parte de `185c5d0` previo a integrar Tareo; el push está incluido en la sincronización actual.
+- Al 2026-11-12 Supabase registra 57 migraciones y local contiene 57 archivos con versiones coincidentes. Ocho migraciones de Mov_Tareo ya están aplicadas. Local `main` y GitHub `origin/main` quedaron alineados en `dabf949`. No se desplegó el frontend a hosting.
 - Edge Functions desplegadas y contrastadas: `crear-usuario` v9 y `actualizar-usuario` v3. `consultar-tipo-cambio-bcrp` fue eliminada.
 - Las funciones de usuarios tienen verify_jwt=false, pero usan middleware withSupabase({ auth: "user" }) y comprueban identidad y ADMIN activo antes de usar privilegios administrativos.
 - La migración 20261021222143_a03_restringir_privilegios_secuencias_public.sql está en local y en el historial remoto.

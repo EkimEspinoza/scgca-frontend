@@ -130,7 +130,7 @@ function Tareo() {
 
   return (
     <CompactModuleTheme>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%', minHeight: 0 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, height: '100%', minHeight: 0 }}>
         <PageHeader
           icon={<TareoIcon />}
           title="Tareo de maquinaria"
@@ -141,8 +141,8 @@ function Tareo() {
 
         <Box sx={{ borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
           <Tabs value={pestana} onChange={cambiarPestana} aria-label="Listas de Tareo">
-            <Tab icon={<LoadedIcon fontSize="small" />} iconPosition="start" label={`Cargados (${resumen.registros.toLocaleString('es-PE')})`} />
-            <Tab icon={<PendingIcon fontSize="small" />} iconPosition="start" label={`Pendientes (${resumen.pendientes.toLocaleString('es-PE')})`} />
+            <Tab icon={<LoadedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label={`Cargados (${resumen.registros.toLocaleString('es-PE')})`} />
+            <Tab icon={<PendingIcon sx={{ fontSize: 18 }} />} iconPosition="start" label={`Pendientes (${resumen.pendientes.toLocaleString('es-PE')})`} />
           </Tabs>
         </Box>
 

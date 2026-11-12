@@ -56,7 +56,7 @@
 - **2026-11-12 — Mov_Tareo, pendientes:** solo maquinaria/centro inexistente, campaña faltante para LEVANTE y hora cero envían filas a Pendientes. Si maquinaria existe pasa a Cargados aunque esté inactiva. Al resolver una causa se revalida y promueve automáticamente.
 - **2026-11-12 — Mov_Tareo, estado/observación:** Cargados muestra la observación fuente; el formulario llama **Estado** al campo origen `estado`. Las correcciones manuales deben conservarse en historial con valores anteriores y nuevos.
 - **2026-11-12 — Mov_Tareo, paginación:** el contenedor de filas podía comprimir el pie `TablePagination`; se fijó `flexShrink: 0` para mantenerlo visible. Build aprobado; falta observar el navegador.
-- **2026-11-12 — Sincronización:** Supabase registra 57 migraciones y local contiene las mismas versiones. GitHub `main` parte de `185c5d0` previo a integrar Tareo; el commit/push está pendiente de verificar.
+- **2026-11-12 — Sincronización:** Supabase registra 57 migraciones y local contiene las mismas versiones. Mov_Tareo y el BRAIN se integraron a GitHub `main` en `dabf949`; local `main` y `origin/main` quedaron alineados. El push no publica el frontend en hosting.
 
 ### Regla BRAIN OK
 
