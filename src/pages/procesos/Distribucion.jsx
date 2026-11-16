@@ -19,11 +19,13 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableSortLabel,
   TextField,
   Tooltip,
   Typography,
 } from '@mui/material'
 import {
+  CleaningServices as CleaningServicesIcon,
   LockOpen as ReopenIcon,
   Percent as PercentIcon,
   Save as SaveIcon,
@@ -73,6 +75,7 @@ function Distribucion() {
   const [desde, setDesde] = useState(mesActual())
   const [hasta, setHasta] = useState(mesActual())
   const [mesReapertura, setMesReapertura] = useState('')
+  const [ordenCentros, setOrdenCentros] = useState({ campo: 'descripcion', direccion: 'asc' })
 
   useEffect(() => {
     let activo = true
@@ -110,6 +113,21 @@ function Distribucion() {
     }))
     return [...mapa.values()].sort((a, b) => Number(a.cod_cc_pk_dist) - Number(b.cod_cc_pk_dist))
   }, [distribucion.periodos])
+  const centrosOrdenados = useMemo(() => {
+    const factor = ordenCentros.direccion === 'asc' ? 1 : -1
+    return [...centros].sort((a, b) => {
+      const comparacion = String(a.descripcion_cc ?? '').localeCompare(String(b.descripcion_cc ?? ''), 'es', { numeric: true, sensitivity: 'base' })
+      return comparacion * factor
+    })
+  }, [centros, ordenCentros])
+  const cambiarOrdenCentros = (campo) => setOrdenCentros((actual) => ({
+    campo,
+    direccion: actual.campo === campo && actual.direccion === 'asc' ? 'desc' : 'asc',
+  }))
+  const encabezadoCentroOrdenable = (texto, campo) => {
+    const activo = ordenCentros.campo === campo
+    return <TableSortLabel active={activo} direction={activo ? ordenCentros.direccion : 'asc'} onClick={() => cambiarOrdenCentros(campo)} aria-label={`Ordenar por ${texto}${activo ? `, ${ordenCentros.direccion === 'asc' ? 'ascendente' : 'descendente'}` : ''}`}>{texto}</TableSortLabel>
+  }
 
   const resumenes = useMemo(() => distribucion.periodos.map((periodo) => {
     const validacion = validarPorcentajeContable(periodo.filas)
@@ -135,9 +153,12 @@ function Distribucion() {
     if (correcto) setMesReapertura('')
   }
 
+  const periodoModificado = desde !== mesActual() || hasta !== mesActual()
+  const limpiarPeriodo = () => { setDesde(mesActual()); setHasta(mesActual()) }
+
   return (
     <CompactModuleTheme>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%', maxHeight: '100%', minHeight: 0, overflow: 'hidden' }}>
+      <Box className="app-module-flow distribution-module" sx={{ display: 'flex', flexDirection: 'column', height: '100%', maxHeight: '100%', minHeight: 0, overflow: 'hidden' }}>
         <PageHeader
           icon={<PercentIcon />}
           title="Distribución por período"
@@ -154,8 +175,15 @@ function Distribucion() {
               ))}
             </TextField>
           )}
-          <TextField size="small" type="month" label="Desde" value={desde} onChange={(e) => setDesde(e.target.value)} slotProps={{ htmlInput: { min: '2017-01' } }} InputLabelProps={{ shrink: true }} sx={{ width: 165, '& input::-webkit-calendar-picker-indicator': { filter: 'invert(38%) sepia(66%) saturate(568%) hue-rotate(92deg) brightness(91%) contrast(91%)', opacity: 1, cursor: 'pointer' } }} />
-          <TextField size="small" type="month" label="Hasta" value={hasta} onChange={(e) => setHasta(e.target.value)} slotProps={{ htmlInput: { min: '2017-01' } }} InputLabelProps={{ shrink: true }} sx={{ width: 165, '& input::-webkit-calendar-picker-indicator': { filter: 'invert(38%) sepia(66%) saturate(568%) hue-rotate(92deg) brightness(91%) contrast(91%)', opacity: 1, cursor: 'pointer' } }} />
+          <TextField size="small" type="month" label="Desde" value={desde} onChange={(e) => setDesde(e.target.value)} slotProps={{ htmlInput: { min: '2017-01' } }} InputLabelProps={{ shrink: true }} sx={{ width: 190, minWidth: 190, flexShrink: 0, '& input::-webkit-calendar-picker-indicator': { filter: 'invert(38%) sepia(66%) saturate(568%) hue-rotate(92deg) brightness(91%) contrast(91%)', opacity: 1, cursor: 'pointer' } }} />
+          <TextField size="small" type="month" label="Hasta" value={hasta} onChange={(e) => setHasta(e.target.value)} slotProps={{ htmlInput: { min: '2017-01' } }} InputLabelProps={{ shrink: true }} sx={{ width: 190, minWidth: 190, flexShrink: 0, '& input::-webkit-calendar-picker-indicator': { filter: 'invert(38%) sepia(66%) saturate(568%) hue-rotate(92deg) brightness(91%) contrast(91%)', opacity: 1, cursor: 'pointer' } }} />
+          <Tooltip title="Restablecer período" arrow>
+            <span>
+              <IconButton className="app-clear-filters-icon" onClick={limpiarPeriodo} disabled={!periodoModificado} aria-label="Restablecer período">
+                <CleaningServicesIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
           <Alert severity="info" sx={{ py: 0, ml: 'auto', flex: '1 1 260px', '& .MuiAlert-message': { py: 0.4, fontSize: '0.8rem' } }}>
             {mesesRangoValido
               ? `Se consultarán ${cantidadMesesRango} ${cantidadMesesRango === 1 ? 'mes' : 'meses'}. Las hectáreas consideran campañas operativas al último día de cada mes.`
@@ -232,18 +260,15 @@ function Distribucion() {
             </Box>
           </Box>
 
-          <TableContainer sx={{ flex: '1 1 auto', minHeight: 0, maxHeight: 'none', overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+          <TableContainer className="app-data-table app-data-table--matrix" sx={{ flex: '1 1 auto', minHeight: 0, maxHeight: 'none', overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
             <Table size="small" stickyHeader sx={{
-              minWidth: Math.max(550, 348 + resumenes.length * 324),
-              '& .MuiTableCell-root': { px: 0.45, py: 0.12, fontSize: '0.68rem' },
-              '& .MuiTableCell-head': { fontSize: '0.67rem', lineHeight: 1.15 },
+              minWidth: Math.max(420, 218 + resumenes.length * 324),
             }}>
               <TableHead>
                 <TableRow>
-                  <TableCell rowSpan={2} sx={{ position: 'sticky', left: 0, zIndex: 5, width: 130, minWidth: 130, maxWidth: 130, bgcolor: 'background.paper' }}>COD_CC_PK_DIST</TableCell>
-                  <TableCell rowSpan={2} sx={{ position: 'sticky', left: 130, zIndex: 5, width: 205, minWidth: 205, maxWidth: 205, bgcolor: 'background.paper', boxShadow: '2px 0 3px rgba(0,0,0,0.08)' }}>Centro de costo</TableCell>
+                  <TableCell rowSpan={2} sortDirection={ordenCentros.campo === 'descripcion' ? ordenCentros.direccion : false} aria-sort={ordenCentros.campo === 'descripcion' ? (ordenCentros.direccion === 'asc' ? 'ascending' : 'descending') : 'none'} sx={{ position: 'sticky', left: 0, zIndex: 5, width: 205, minWidth: 205, maxWidth: 205, bgcolor: 'background.paper', boxShadow: '2px 0 3px rgba(0,0,0,0.08)' }}>{encabezadoCentroOrdenable('Centro de costo', 'descripcion')}</TableCell>
                   {resumenes.map((periodo) => (
-                    <TableCell key={periodo.mes} align="center" colSpan={3} sx={{ minWidth: 324, bgcolor: 'action.hover', fontWeight: 700, borderLeft: '2px solid', borderRight: '2px solid', borderColor: 'divider' }}>
+                    <TableCell key={periodo.mes} align="center" colSpan={3} sx={{ minWidth: 324, bgcolor: 'action.hover', fontWeight: 700, borderLeft: '2px solid', borderRight: '2px solid', borderColor: 'var(--distribution-column-separator)' }}>
                       {etiquetaMes(periodo.mes)}{periodo.estado?.estado === 'CERRADO' ? ' · Cerrado' : ''}
                     </TableCell>
                   ))}
@@ -251,27 +276,26 @@ function Distribucion() {
                 </TableRow>
                 <TableRow>
                   {resumenes.flatMap((periodo) => [
-                    <TableCell key={`${periodo.mes}-num-hec`} align="right" sx={{ minWidth: 100, borderLeft: '2px solid', borderColor: 'divider' }}>Hectáreas</TableCell>,
+                    <TableCell key={`${periodo.mes}-num-hec`} align="right" sx={{ minWidth: 100, borderLeft: '2px solid', borderColor: 'var(--distribution-column-separator)' }}>Hectáreas</TableCell>,
                     <TableCell key={`${periodo.mes}-porcentaje`} align="right" sx={{ minWidth: 112 }}>Porcentaje</TableCell>,
-                    <TableCell key={`${periodo.mes}-porcentaje-hec`} align="right" sx={{ minWidth: 112, borderRight: '2px solid', borderColor: 'divider' }}>Porc. Hec</TableCell>,
+                    <TableCell key={`${periodo.mes}-porcentaje-hec`} align="right" sx={{ minWidth: 112, borderRight: '2px solid', borderColor: 'var(--distribution-column-separator)' }}>Porc. Hec</TableCell>,
                   ])}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {centros.map((centro) => (
+                {centrosOrdenados.map((centro) => (
                   <TableRow key={centro.cod_cc_pk_dist} hover>
-                    <TableCell sx={{ position: 'sticky', left: 0, zIndex: 2, width: 130, minWidth: 130, maxWidth: 130, bgcolor: 'background.paper', 'tr.MuiTableRow-hover:hover &': { bgcolor: 'action.hover' } }}>{centro.cod_cc_pk_dist}</TableCell>
-                    <TableCell sx={{ position: 'sticky', left: 130, zIndex: 2, width: 205, minWidth: 205, maxWidth: 205, bgcolor: 'background.paper', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', boxShadow: '2px 0 3px rgba(0,0,0,0.08)', 'tr.MuiTableRow-hover:hover &': { bgcolor: 'action.hover' } }}>{centro.descripcion_cc || '—'}</TableCell>
+                    <TableCell sx={{ position: 'sticky', left: 0, zIndex: 2, width: 205, minWidth: 205, maxWidth: 205, bgcolor: 'background.paper', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', boxShadow: '2px 0 3px rgba(0,0,0,0.08)', 'tr.MuiTableRow-hover:hover &': { bgcolor: 'action.hover' } }}>{centro.descripcion_cc || '—'}</TableCell>
                     {resumenes.flatMap((periodo) => {
                       const fila = periodo.filas.find((item) => Number(item.cod_cc_pk_dist) === Number(centro.cod_cc_pk_dist))
                       if (!fila) return [
-                        <TableCell key={`${periodo.mes}-${centro.cod_cc_pk_dist}-num-hec`} align="right" sx={{ borderLeft: '2px solid', borderColor: 'divider' }}>—</TableCell>,
+                        <TableCell key={`${periodo.mes}-${centro.cod_cc_pk_dist}-num-hec`} align="right" sx={{ borderLeft: '2px solid', borderColor: 'var(--distribution-column-separator)' }}>—</TableCell>,
                         <TableCell key={`${periodo.mes}-${centro.cod_cc_pk_dist}-pct`} align="right">—</TableCell>,
-                        <TableCell key={`${periodo.mes}-${centro.cod_cc_pk_dist}-porcentaje-hec`} align="right" sx={{ borderRight: '2px solid', borderColor: 'divider' }}>—</TableCell>,
+                        <TableCell key={`${periodo.mes}-${centro.cod_cc_pk_dist}-porcentaje-hec`} align="right" sx={{ borderRight: '2px solid', borderColor: 'var(--distribution-column-separator)' }}>—</TableCell>,
                       ]
                       const cerrado = periodo.estado?.estado === 'CERRADO'
                       return [
-                        <TableCell key={`${periodo.mes}-${centro.cod_cc_pk_dist}-num-hec`} align="right" sx={{ borderLeft: '2px solid', borderColor: 'divider' }}>
+                        <TableCell key={`${periodo.mes}-${centro.cod_cc_pk_dist}-num-hec`} align="right" sx={{ borderLeft: '2px solid', borderColor: 'var(--distribution-column-separator)' }}>
                           {mostrarHectareas(fila.num_hec)}
                         </TableCell>,
                         <TableCell key={`${periodo.mes}-${centro.cod_cc_pk_dist}-pct`} align="right">
@@ -285,7 +309,7 @@ function Distribucion() {
                             sx={{ width: 90, '& .MuiInputBase-root': { height: 21 }, '& input': { px: 0.4, py: 0.1, textAlign: 'right', fontSize: '0.68rem' } }}
                           />
                         </TableCell>,
-                        <TableCell key={`${periodo.mes}-${centro.cod_cc_pk_dist}-porcentaje-hec`} align="right" sx={{ borderRight: '2px solid', borderColor: 'divider' }}>
+                        <TableCell key={`${periodo.mes}-${centro.cod_cc_pk_dist}-porcentaje-hec`} align="right" sx={{ borderRight: '2px solid', borderColor: 'var(--distribution-column-separator)' }}>
                           {(Number(fila.porcentaje_hec || 0) * 100).toFixed(4)}%
                         </TableCell>,
                       ]
@@ -294,22 +318,22 @@ function Distribucion() {
                 ))}
                 {centros.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={2 + Math.max(resumenes.length * 3, 1)} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                    <TableCell colSpan={1 + Math.max(resumenes.length * 3, 1)} align="center" sx={{ py: 4, color: 'text.secondary' }}>
                       {distribucion.cargando ? 'Cargando meses y centros de costo…' : 'No hay centros LEVANTE en campaña para el rango seleccionado.'}
                     </TableCell>
                   </TableRow>
                 )}
                 {centros.length > 0 && (
                   <TableRow sx={{ '& td': { fontWeight: 700, bgcolor: 'action.hover' } }}>
-                    <TableCell colSpan={2} sx={{ position: 'sticky', left: 0, zIndex: 2, bgcolor: 'action.hover' }}>Totales</TableCell>
+                    <TableCell colSpan={1} sx={{ position: 'sticky', left: 0, zIndex: 2, bgcolor: 'action.hover' }}>Totales</TableCell>
                     {resumenes.flatMap((periodo) => [
-                      <TableCell key={`${periodo.mes}-total-hectareas`} align="right" sx={{ borderLeft: '2px solid', borderColor: 'divider' }}>
+                      <TableCell key={`${periodo.mes}-total-hectareas`} align="right" sx={{ borderLeft: '2px solid', borderColor: 'var(--distribution-column-separator)' }}>
                         {mostrarHectareas(periodo.sumaHectareas)}
                       </TableCell>,
                       <TableCell key={`${periodo.mes}-total-pct`} align="right">
                         {(periodo.filas.reduce((total, fila) => total + Number(fila.porcentaje || 0), 0) * 100).toFixed(4)}%
                       </TableCell>,
-                      <TableCell key={`${periodo.mes}-total-porcentaje-hec`} align="right" sx={{ borderRight: '2px solid', borderColor: 'divider' }}>
+                      <TableCell key={`${periodo.mes}-total-porcentaje-hec`} align="right" sx={{ borderRight: '2px solid', borderColor: 'var(--distribution-column-separator)' }}>
                         {(periodo.sumaHectareasDist * 100).toFixed(4)}%
                       </TableCell>,
                     ])}

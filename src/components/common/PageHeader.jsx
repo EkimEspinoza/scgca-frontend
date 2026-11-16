@@ -1,98 +1,53 @@
-import {
-    Box,
-    Button,
-    Typography,
-} from '@mui/material'
-
+import { Box, Button, Typography } from '@mui/material'
 
 function PageHeader({
-    icon,
-    title,
-    description,
-    actionLabel,
-    onAction,
-    actionIcon,
+  icon,
+  title,
+  description,
+  summary,
+  actionLabel,
+  onAction,
+  actionIcon,
+  sx,
 }) {
-    return (
-        <Box
-            sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 2,
-                mb: 2,
-            }}
-        >
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    minWidth: 0,
-                }}
-            >
-                {icon && (
-                    <Box
-                        sx={{
-                            width: 42,
-                            height: 42,
-                            flexShrink: 0,
-                            borderRadius: 1,
-                            backgroundColor:
-                                'primary.light',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                        }}
-                    >
-                        {icon}
-                    </Box>
-                )}
-
-                <Box
-                    sx={{
-                        minWidth: 0,
-                    }}
-                >
-                    <Typography
-                        variant="h5"
-                        fontWeight={700}
-                        color="text.primary"
-                    >
-                        {title}
-                    </Typography>
-
-                    {description && (
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                        >
-                            {description}
-                        </Typography>
-                    )}
-                </Box>
-            </Box>
-
-            {actionLabel && onAction && (
-                <Button
-                    variant="contained"
-                    startIcon={actionIcon}
-                    onClick={onAction}
-                    sx={{
-                        borderRadius: 0.8,
-                        minHeight: 40,
-                        px: 2,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        flexShrink: 0,
-                    }}
-                >
-                    {actionLabel}
-                </Button>
+  return (
+    <Box component="header" className="app-page-header" sx={sx}>
+      <Box className="app-page-header__main">
+        <Box className="app-page-header__copy">
+          <Box className="app-page-header__title-row">
+            {icon && (
+              <Box className="app-page-header__icon" aria-hidden="true">
+                {icon}
+              </Box>
             )}
+            <Typography className="app-page-header__title" variant="h5" component="h1">
+              {title}
+            </Typography>
+          </Box>
+          {description && (
+            <Typography className="app-page-header__description" variant="body2" color="text.secondary">
+              {description}
+            </Typography>
+          )}
+          {summary && (
+            <Typography className="app-page-header__summary" component="div" variant="caption">
+              {summary}
+            </Typography>
+          )}
         </Box>
-    )
+      </Box>
+      {actionLabel && onAction && (
+        <Button
+          variant="contained"
+          startIcon={actionIcon}
+          onClick={onAction}
+          className="app-page-header__action"
+        >
+          {actionLabel}
+        </Button>
+      )}
+    </Box>
+  )
 }
 
 export default PageHeader

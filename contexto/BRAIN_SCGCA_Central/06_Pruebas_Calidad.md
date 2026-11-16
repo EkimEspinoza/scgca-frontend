@@ -1,10 +1,14 @@
 # Pruebas y calidad — SCGCA Central
 
-**Actualizado:** 2026-11-12
+**Actualizado:** 2026-11-16
 
 ## 08. Pruebas y calidad
 
 ### Evidencia reciente
+
+- **2026-11-16, alineación UI/Supabase:** `npm run build` aprobado con Vite 8.2.2 y 11,809 módulos transformados. `git diff --check` sin errores de whitespace (avisos LF/CRLF). Supabase Central registra 59 migraciones y sus versiones coinciden con los archivos SQL locales. No se ejecutaron pruebas unitarias, lint ni revisión visual manual. El build no equivale a despliegue en hosting.
+
+- **2026-11-14, diseño global Mov_Tareo/módulos:** `npm run build` aprobó con Vite 8.2.2 y 11,807 módulos transformados tras los estilos compartidos de tablas, PageHeader y filtros, y el ajuste de espaciado de Comparativos. `git diff --check` no encontró errores de whitespace (solo avisos LF/CRLF). No se ejecutaron pruebas unitarias, lint ni revisión visual en navegador. Los cambios siguen locales; sin cambios de Supabase.
 
 - **2026-11-12, Mov_Tareo, commit `dabf949`:** `npm run build` aprobado con Vite 8.2.2 y 11,807 módulos. Entrada: 358.19 KB minificado / 109.28 KB gzip; Tareo: 29.69 KB / 10.32 KB. `git diff --check` aprobado. Se ajustó la paginación para no contraerse debajo de la tabla. No se hizo prueba visual, unitaria, lint ni prueba por rol; GitHub no devolvió checks al consultar el commit.
 

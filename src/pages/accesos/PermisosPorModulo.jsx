@@ -3,16 +3,19 @@ import {
   Alert,
   Box,
   Button,
+  IconButton,
   MenuItem,
   Snackbar,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material'
-import { Save, Security } from '@mui/icons-material'
+import { CleaningServices, Save, Security } from '@mui/icons-material'
 
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import DataTable from '../../components/common/DataTable'
 import PageHeader from '../../components/common/PageHeader'
+import FiltersToolbar from '../../components/common/FiltersToolbar'
 import { obtenerEtiquetaPermiso } from '../../components/usuarios/usuarioRules'
 import {
   obtenerAsignacionesUsuario,
@@ -143,33 +146,29 @@ function PermisosPorModulo() {
 
   return (
     <CompactModuleTheme>
-      <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <Box className="app-module-flow" sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <PageHeader
           icon={<Security fontSize="small" />}
           title="Permisos por módulo"
           description="Define qué módulos puede consultar o administrar cada usuario."
         />
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, flexShrink: 0 }}>
-          <TextField
-            select
-            size="small"
-            label="Usuario"
-            value={usuarioId}
-            onChange={(event) => setUsuarioId(event.target.value)}
-            disabled={loading || usuarios.length === 0}
-            sx={{ minWidth: { xs: '100%', sm: 360 } }}
-          >
-            {usuarios.map((usuario) => (
-              <MenuItem key={usuario.id_usuario} value={String(usuario.id_usuario)}>
-                {nombreUsuario(usuario)} · {obtenerEtiquetaPermiso(usuario.permiso?.nombre)} · {usuario.estado ? 'Activo' : 'Inactivo'}
-              </MenuItem>
-            ))}
-          </TextField>
-          <Button variant="contained" startIcon={<Save />} onClick={guardar} disabled={loading || guardando || !usuarioId || esAdmin}>
-            {guardando ? 'Guardando…' : 'Guardar permisos'}
-          </Button>
-        </Box>
+        <FiltersToolbar
+          actions={<Button variant="contained" startIcon={<Save />} onClick={guardar} disabled={loading || guardando || !usuarioId || esAdmin}>{guardando ? 'Guardando…' : 'Guardar permisos'}</Button>}
+        >
+          <Box className="app-filters-row" sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
+            <TextField select size="small" label="Usuario" value={usuarioId} onChange={(event) => setUsuarioId(event.target.value)} disabled={loading || usuarios.length === 0} sx={{ minWidth: { xs: 0, sm: 360 }, flex: { xs: 1, sm: 'initial' } }}>
+              {usuarios.map((usuario) => <MenuItem key={usuario.id_usuario} value={String(usuario.id_usuario)}>{nombreUsuario(usuario)} · {obtenerEtiquetaPermiso(usuario.permiso?.nombre)} · {usuario.estado ? 'Activo' : 'Inactivo'}</MenuItem>)}
+            </TextField>
+            <Tooltip title="Limpiar selección" arrow>
+              <span>
+                <IconButton className="app-clear-filters-icon" onClick={() => setUsuarioId('')} disabled={loading || !usuarioId} color="primary" aria-label="Limpiar selección de usuario">
+                  <CleaningServices fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Box>
+        </FiltersToolbar>
 
         {esAdmin && <Alert severity="info" sx={{ mb: 1 }}>El rol ADMIN conserva acceso total; sus permisos no se asignan por módulo.</Alert>}
         {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}

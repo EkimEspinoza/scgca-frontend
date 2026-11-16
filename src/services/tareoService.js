@@ -1,12 +1,20 @@
 import { supabase } from '../lib/supabase'
 
-export async function contarMovimientosTareo(idEmpresa) {
+export async function contarMovimientosTareo(idEmpresa, fechaDesde, fechaHasta) {
   let movimientos = supabase.from('mov_tareo').select('id_mov_tareo', { count: 'exact', head: true })
   let pendientes = supabase.from('mov_tareo_pendiente').select('id_mov_tareo', { count: 'exact', head: true })
 
   if (idEmpresa) {
     movimientos = movimientos.eq('id_empresa', Number(idEmpresa))
     pendientes = pendientes.eq('id_empresa', Number(idEmpresa))
+  }
+  if (fechaDesde) {
+    movimientos = movimientos.gte('fecha_tareo', fechaDesde)
+    pendientes = pendientes.gte('fecha_tareo', fechaDesde)
+  }
+  if (fechaHasta) {
+    movimientos = movimientos.lte('fecha_tareo', fechaHasta)
+    pendientes = pendientes.lte('fecha_tareo', fechaHasta)
   }
 
   const [resultadoMovimientos, resultadoPendientes] = await Promise.all([movimientos, pendientes])
@@ -25,6 +33,7 @@ export async function listarMovimientosTareo({
   fechaDesde,
   fechaHasta,
   busqueda = '',
+  estado = '',
   pagina = 0,
   filasPorPagina = 25,
 }) {
@@ -45,6 +54,7 @@ export async function listarMovimientosTareo({
   if (idEmpresa) query = query.eq('id_empresa', Number(idEmpresa))
   if (fechaDesde) query = query.gte('fecha_tareo', fechaDesde)
   if (fechaHasta) query = query.lte('fecha_tareo', fechaHasta)
+  if (estado !== '' && estado != null) query = query.eq('estado', Number(estado))
   if (busqueda.trim()) {
     const termino = busqueda.trim().replace(/[,.()%*\\]/g, ' ').replace(/\s+/g, ' ').trim()
     const esCodigo = /^\d+$/.test(termino)
@@ -123,7 +133,7 @@ async function obtenerCentroCosto(idEmpresa, codCc, etiqueta) {
   return data
 }
 
-export async function actualizarMovimientoTareo(idMovimiento, valores) {
+export async function actualizarMovimientoTareo(idMovimiento, valores, pendientes = false) {
   const idEmpresa = Number(valores.id_empresa)
   const hora = Number(valores.hora)
   if (!Number.isFinite(hora) || hora <= 0) throw new Error('Las horas deben ser mayores a cero.')
@@ -141,7 +151,7 @@ export async function actualizarMovimientoTareo(idMovimiento, valores) {
     .maybeSingle()
   if (errorTipo) throw errorTipo
 
-  if (tipo?.des_tip_cc?.toLocaleUpperCase('es-PE').includes('LEVANTE')) {
+  if (!pendientes && tipo?.des_tip_cc?.toLocaleUpperCase('es-PE').includes('LEVANTE')) {
     const { data: campana, error: errorCampana } = await supabase
       .from('Dim_Campana')
       .select('id_campana')
@@ -156,8 +166,9 @@ export async function actualizarMovimientoTareo(idMovimiento, valores) {
     if (!campana) throw new Error('El centro de costo Levante no tiene una campaña operativa para la fecha seleccionada.')
   }
 
+  const tabla = pendientes ? 'mov_tareo_pendiente' : 'mov_tareo'
   const { data, error } = await supabase
-    .from('mov_tareo')
+    .from(tabla)
     .update({
       cod_cc: centro.cod_cc,
       cod_cc_pk: centro.cod_cc_pk,
@@ -175,4 +186,17 @@ export async function actualizarMovimientoTareo(idMovimiento, valores) {
 
   if (error) throw error
   if (!data) throw new Error('No se encontró el movimiento o no tienes permiso para actualizarlo.')
+}
+
+export async function actualizarEstadoMovimientoTareo(idMovimiento, estado, pendientes = false) {
+  const tabla = pendientes ? 'mov_tareo_pendiente' : 'mov_tareo'
+  const { data, error } = await supabase
+    .from(tabla)
+    .update({ estado: Number(estado), updated_at: new Date().toISOString() })
+    .eq('id_mov_tareo', Number(idMovimiento))
+    .select('id_mov_tareo')
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) throw new Error('No se encontró el movimiento o no tienes permiso para cambiar su estado.')
 }

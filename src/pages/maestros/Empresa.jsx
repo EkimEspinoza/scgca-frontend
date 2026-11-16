@@ -14,6 +14,7 @@ function Empresas() {
   return (
     <CompactModuleTheme>
       <Box
+        className="app-module-flow"
         sx={{
           width: '100%',
           height: '100%',

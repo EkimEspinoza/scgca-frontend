@@ -1,29 +1,7 @@
-import { Box, Typography } from '@mui/material'
+import PageHeader from './common/PageHeader'
 
 function PageTitle({ title, subtitle }) {
-  return (
-    <Box sx={{ mb: 3 }}>
-      <Typography
-        variant="h4"
-        sx={{
-          fontWeight: 700,
-          color: 'text.primary',
-        }}
-      >
-        {title}
-      </Typography>
-
-      {subtitle && (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ mt: 0.5 }}
-        >
-          {subtitle}
-        </Typography>
-      )}
-    </Box>
-  )
+  return <PageHeader title={title} description={subtitle} />
 }
 
 export default PageTitle

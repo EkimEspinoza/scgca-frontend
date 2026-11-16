@@ -7,57 +7,19 @@ function KpiCard({
   icon,
 }) {
   return (
-    <Card
-      elevation={0}
-      sx={{
-        height: '100%',
-        border: '1px solid',
-        borderColor: 'divider',
-      }}
-    >
-      <CardContent>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            mb: 2,
-          }}
-        >
-          <Typography
-            variant="body2"
-            color="text.secondary"
-          >
+    <Card className="app-kpi-card" elevation={0}>
+      <CardContent className="app-kpi-card__content">
+        <Box className="app-kpi-card__header">
+          <Typography className="app-kpi-card__label" variant="body2" color="text.secondary">
             {title}
           </Typography>
-
-          {icon && (
-            <Box
-              sx={{
-                color: 'primary.main',
-                display: 'flex',
-              }}
-            >
-              {icon}
-            </Box>
-          )}
+          {icon && <Box className="app-kpi-card__icon">{icon}</Box>}
         </Box>
-
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 700,
-            color: 'text.primary',
-          }}
-        >
+        <Typography className="app-kpi-card__value" variant="h4">
           {value}
         </Typography>
-
         {subtitle && (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-          >
+          <Typography className="app-kpi-card__subtitle" variant="caption" color="text.secondary">
             {subtitle}
           </Typography>
         )}

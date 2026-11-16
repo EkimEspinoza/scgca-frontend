@@ -9,15 +9,19 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  TableSortLabel,
   Tooltip,
   Typography,
 } from '@mui/material'
+import { useMemo, useState } from 'react'
 
 import {
   Edit as EditIcon,
 } from '@mui/icons-material'
 
 import { obtenerEtiquetaPermiso } from './usuarioRules'
+
+const usuarioCollator = new Intl.Collator('es-PE', { numeric: true, sensitivity: 'base' })
 
 const COLORES_EMPRESA = {
   RANCHO: '#1976D2',
@@ -124,6 +128,27 @@ function UsuarioTable({
   onCambiarFilasPorPagina,
   onEditar,
 }) {
+  const [orden, setOrden] = useState({ campo: '', direccion: 'asc' })
+  const camposOrden = {
+    nombre: (usuario) => usuario.nombre,
+    apellido: (usuario) => usuario.apellido,
+    permiso: (usuario) => usuario.permiso?.nombre,
+    empresas: (usuario) => obtenerTextoEmpresas(usuario),
+    estado: (usuario) => usuario.estado,
+  }
+  const usuariosOrdenados = useMemo(() => {
+    if (!orden.campo) return usuarios
+    const obtenerValor = camposOrden[orden.campo]
+    const factor = orden.direccion === 'asc' ? 1 : -1
+    return [...usuarios].sort((a, b) => usuarioCollator.compare(String(obtenerValor(a) ?? ''), String(obtenerValor(b) ?? '')) * factor)
+  }, [usuarios, orden])
+  const cambiarOrden = (campo) => setOrden((actual) => ({ campo, direccion: actual.campo === campo && actual.direccion === 'asc' ? 'desc' : 'asc' }))
+  const encabezadoOrdenable = (texto, campo, width) => {
+    const activo = orden.campo === campo
+    return <TableCell sortDirection={activo ? orden.direccion : false} aria-sort={activo ? (orden.direccion === 'asc' ? 'ascending' : 'descending') : 'none'} sx={{ width }}>
+      <Tooltip title="Ordenar ascendente o descendente" enterDelay={500}><TableSortLabel active={activo} direction={activo ? orden.direccion : 'asc'} onClick={() => cambiarOrden(campo)} aria-label={`Ordenar por ${texto}${activo ? `, ${orden.direccion === 'asc' ? 'ascendente' : 'descendente'}` : ''}`}>{texto}</TableSortLabel></Tooltip>
+    </TableCell>
+  }
   return (
     <Paper
       elevation={0}
@@ -142,6 +167,7 @@ function UsuarioTable({
       }}
     >
       <TableContainer
+        className="app-data-table"
         sx={{
           flex: '1 1 0%',
           minWidth: 0,
@@ -158,12 +184,7 @@ function UsuarioTable({
             minWidth: 760,
             tableLayout: 'fixed',
 
-            '& .MuiTableCell-root': {
-              fontSize: 13,
-              py: 1,
-              px: 1.25,
-              borderColor: '#E0E5E2',
-            },
+            '& .MuiTableCell-root': { borderColor: '#E0E5E2' },
 
             '& .MuiTableCell-head': {
               fontWeight: 700,
@@ -175,45 +196,11 @@ function UsuarioTable({
         >
           <TableHead>
             <TableRow>
-              <TableCell
-                sx={{
-                  width: '15%',
-                }}
-              >
-                Nombre
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  width: '15%',
-                }}
-              >
-                Apellido
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  width: '18%',
-                }}
-              >
-                Permiso
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  width: '24%',
-                }}
-              >
-                Empresas
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  width: '12%',
-                }}
-              >
-                Estado
-              </TableCell>
+              {encabezadoOrdenable('Nombre', 'nombre', '15%')}
+              {encabezadoOrdenable('Apellido', 'apellido', '15%')}
+              {encabezadoOrdenable('Permiso', 'permiso', '18%')}
+              {encabezadoOrdenable('Empresas', 'empresas', '24%')}
+              {encabezadoOrdenable('Estado', 'estado', '12%')}
 
               <TableCell
                 align="center"
@@ -264,7 +251,7 @@ function UsuarioTable({
                 </TableCell>
               </TableRow>
             ) : (
-              usuarios.map(
+              usuariosOrdenados.map(
                 (usuario) => {
                   const empresas =
                     obtenerNombreEmpresas(
@@ -332,7 +319,6 @@ function UsuarioTable({
                             ''
                           }
                           sx={{
-                            fontSize: 13,
                             fontWeight: 600,
                           }}
                         >
@@ -351,7 +337,6 @@ function UsuarioTable({
                             ''
                           }
                           sx={{
-                            fontSize: 13,
                           }}
                         >
                           {usuario.apellido ||
@@ -374,7 +359,6 @@ function UsuarioTable({
                             ''
                           }
                           sx={{
-                            fontSize: 13,
                           }}
                         >
                           {obtenerEtiquetaPermiso(usuario.permiso?.nombre)}
@@ -390,7 +374,6 @@ function UsuarioTable({
                             empresasTexto
                           }
                           sx={{
-                            fontSize: 13,
                             color:
                               empresas.length ===
                               0 &&
@@ -432,7 +415,6 @@ function UsuarioTable({
                           <Typography
                             variant="body2"
                             sx={{
-                              fontSize: 13,
                               color:
                                 estado.texto,
                               fontWeight: 500,
@@ -446,7 +428,7 @@ function UsuarioTable({
                       </TableCell>
 
                       {/* Acción */}
-                      <TableCell align="center">
+                      <TableCell align="center" className="app-table-action-cell">
                         <Tooltip title="Editar usuario">
                           <IconButton
                             
@@ -458,11 +440,7 @@ function UsuarioTable({
                             disabled={
                               loading
                             }
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: 1,
-                            }}
+                            sx={{ borderRadius: 1 }}
                           >
                             <EditIcon
                               sx={{

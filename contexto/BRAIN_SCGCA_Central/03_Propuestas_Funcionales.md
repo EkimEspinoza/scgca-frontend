@@ -1,6 +1,6 @@
 # Propuestas funcionales futuras — SCGCA Central
 
-**Actualizado:** 2026-11-12
+**Actualizado:** 2026-11-16
 Este registro acumula ideas y requisitos futuros. Estar aquí no significa que la propuesta esté aprobada ni que se haya iniciado. Cuando el usuario acuerde ejecutarla, mover su seguimiento al plan de trabajo y conservar aquí el origen y la decisión.
 
 **Escala de estimación:** días/persona o intervalo de esfuerzo, definido después de analizar alcance, dependencias y criterios. Hasta entonces se indica “Por estimar”; no se inventan fechas ni duraciones.
@@ -20,7 +20,7 @@ Este registro acumula ideas y requisitos futuros. Estar aquí no significa que l
 | PF-011 | Optimizar el bundle JavaScript inicial mediante división de código y carga diferida | PROPUESTA | Por definir | Por estimar | Build del 2026-11-03: bundle principal de 736.44 KB minificado (230.36 KB gzip). Evaluar división por rutas/módulos, priorizando lo que reduzca carga inicial; medir el resultado y el efecto en la navegación. El umbral de 500 KB de Vite es una advertencia, no un objetivo obligatorio. |
 | PF-012 | Distribución: cargar porcentajes contables desde Excel | IMPLEMENTACIÓN FUTURA | Acordado por el usuario | Por estimar | Definir plantilla con centro de costo/mes y validar duplicados, centros no vigentes y suma de PORCENTAJE en 100 % por empresa/mes. Num_Hec y Porcentaje_Hec seguirán calculándose en el sistema. |
 | PF-013 | Distribución: exportar la vista a Excel | IMPLEMENTACIÓN FUTURA | Acordado por el usuario | Por estimar | Exportar empresa y rango seleccionado con COD_CC_PK_Dist, descripción, hectáreas, PORCENTAJE, Porcentaje_Hec, totales y estado mensual. Considerar compatibilidad con la futura plantilla de carga. |
-| PF-014 | Módulo Mov_Tareo: registrar horas de maquinaria por centro de costo | EN DESARROLLO | Acordado por el usuario | Incremental | Primera versión de base e interfaz implementada; quedan carga diferencial desde Excel, resolución de pendientes y consulta del historial. Seguimiento en R-08 del plan. |
+| PF-014 | Módulo Mov_Tareo: registrar horas de maquinaria por centro de costo | EN DESARROLLO | Acordado por el usuario | Incremental | Primera versión de base e interfaz implementada. La interfaz usa el catálogo Dim_Etapa_Costo solo si hay etapa no vacía. Se extendió localmente el diseño compartido de tablas, PageHeader y filtros a los módulos. Reglas de importación acumulativa por empresa/año acordadas; faltan carga Excel, revisión/inactivación de ausentes, resolución de pendientes, consulta del historial y completar el espaciado filtros-tabla común. Seguimiento en R-08 del plan. |
 
 ## Plantilla para nuevas propuestas
 

@@ -11,13 +11,13 @@ import {
   Divider,
   FormControl,
   IconButton,
+  InputLabel,
   Menu,
   MenuItem,
   Select,
   Toolbar,
   Typography,
   useMediaQuery,
-  useTheme,
 } from '@mui/material'
 
 import { useState } from 'react'
@@ -57,13 +57,7 @@ function Header({
   const menuOpen =
     Boolean(anchorEl)
 
-  const theme =
-    useTheme()
-
-  const isMobile =
-    useMediaQuery(
-      theme.breakpoints.down('md'),
-    )
+  const isMobile = useMediaQuery('(max-width: 767.95px)')
 
 
   const handleMenuOpen = (
@@ -106,12 +100,7 @@ function Header({
     }
 
     const empresa =
-      empresas.find(
-        (item) =>
-          String(
-            item.id_empresa,
-          ) === String(value),
-      )
+      empresas.find((item) => String(item.id_empresa) === String(value))
 
     if (empresa) {
       cambiarEmpresa(empresa)
@@ -143,19 +132,8 @@ function Header({
           ? 'inset 0 -1px 0 rgba(255, 255, 255, 0.06)'
           : theme.scgca?.themeId === 'light' ? 'inset 0 -1px 0 rgba(255, 255, 255, 0.9)' : undefined,
 
-        ml: {
-          xs: 0,
-          md: collapsed
-            ? '72px'
-            : '240px',
-        },
-
-        width: {
-          xs: '100%',
-          md: collapsed
-            ? 'calc(100% - 72px)'
-            : 'calc(100% - 240px)',
-        },
+        ml: isMobile ? 0 : collapsed ? '72px' : '240px',
+        width: isMobile ? '100%' : collapsed ? 'calc(100% - 72px)' : 'calc(100% - 240px)',
 
         transition: (theme) =>
           theme.transitions.create(
@@ -251,7 +229,10 @@ function Header({
               flexShrink: 1,
             }}
           >
+            <InputLabel id="empresa-actual-label">Empresa</InputLabel>
             <Select
+              labelId="empresa-actual-label"
+              label="Empresa"
               value={
                 empresaActual
                   ?.id_empresa ??
@@ -260,7 +241,6 @@ function Header({
               onChange={
                 handleEmpresaChange
               }
-              displayEmpty
               sx={{
                 fontSize: {
                   xs: 13,

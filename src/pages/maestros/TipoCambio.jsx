@@ -23,6 +23,7 @@ import Pagination from '../../components/common/Pagination'
 import PageHeader from '../../components/common/PageHeader'
 import DataTable from '../../components/common/DataTable'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
+import { ActiveFilterChips } from '../../components/common/FiltersToolbar'
 
 const MESES = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -361,6 +362,7 @@ function TipoCambio() {
     return (
         <CompactModuleTheme>
         <Box
+            className="app-module-flow"
             sx={{
                 width: '100%',
                 height: '100%',
@@ -368,11 +370,16 @@ function TipoCambio() {
                 minHeight: 0,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 2,
                 overflow: 'auto',
                 pb: 1
             }}
         >
+            <PageHeader
+                icon={<CurrencyExchange />}
+                title="Tipo de cambio"
+                description="Consulta y administra los tipos de cambio registrados por período."
+                sx={{ mb: 0 }}
+            />
             {/* ENCABEZADO */}
 
             {/* TARJETAS DE PERÍODOS */}
@@ -566,6 +573,10 @@ function TipoCambio() {
                             onChange={handleCambioBusqueda}
                             placeholder="Buscar por año, mes, tipo de cambio o estado..."
                             ariaLabel="Buscar en el histórico de tipos de cambio"
+                        />
+                        <ActiveFilterChips
+                            filters={busqueda.trim() ? [{ id: 'busqueda', label: `Búsqueda: ${busqueda}`, onRemove: () => handleCambioBusqueda({ target: { value: '' } }) }] : []}
+                            onClear={busqueda.trim() ? () => handleCambioBusqueda({ target: { value: '' } }) : undefined}
                         />
                     </Box>
                     {/* Mantén aquí la tabla del histórico y su paginación */}

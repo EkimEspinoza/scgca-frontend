@@ -25,9 +25,7 @@ import {
     Typography,
     Divider,
     Tooltip,
-    Switch,
     useMediaQuery,
-    useTheme,
 } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
@@ -35,6 +33,17 @@ import { useAppTheme } from '../../context/useAppTheme'
 
 const drawerWidth = 240
 const collapsedWidth = 72
+const activeNavItemSx = {
+    position: 'relative',
+    backgroundColor: 'var(--primary-soft)',
+    color: 'var(--primary-active-text)',
+    '&::before': {
+        content: '""', position: 'absolute', insetBlock: 6, left: 0, width: 3,
+        borderRadius: '0 3px 3px 0', backgroundColor: 'var(--primary-active-text)',
+    },
+    '&:hover': { backgroundColor: 'var(--primary-soft)' },
+    '& .MuiListItemIcon-root': { color: 'var(--primary-active-text)' },
+}
 
 function ThemeToggle({ collapsed = false }) {
     const { themeName, cambiarTema, guardandoTema } = useAppTheme()
@@ -42,9 +51,10 @@ function ThemeToggle({ collapsed = false }) {
     const isDark = themeName === 'dark'
     const ModeIcon = isDark ? DarkMode : LightMode
 
-    const handleChange = async (_event, checked) => {
+    const handleToggle = async (event) => {
+        clickOrigin.current = { x: event.clientX, y: event.clientY }
         try {
-            await cambiarTema(checked ? 'dark' : 'light', clickOrigin.current)
+            await cambiarTema(isDark ? 'light' : 'dark', clickOrigin.current)
         } catch (error) {
             console.error('Error guardando la preferencia de tema:', error)
         } finally {
@@ -52,37 +62,24 @@ function ThemeToggle({ collapsed = false }) {
         }
     }
 
-    const captureClickOrigin = (event) => {
-        clickOrigin.current = { x: event.clientX, y: event.clientY }
-    }
-
     const toggle = (
-        <Switch
-            size="small"
-            checked={isDark}
-            onChange={handleChange}
-            onClickCapture={captureClickOrigin}
-            disabled={guardandoTema}
-            inputProps={{ 'aria-label': 'Cambiar entre tema claro y oscuro' }}
-        />
+        <Tooltip title="Cambiar tema" placement={collapsed ? 'right' : 'top'}>
+            <span>
+                <IconButton onClick={handleToggle} disabled={guardandoTema} aria-label="Cambiar tema" aria-pressed={isDark} size="small">
+                    <ModeIcon fontSize="small" />
+                </IconButton>
+            </span>
+        </Tooltip>
     )
 
     if (collapsed) {
         return (
-            <Tooltip title={isDark ? 'Tema oscuro: cambiar a claro' : 'Tema claro: cambiar a oscuro'} placement="right">
-                <Box sx={{ minHeight: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
-                    <ModeIcon fontSize="small" color="action" />
-                    {toggle}
-                </Box>
-            </Tooltip>
+            <Box sx={{ minHeight: 42, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{toggle}</Box>
         )
     }
 
     return (
-        <Box sx={{ minHeight: 42, display: 'flex', alignItems: 'center', px: 2 }}>
-            <ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: 'center', color: 'text.secondary' }}>
-                <ModeIcon fontSize="small" />
-            </ListItemIcon>
+        <Box sx={{ minHeight: 42, display: 'flex', alignItems: 'center', pl: 2, pr: 1 }}>
             <ListItemText primary="Tema oscuro" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
             {toggle}
         </Box>
@@ -100,12 +97,10 @@ function Sidebar({
     const { perfil } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
-    const theme = useTheme()
-
     /*
      * Debajo de md tratamos la navegación como móvil/tablet.
      */
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+    const isMobile = useMediaQuery('(max-width: 767.95px)')
     const permiso = perfil?.permiso?.nombre
 
     /*
@@ -330,8 +325,8 @@ function Sidebar({
                         boxSizing: 'border-box',
                         overflowX: 'hidden',
                         backgroundColor: 'scgca.sidebar',
-                        backdropFilter: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId) ? 'blur(18px)' : 'none',
-                        WebkitBackdropFilter: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId) ? 'blur(18px)' : 'none',
+                        backdropFilter: 'none',
+                        WebkitBackdropFilter: 'none',
                         boxShadow: (theme) => theme.scgca?.themeId === 'dark'
                             ? 'inset -1px 0 rgba(255, 255, 255, 0.05)'
                             : theme.scgca?.themeId === 'light' ? 'inset -1px 0 rgba(31, 41, 55, 0.06)' : undefined,
@@ -361,13 +356,11 @@ function Sidebar({
                     >
                         Costos Rotondo
                     </Typography>
-                    <IconButton
-                        onClick={onMobileClose}
-                        color="primary"
-                        aria-label="Cerrar menú"
-                    >
-                        <Menu />
-                    </IconButton>
+                    <Tooltip title="Cerrar menú" placement="right">
+                        <IconButton onClick={onMobileClose} color="primary" aria-label="Cerrar menú">
+                            <Menu />
+                        </IconButton>
+                    </Tooltip>
                 </Box>
                 <Divider />
 
@@ -384,16 +377,7 @@ function Sidebar({
                                     minHeight: 42,
                                     justifyContent: 'initial',
                                     px: 2,
-                                    '&.Mui-selected': {
-                                        backgroundColor: 'primary.main',
-                                        color: 'primary.contrastText',
-                                        '&:hover': {
-                                            backgroundColor: 'primary.dark',
-                                        },
-                                        '& .MuiListItemIcon-root': {
-                                            color: 'primary.contrastText',
-                                        },
-                                    },
+                                '&.Mui-selected': activeNavItemSx,
                                     '&:hover': {
                                         backgroundColor: 'action.hover',
                                     },
@@ -428,7 +412,7 @@ function Sidebar({
                             <Collapse in={tareosOpen} timeout="auto" unmountOnExit>
                                 <List component="div" disablePadding>
                                     {tareosVisibles.map((item) => (
-                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': { backgroundColor: 'primary.main', color: 'primary.contrastText', '&:hover': { backgroundColor: 'primary.dark' } } }}>
+                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
                                             <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
                                         </ListItemButton>
                                     ))}
@@ -485,13 +469,7 @@ function Sidebar({
                                              */
                                             pl: 2.5,
                                             pr: 1.5,
-                                            '&.Mui-selected': {
-                                                backgroundColor: 'primary.main',
-                                                color: 'primary.contrastText',
-                                                '&:hover': {
-                                                    backgroundColor: 'primary.dark',
-                                                },
-                                            },
+                                            '&.Mui-selected': activeNavItemSx,
                                             '&:hover': {
                                                 backgroundColor: 'action.hover',
                                             },
@@ -513,7 +491,7 @@ function Sidebar({
                             <Collapse in={accesosOpen} timeout="auto" unmountOnExit>
                                 <List component="div" disablePadding>
                                     {accesosItems.map((item) => (
-                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': { backgroundColor: 'primary.main', color: 'primary.contrastText', '&:hover': { backgroundColor: 'primary.dark' } } }}>
+                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
                                             <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
                                         </ListItemButton>
                                     ))}
@@ -576,8 +554,8 @@ function Sidebar({
                             duration: theme.transitions.duration.shortest,
                         }),
                     backgroundColor: 'scgca.sidebar',
-                    backdropFilter: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId) ? 'blur(18px)' : 'none',
-                    WebkitBackdropFilter: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId) ? 'blur(18px)' : 'none',
+                    backdropFilter: 'none',
+                    WebkitBackdropFilter: 'none',
                     boxShadow: (theme) => theme.scgca?.themeId === 'dark'
                         ? 'inset -1px 0 rgba(255, 255, 255, 0.05)'
                         : theme.scgca?.themeId === 'light' ? 'inset -1px 0 rgba(31, 41, 55, 0.06)' : undefined,
@@ -610,13 +588,11 @@ function Sidebar({
                         Costos Rotondo
                     </Typography>
                 )}
-                <IconButton
-                    onClick={onToggle}
-                    color="primary"
-                    aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
-                >
-                    <Menu />
-                </IconButton>
+                <Tooltip title={collapsed ? 'Expandir menú' : 'Colapsar menú'} placement="right">
+                    <IconButton onClick={onToggle} color="primary" aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}>
+                        <Menu />
+                    </IconButton>
+                </Tooltip>
             </Box>
             <Divider />
 
@@ -633,16 +609,7 @@ function Sidebar({
                                 minHeight: 42,
                                 justifyContent: collapsed ? 'center' : 'initial',
                                 px: 2,
-                                '&.Mui-selected': {
-                                    backgroundColor: 'primary.main',
-                                    color: 'primary.contrastText',
-                                    '&:hover': {
-                                        backgroundColor: 'primary.dark',
-                                    },
-                                    '& .MuiListItemIcon-root': {
-                                        color: 'primary.contrastText',
-                                    },
-                                },
+                                '&.Mui-selected': activeNavItemSx,
                                 '&:hover': {
                                     backgroundColor: 'action.hover',
                                 },
@@ -692,7 +659,7 @@ function Sidebar({
                             <Collapse in={tareosOpen} timeout="auto" unmountOnExit>
                                 <List component="div" disablePadding>
                                     {tareosVisibles.map((item) => (
-                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': { backgroundColor: 'primary.main', color: 'primary.contrastText', '&:hover': { backgroundColor: 'primary.dark' } } }}>
+                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
                                             <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
                                         </ListItemButton>
                                     ))}
@@ -766,13 +733,7 @@ function Sidebar({
                                              */
                                             pl: 2.5,
                                             pr: 1.5,
-                                            '&.Mui-selected': {
-                                                backgroundColor: 'primary.main',
-                                                color: 'primary.contrastText',
-                                                '&:hover': {
-                                                    backgroundColor: 'primary.dark',
-                                                },
-                                            },
+                                            '&.Mui-selected': activeNavItemSx,
                                             '&:hover': {
                                                 backgroundColor: 'action.hover',
                                             },
@@ -827,7 +788,7 @@ function Sidebar({
                         <Collapse in={accesosOpen} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
                                 {accesosItems.map((item) => (
-                                    <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': { backgroundColor: 'primary.main', color: 'primary.contrastText', '&:hover': { backgroundColor: 'primary.dark' } } }}>
+                                    <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
                                         <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
                                     </ListItemButton>
                                 ))}

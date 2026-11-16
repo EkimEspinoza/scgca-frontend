@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Snackbar,
-  Typography,
 } from '@mui/material'
 
 import {
@@ -16,6 +15,7 @@ import { useUsuarios } from '../../hooks/useUsuarios'
 import UsuariosFilters from '../../components/usuarios/UsuariosFilters'
 import UsuarioTable from '../../components/usuarios/UsuarioTable'
 import UsuarioForm from '../../components/usuarios/UsuarioForm'
+import PageHeader from '../../components/common/PageHeader'
 
 function Usuarios() {
   const {
@@ -55,6 +55,7 @@ function Usuarios() {
 
   return (
     <Box
+      className="app-module-flow"
       sx={{
         width: '100%',
         height: '100%',
@@ -76,7 +77,6 @@ function Usuarios() {
           justifyContent:
             'space-between',
           gap: 2,
-          mb: 1.5,
           flexShrink: 0,
           flexDirection: {
             xs: 'column',
@@ -84,64 +84,18 @@ function Usuarios() {
           },
         }}
       >
-        <Box>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-            }}
-          >
-            <PeopleIcon
-              color="primary"
-              sx={{
-                fontSize: 28,
-              }}
-            />
+        <PageHeader
+          icon={<PeopleIcon />}
+          title="Usuarios"
+          description="Administración de usuarios, permisos y acceso a empresas."
+          sx={{ mb: 0, flex: 1 }}
+        />
 
-            <Typography
-              variant="h5"
-              fontWeight={700}
-            >
-              Usuarios
-            </Typography>
-          </Box>
-
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              mt: 0.25,
-            }}
-          >
-            Administración de usuarios,
-            permisos y acceso a empresas.
-          </Typography>
-        </Box>
-
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleNuevo}
-          disabled={
-            loading ||
-            loadingMaestros
-          }
-          sx={{
-            minWidth: 190,
-            height: 44,
-            borderRadius: 1,
-            flexShrink: 0,
-          }}
-        >
-          Nuevo usuario
-        </Button>
       </Box>
 
       {/* Filtros */}
       <Box
         sx={{
-          mb: 1,
           flexShrink: 0,
         }}
       >
@@ -159,6 +113,7 @@ function Usuarios() {
           onLimpiarFiltros={
             handleLimpiarFiltros
           }
+          actions={<Button className="app-create-action-button" variant="contained" startIcon={<AddIcon />} onClick={handleNuevo} disabled={loading || loadingMaestros}>Nuevo usuario</Button>}
         />
       </Box>
 
@@ -167,7 +122,6 @@ function Usuarios() {
         <Alert
           severity="error"
           sx={{
-            mb: 1,
             flexShrink: 0,
             borderRadius: 1,
           }}

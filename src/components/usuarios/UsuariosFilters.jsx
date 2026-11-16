@@ -5,7 +5,6 @@ import {
   InputAdornment,
   InputLabel,
   MenuItem,
-  Paper,
   Select,
   TextField,
   Tooltip,
@@ -17,6 +16,7 @@ import {
 } from '@mui/icons-material'
 
 import { obtenerEtiquetaPermiso } from './usuarioRules'
+import FiltersToolbar from '../common/FiltersToolbar'
 
 function UsuariosFilters({
   filtros,
@@ -25,21 +25,20 @@ function UsuariosFilters({
   loading = false,
   onFiltroChange,
   onLimpiarFiltros,
+  actions,
 }) {
+  const activeFilters = []
+  const permiso = permisos.find((item) => String(item.id_permiso) === String(filtros.permiso))
+  const empresa = empresas.find((item) => String(item.id_empresa) === String(filtros.empresa))
+  if (filtros.estado) activeFilters.push({ id: 'estado', label: `Estado: ${{ ACTIVO: 'Activo', PENDIENTE: 'Pendiente', INACTIVO: 'Inactivo' }[filtros.estado] ?? filtros.estado}`, onRemove: () => onFiltroChange('estado', '') })
+  if (filtros.permiso) activeFilters.push({ id: 'permiso', label: `Permiso: ${permiso ? obtenerEtiquetaPermiso(permiso.nombre) : filtros.permiso}`, onRemove: () => onFiltroChange('permiso', '') })
+  if (filtros.empresa) activeFilters.push({ id: 'empresa', label: `Empresa: ${empresa?.nombre_comercial ?? filtros.empresa}`, onRemove: () => onFiltroChange('empresa', '') })
+  if (filtros.buscar?.trim()) activeFilters.push({ id: 'buscar', label: `Búsqueda: ${filtros.buscar}`, onRemove: () => onFiltroChange('buscar', '') })
+
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        width: '100%',
-        maxWidth: '100%',
-        p: 1.5,
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1,
-        boxSizing: 'border-box',
-      }}
-    >
+    <FiltersToolbar className="usuarios-filters" actions={actions} activeFilters={activeFilters} onClear={activeFilters.length ? onLimpiarFiltros : undefined} disabled={loading}>
       <Box
+        className="app-filters-row"
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -203,6 +202,7 @@ function UsuariosFilters({
 
         {/* Buscar */}
         <TextField
+          className="app-search-input"
           size="small"
           label="Buscar"
           placeholder="Nombre o permiso"
@@ -242,11 +242,13 @@ function UsuariosFilters({
         <Tooltip title="Limpiar filtros">
           <span>
             <IconButton
+              className="app-clear-filters-icon"
               onClick={
                 onLimpiarFiltros
               }
               disabled={loading}
               color="primary"
+              aria-label="Limpiar filtros"
               sx={{
                 width: 38,
                 height: 38,
@@ -261,7 +263,7 @@ function UsuariosFilters({
           </span>
         </Tooltip>
       </Box>
-    </Paper>
+    </FiltersToolbar>
   )
 }
 

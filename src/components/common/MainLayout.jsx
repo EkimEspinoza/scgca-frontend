@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box } from '@mui/material'
+import { Box, useMediaQuery } from '@mui/material'
 
 import Sidebar from '../layout/Sidebar'
 import Header from './Header'
@@ -8,10 +8,14 @@ import Header from './Header'
 function MainLayout({ children, onLogout }) {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [expandedTablet, setExpandedTablet] = useState(false)
+  const tablet = useMediaQuery('(min-width: 768px) and (max-width: 1199.95px)')
+  const sidebarCollapsed = tablet ? !expandedTablet : collapsed
 
 
   const handleToggleSidebar = () => {
-    setCollapsed((valor) => !valor)
+    if (tablet) setExpandedTablet((valor) => !valor)
+    else setCollapsed((valor) => !valor)
   }
 
 
@@ -34,13 +38,14 @@ function MainLayout({ children, onLogout }) {
     <Box
       sx={{
         display: 'flex',
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: 0,
         width: '100%',
         overflow: 'hidden',
       }}
     >
       <Sidebar
-        collapsed={collapsed}
+        collapsed={sidebarCollapsed}
         onToggle={handleToggleSidebar}
         onLogout={onLogout}
         mobileOpen={mobileOpen}
@@ -50,7 +55,7 @@ function MainLayout({ children, onLogout }) {
 
 
       <Header
-        collapsed={collapsed}
+        collapsed={sidebarCollapsed}
         mobileOpen={mobileOpen}
         onMobileMenuOpen={handleOpenMobileSidebar}
       />
@@ -67,8 +72,9 @@ function MainLayout({ children, onLogout }) {
      * El área principal ocupa exactamente
      * el alto disponible de la ventana.
      */
-    height: '100vh',
-    maxHeight: '100vh',
+    height: '100dvh',
+    maxHeight: '100dvh',
+    minHeight: 0,
 
     /*
      * Evita que el módulo genere
@@ -79,18 +85,18 @@ function MainLayout({ children, onLogout }) {
     boxSizing: 'border-box',
 
     p: {
-      xs: 2,
-      sm: 2.5,
-      md: 3,
+      xs: 1,
+      sm: 1.5,
+      md: 2,
     },
 
     /*
      * Espacio reservado para el Header.
      */
     pt: {
-      xs: 9,
-      sm: 9,
-      md: 10,
+      xs: 8.5,
+      sm: 8.5,
+      md: 9,
     },
 
     backgroundColor: (theme) => ['dark', 'light'].includes(theme.scgca?.themeId)

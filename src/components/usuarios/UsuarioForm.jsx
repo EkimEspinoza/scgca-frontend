@@ -83,12 +83,7 @@ function UsuarioForm({
         email: usuario.email ?? '',
         nombre: usuario.nombre ?? '',
         apellido: usuario.apellido ?? '',
-        id_permiso:
-          usuario.id_permiso
-            ? String(
-                usuario.id_permiso,
-              )
-            : '',
+        id_permiso: usuario.id_permiso ? String(usuario.id_permiso) : '',
         estado:
           usuario.estado ??
           'PENDIENTE',
@@ -484,9 +479,7 @@ function UsuarioForm({
             )}
 
 
-          {/* =================================================
-              DATOS DEL USUARIO
-          ================================================= */}
+          {/* Datos del usuario */}
 
           {!esEdicion && (
             <TextField
@@ -582,9 +575,7 @@ function UsuarioForm({
           </Box>
 
 
-          {/* =================================================
-              PERMISO / ESTADO
-          ================================================= */}
+          {/* Permiso y estado */}
 
           <Box
             sx={{
@@ -676,9 +667,7 @@ function UsuarioForm({
           </Box>
 
 
-          {/* =================================================
-              EMPRESAS
-          ================================================= */}
+          {/* Empresas asignadas */}
 
           <Box>
             <Typography

@@ -18,6 +18,7 @@ function SearchInput({
 }) {
     return (
         <TextField
+            className="app-search-input"
             fullWidth
             size="small"
             value={value}
@@ -44,10 +45,6 @@ function SearchInput({
                     },
                     '&:hover fieldset': {
                         borderColor: theme.scgca?.themeId === 'dark' ? 'rgba(255, 255, 255, 0.26)' : undefined,
-                    },
-                    '&.Mui-focused fieldset': {
-                        borderColor: theme.scgca?.themeId === 'dark' ? '#2FB468' : undefined,
-                        boxShadow: theme.scgca?.themeId === 'dark' ? '0 0 0 3px rgba(47, 180, 104, 0.22)' : undefined,
                     },
                 },
                 '& .MuiInputBase-input::placeholder': {

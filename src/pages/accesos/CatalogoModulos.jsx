@@ -14,11 +14,12 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { Add, Apps, Close, Edit, Save } from '@mui/icons-material'
+import { Add, Apps, CleaningServices, Close, Edit, Save } from '@mui/icons-material'
 
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import DataTable from '../../components/common/DataTable'
 import PageHeader from '../../components/common/PageHeader'
+import FiltersToolbar from '../../components/common/FiltersToolbar'
 import { useAuth } from '../../context/useAuth'
 import {
   actualizarEstadoModulo,
@@ -204,28 +205,32 @@ function CatalogoModulos() {
 
   return (
     <CompactModuleTheme>
-      <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <Box className="app-module-flow" sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <PageHeader
           icon={<Apps fontSize="small" />}
           title="Catálogo de módulos"
           description="Administra los módulos disponibles para asignar permisos."
-          actionLabel="Nuevo módulo"
-          onAction={abrirNuevo}
-          actionIcon={<Add />}
         />
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1.5, mb: 1, flexShrink: 0 }}>
-          <Typography variant="body2" color="text.secondary">{modulos.length} módulos en el catálogo</Typography>
-          <TextField
-            size="small"
-            label="Buscar módulo"
-            value={busqueda}
-            onChange={(event) => setBusqueda(event.target.value)}
-            sx={{ width: { xs: '100%', sm: 280 } }}
-          />
-        </Box>
+        <FiltersToolbar
+          actions={<Button className="app-create-action-button" variant="contained" startIcon={<Add />} onClick={abrirNuevo}>Nuevo módulo</Button>}
+        >
+          <Box className="app-filters-row" sx={{ p: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
+            <Typography variant="body2" color="text.secondary">{modulos.length} módulos en el catálogo</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <TextField className="app-search-input" size="small" label="Buscar módulo" value={busqueda} onChange={(event) => setBusqueda(event.target.value)} sx={{ width: { xs: '100%', sm: 280 } }} />
+              <Tooltip title="Limpiar búsqueda" arrow>
+                <span>
+                  <IconButton className="app-clear-filters-icon" onClick={() => setBusqueda('')} disabled={!busqueda} color="primary" aria-label="Limpiar búsqueda de módulos">
+                    <CleaningServices fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </Box>
+          </Box>
+        </FiltersToolbar>
 
-        {error && <Alert severity="error" sx={{ mb: 1, flexShrink: 0 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ flexShrink: 0 }}>{error}</Alert>}
         <Box sx={{ flex: '1 1 0%', minWidth: 0, minHeight: 0, display: 'flex', overflow: 'hidden', border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}>
           <DataTable
             columns={columnas}

@@ -8,6 +8,7 @@ import CampanaForm from '../../components/campanas/CampanaForm'
 import CampanaTable from '../../components/campanas/CampanaTable'
 import useCampana from '../../hooks/useCampana'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
+import PageHeader from '../../components/common/PageHeader'
 
 
 function Campanas() {
@@ -154,7 +155,7 @@ function Campanas() {
      */
     return (
       <CompactModuleTheme>
-        <Box sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Box className="app-module-flow" sx={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* ====================================================
                 ENCABEZADO
             ===================================================== */}
@@ -163,67 +164,30 @@ function Campanas() {
                 sx={{
                     display: 'flex', flexDirection: { xs: 'column', sm: 'row' },
                     alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between',
-                    gap: 1.5, flexShrink: 0, mb: 0.75, minWidth: 0,
+                    gap: 1.5, flexShrink: 0, minWidth: 0,
                 }}
             >
 
                 {/* =================================================
                 TÍTULO
                 ================================================== */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
-                    <Box sx={{ width: 48, height: 48, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 1, backgroundColor: 'primary.light', color: 'primary.dark', opacity: 0.95 }}>
-                        <Campaign sx={{ fontSize: 27 }} />
-                    </Box>
-                    <Box sx={{ minWidth: 0 }}>
-                        <Typography component="h1" sx={{ fontSize: { xs: '1.25rem', sm: '1.375rem' }, lineHeight: 1.2, fontWeight: 700, color: 'text.primary' }}>
-                            Campañas
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                            Administración de campañas asociadas al Centro de Costo seleccionado.
-                        </Typography>
-                    </Box>
-                </Box>
-                {/* =================================================
-                ACCIONES
-                ================================================== */}
-
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'row', sm: 'row' }, gap: 1, width: { xs: '100%', sm: 'auto' }, flexShrink: 0, minWidth: 0 }}>
-                    {/* =================================================
-                    EXPORTAR EXCEL
-                    ============================================== */}
-
-                    <Button
-                        variant="outlined"
-                        startIcon={<TableViewIcon />}
-                        onClick={handleExportarExcel}
-                        disabled={exportandoExcel || loading || loadingEmpresas || loadingCentrosCosto}
-                        sx={{ minWidth: 0, flex: { xs: '1 1 0%', sm: '0 1 auto' }, height: 36, whiteSpace: 'nowrap', fontSize: { xs: '0.6875rem', sm: '0.75rem' }, px: { xs: 0.75, sm: 1.5 }, fontWeight: 700, borderRadius: 1, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
-                    >
+                <PageHeader
+                    icon={<Campaign />}
+                    title="Campañas"
+                    description="Administración de campañas asociadas al Centro de Costo seleccionado."
+                    sx={{ mb: 0, flex: 1 }}
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, flexWrap: 'wrap', flexShrink: 0 }}>
+                    <Button className="app-excel-action-button" variant="outlined" color="inherit" startIcon={<TableViewIcon />} onClick={handleExportarExcel} disabled={exportandoExcel || loading || loadingEmpresas || loadingCentrosCosto}>
                         {exportandoExcel ? 'Exportando...' : 'Exportar Excel'}
                     </Button>
-
-                    {/* =============================================
-                    NUEVA CAMPAÑA
-                    ============================================== */}
-
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={abrirNuevo}
-                        disabled={loading}
-                        sx={{ minWidth: 0, flex: { xs: '1 1 0%', sm: '0 1 auto' }, height: 36, whiteSpace: 'nowrap', fontSize: { xs: '0.6875rem', sm: '0.75rem' }, px: { xs: 0.75, sm: 1.5 }, flexShrink: 0, fontWeight: 700, borderRadius: 1, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
-                        Nueva Campaña
-                    </Button>
-
+                    <Button className="app-create-action-button" variant="contained" startIcon={<AddIcon />} onClick={abrirNuevo} disabled={loading}>Nueva Campaña</Button>
                 </Box>
-
             </Box>
 
             {/* ====================================================
                 FILTROS
             ===================================================== */}
-            <Paper elevation={0} sx={{ flexShrink: 0, minWidth: 0, mb: 0.75 }}>
-
                 <CampanaFilters
 
                     empresas={empresas}
@@ -245,8 +209,6 @@ function Campanas() {
 
                     loading={loading || loadingEmpresas || loadingCentrosCosto || eliminando}
                 />
-
-            </Paper>
             {/* ====================================================
                 TABLA
             ===================================================== */}

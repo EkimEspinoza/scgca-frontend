@@ -1,6 +1,6 @@
 # BRAIN maestro de SCGCA Central
 
-**Actualizado:** 2026-11-12
+**Actualizado:** 2026-11-16
 **Estado:** documento formal e índice del conocimiento consolidado del proyecto.
 **Regla de actualización:** cuando el usuario diga **BRAIN OK**, incorporar los acuerdos y avances recientes en los archivos pertinentes. Actualizar todos los archivos afectados por un cambio, sin duplicar información innecesariamente.
 
@@ -118,21 +118,36 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 ### Mov_Tareo — estado verificado al 12 de noviembre de 2026
 
 - Se implementaron el acceso bajo el grupo **Tareos** con icono de reloj, pestañas **Cargados** y **Pendientes**, búsqueda por número/centro, rango de fechas, tabla y edición de Cargados. La observación fuente se presenta en su propia columna; el formulario identifica `estado` como **Estado** y oculta los controles incrementales en campos numéricos.
-- La edición resuelve los códigos local/global de centro operativo y maquinaria y exige campaña vigente si el centro es de tipo LEVANTE. Si centro o maquinaria existe, puede pasar a Cargados aunque esté inactivo.
+- La edición resuelve los códigos local/global de centro operativo y maquinaria y exige campaña vigente si el centro es de tipo LEVANTE. La regla ya acordada para una carga/importación de historial distingue la vigencia en la fecha del tareo del estado actual del centro.
 - Supabase tiene `mov_tareo` (válidos), `mov_tareo_pendiente` (observaciones por resolver) y `mov_tareo_historial` (auditoría de cambios). Las tres tablas tienen RLS; MOV_TAREO usa niveles QUERY/WRITER y acceso por empresa, con ADMIN global. El historial es de lectura autorizada y se llena desde un trigger.
-- Las únicas causas de Pendientes acordadas son `MAQUINARIA_NO_EXISTE`, `CENTRO_COSTO_NO_EXISTE`, `CAMPANA_NO_EXISTE` y `HORA_CERO`. Triggers revalidan automáticamente pendientes al crear/actualizar centros o campañas y promueven los válidos a `mov_tareo`.
+- Para las filas nuevas, las causas base de Pendientes son maquinaria inexistente, centro de costo inexistente, campaña no vigente en la fecha del tareo y hora cero. La aceptación de un centro actualmente inactivo depende de la fase de carga: durante el backfill histórico desde 2017, una campaña que cubra `FECHA_TAREO` prueba actividad en esa fecha y permite Cargados; si no hay campaña vigente, va a Pendientes. Tras completar el historial, centro inactivo pasa a Pendientes. Maquinaria existente inactiva sigue aceptándose.
+- Triggers revalidan automáticamente pendientes al crear/actualizar centros o campañas y promueven los válidos a `mov_tareo`.
+- **Importación Excel de Mov_Tareo — reglas acordadas, aún no implementadas:** se cargará por empresa en archivos acumulativos del año (por ejemplo, enero–octubre y después enero–noviembre). La clave de idempotencia es `(id_empresa, nro_parte)` porque `NRO_PARTE` es único dentro de cada empresa. Una clave ya registrada no se vuelve a insertar, actualizar ni notificar por diferencias de origen; se conservan cambios asignados desde la aplicación, incluida Etapa de Costo.
+- Al comparar el archivo acumulativo con lo previamente cargado, un `NRO_PARTE` que ya no aparece genera una observación para revisión. El usuario decidirá pasarlo a inactivo; debe conservarse el registro histórico, sin borrado físico. Si una observación no se puede levantar, el registro también puede inactivarse. Un centro faltante se resuelve creando el centro; una campaña ausente para la fecha se resuelve creando o ampliando la campaña. Después de corregir maestros/campañas, la revalidación automática puede promover las filas válidas.
 - En la primera revalidación, 62 filas pasaron de Pendientes a Cargados. Consulta de Supabase del 2026-11-12 verificó 3,678 cargados, 0 pendientes y 0 eventos de auditoría manual.
 - La paginación fue reservada en el pie de la tabla (`flexShrink: 0`) para evitar que la tabla la recorte. El ajuste de frontend requiere compilación y confirmación visual en navegador.
+- **Ajustes de interfaz posteriores, 2026-11-12 (locales):** se añadió segmentación por año desde 2017 hasta el actual, con opción para ver todos los años; al consultar todas las empresas, se muestra el nombre comercial de `Dim_Empresa` en vez del ID. El formulario de edición obtiene las etapas activas desde `Dim_Etapa_Costo`. Las pestañas Cargados/Pendientes se alinearon con el título y los filtros ocupan una fila completa. La búsqueda no repite el texto como chip; el buscador conserva su icono de limpiar y se añadió una acción para limpiar filtros. Empresa, Fecha y Acciones quedan fijas con fondos opacos; encabezados y hover de fila también son opacos. No se modificaron reglas de negocio ni esquema Supabase. Build Vite y `git diff --check` aprobaron; estos cambios permanecen locales y no se publicaron en GitHub.
+- El botón **Cargar Excel** de esta interfaz solo permite elegir el archivo y avisa que la importación aún no está implementada; todavía no procesa ni guarda datos.
 - Sincronización terminada el 2026-11-12: Mov_Tareo se publicó en GitHub `main` con `dabf949` (`feat: add Mov Tareo module`); el mismo commit quedó en local. Supabase y local tienen las mismas 57 versiones de migración. El push no publica el frontend en hosting.
 
-### Pendientes vigentes al 12 de noviembre
+### Avances locales al 14 de noviembre de 2026
+
+- **CONFIRMADO — Etapa en Mov_Tareo:** los valores de `etapa_tareo` se resuelven contra `Dim_Etapa_Costo` mediante `cod_etapa` para mostrar la descripción. El catálogo solo se solicita cuando la página contiene al menos una etapa no vacía; una celda vacía muestra un guion sin consultar el catálogo. La columna origen sigue siendo texto y no se añadió una FK ni hubo cambios de esquema.
+- **EN DESARROLLO — Diseño común:** se extendió el lenguaje visual de Mov_Tareo al resto de módulos. Tablas usan estilos comunes para superficies, encabezados, divisores, hover y paginación; las densidades especiales de Tareo y Distribución se conservan. `PageHeader` ya se comparte en módulos y los encabezados que eran propios se migraron al componente común. Los paneles de filtros comparten altura de controles, borde, radio, espaciado y color verde para iconos activos de limpieza; los filtros deshabilitados quedan atenuados.
+- **EN DESARROLLO — Espaciado de filtros:** se eliminó el padding interno duplicado de las filas de filtros. Comparativos quedó con una separación de 12 px entre filtros y tabla, igual al ritmo vertical de Mov_Tareo. Falta aplicar y revisar el mismo espaciado en los demás módulos que aún tengan una separación distinta.
+- Build de producción aprobado el 2026-11-14 (Vite 8.2.2, 11,807 módulos transformados) y `git diff --check` sin errores de whitespace; solo reportó avisos de conversión LF/CRLF. No se ejecutaron pruebas unitarias, lint ni revisión visual en navegador.
+- Los ajustes de interfaz están solo en el árbol local de trabajo y no se han publicado en GitHub. No se hicieron cambios de Supabase. La compilación no equivale a prueba visual ni a despliegue.
+
+### Pendientes vigentes al 14 de noviembre
 
 - Alinear, según instrucción del usuario, las asignaciones de prueba: la base muestra prueba 1 WRITER, prueba 3 WRITER y prueba 2 sin asignación a Empresas.
 - Probar manualmente las pantallas ADMIN de Módulos y Permisos y sus flujos de asignación; el build solo verifica compilación.
-- Completar la importación de Excel para Mov_Tareo: validar maestros, centro operativo, maquinaria, campaña LEVANTE y horas; recargar solo el diferencial y permitir correcciones mostrando los valores anteriores y nuevos.
+- Implementar la importación acumulativa de Excel para Mov_Tareo según las reglas acordadas: deduplicar por empresa/NRO_PARTE sin sobrescribir datos existentes, validar filas nuevas, detectar NRO_PARTE ausentes en el acumulado, permitir inactivarlos con historial y aplicar la regla por fases para centros inactivos/campañas.
 - Completar la interfaz para resolver Pendientes y verificar su promoción automática al corregirse una observación.
 - Mostrar/consultar el historial de cambios manuales de registros cargados.
 - Confirmar manualmente en navegador que la paginación de Mov_Tareo se muestra y navega correctamente.
+- Replicar y revisar el espaciado compacto entre filtros y tabla en los demás módulos donde todavía difiera del patrón de Mov_Tareo.
+- Revisar el filtrado por fechas/año de Mov_Tareo: el selector inicia visualmente en el año actual, pero las fechas iniciales permanecen vacías, así que la primera consulta no queda limitada a ese año. Corregir y verificar este comportamiento. Evaluar como propuesta de interfaz tarjetas mensuales que resuman el estado de cada mes del año; antes de implementarlas, definir qué estados mostrarán y cómo se relacionan con los registros cargados/pendientes.
 - Revisar si QUERY/WRITER globales seguirán siendo necesarios cuando las asignaciones por módulo estén completas.
 - Validar visualmente Distribución en navegador; probar carga/guardado, cierre mensual, reapertura ADMIN y validaciones por rol.
 - La importación y exportación Excel de Distribución quedan registradas como implementaciones futuras. No se mostrará Variedad y las campañas no filtrarán hectáreas.
@@ -154,7 +169,7 @@ En los requisitos también aparecen Almacén, importación de Excel, Distribuci�
 - Cada Centro de Costo pertenece permanentemente a una variedad.
 - No cambiar la regla histórica de cod_cc_pk sin un caso comprobado.
 - Los filtros dependen de empresa, estado y tipo; mostrar maquinaria, comparativo o variedad según corresponda.
-- La importación debe advertir sobre Centros de Costo, Campañas o Variedades inexistentes o inactivos.
+- Para la importación de Mov_Tareo, las validaciones acordadas son las registradas en el estado del módulo y R-08: centro/maquinaria inexistentes, campaña sin vigencia en la fecha y hora cero; el estado inactivo del centro se evalúa por fase histórica/operativa. No hay una regla independiente confirmada para bloquear por variedad inactiva.
 
 ### Campañas y hectáreas
 
@@ -254,3 +269,22 @@ La auditoría histórica reportó RLS habilitado en las 12 tablas examinadas, oc
 ## Convención BRAIN OK
 
 BRAIN OK significa consolidar los acuerdos y avances acumulados hasta ese momento. Revisar qué archivos resultan afectados: por ejemplo, cambios de esquema actualizan inventario y posiblemente decisiones, plan y pruebas; una nueva propuesta actualiza su registro; pruebas ejecutadas actualizan calidad y el estado principal si cambia. Anotar fecha, evidencia y pendientes. No declarar como realizado lo que solo está propuesto o no verificado.
+
+### Estado verificado al 16 de noviembre de 2026
+
+- **CONFIRMADO — UI global:** se consolidaron estilos compartidos de filtros, acciones, iconos verdes de limpieza, encabezados, tablas, paginación y temas claro/oscuro en los módulos. En Mov_Tareo, Empresa, Fecha y Acciones mantienen fondos opacos al desplazarse y sus encabezados quedan por encima de las celdas fijas. El usuario confirmó el último ajuste visual.
+- **CONFIRMADO — build local:** `npm run build` aprobado con Vite 8.2.2 y 11,809 módulos transformados. `git diff --check` no encontró errores de whitespace; reportó avisos habituales LF/CRLF. No se ejecutaron pruebas unitarias, lint ni revisión visual manual adicional.
+- **CONFIRMADO — Supabase:** proyecto Central `ajzmheqoanihdujmgbhv`, con 59 migraciones registradas. Las 59 versiones coinciden con los archivos locales; el archivo de importación segura se renombró a `20261112233959_mov_tareo_importacion_segura.sql`. No se reaplicaron migraciones.
+- **CONFIRMADO — Git:** al iniciar, local `main` y `origin/main` estaban en `6c8857e1d5b25922710a39023fea749055e3dec7`. Los cambios de esta jornada quedaron en GitHub `main` y local con el commit `cc8bf72` (`feat: unify module UI and Mov Tareo updates`).
+- **PENDIENTE — importación Mov_Tareo:** Supabase cuenta con rutinas backend para importación segura y revalidación, pero el botón Excel del frontend solo permite elegir el archivo; aún no procesa ni guarda su contenido. La carga acumulativa, la revisión de ausencias y la inactivación siguen pendientes.
+
+### Pendientes vigentes al 16 de noviembre
+
+- Alinear las asignaciones de prueba: la base muestra prueba 1 WRITER, prueba 3 WRITER y prueba 2 sin asignación a Empresas.
+- Probar manualmente las pantallas ADMIN de Módulos y Permisos y sus flujos de asignación.
+- Implementar la importación acumulativa Excel de Mov_Tareo, sin sobrescribir registros existentes, validando filas nuevas y detectando partes ausentes para revisión/inactivación con historial.
+- Completar la interfaz para resolver Pendientes y consultar historial de cambios manuales.
+- Verificar en navegador paginación, filtros de año/fecha (la primera consulta no queda limitada porque las fechas inician vacías), apariencia en ambos temas y breakpoints.
+- Evaluar tarjetas mensuales para resumir los tareos, definiendo sus estados y relación con cargados/pendientes.
+- Validar visualmente Distribución y probar guardado, cierre, reapertura ADMIN y permisos por rol. Importación/exportación Excel de Distribución siguen como futuro.
+- Ordenar visualmente el diagrama de tablas de Supabase. El push a `main` no publica por sí mismo el frontend en hosting.
