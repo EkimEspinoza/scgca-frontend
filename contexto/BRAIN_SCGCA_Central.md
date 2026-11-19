@@ -292,6 +292,7 @@ BRAIN OK significa consolidar los acuerdos y avances acumulados hasta ese moment
 - **PENDIENTE — conformidad integral:** revisar al 100 % Mov_Tareo y Mov_MO y volver a ejecutar la carga de toda la data para comprobar el flujo con el conjunto completo. No se ha iniciado esta nueva carga integral.
 - **CONFIRMADO — Supabase:** Central registra 75 migraciones; los 75 archivos locales coinciden en versión y nombre. Cinco archivos locales se renombraron para hacerlos corresponder a migraciones que ya estaban aplicadas; no se volvió a ejecutar SQL. `importar-mov-tareo` está en versión 2 y sus fuentes locales coinciden con las desplegadas; `crear-usuario` v9 y `actualizar-usuario` v3 siguen activas.
 - **CONFIRMADO — compilación local:** `npm run build` aprobó con Vite 8.2.2 y 11,848 módulos. Se corrigió el import del icono `AddCircleOutlineOutlined` en MovMOForm. `git diff --cached --check` pasó; no se ejecutaron pruebas unitarias ni revisión visual manual.
+- **CONFIRMADO — GitHub:** el commit `fa129ca` (`feat: implement MovMO and labor master workflows`) se publicó en `main`; local y `origin/main` quedaron en el mismo SHA `fa129ca8febacd302297814fa9299c7f4ca21139`. El push no publica el frontend en un hosting.
 
 ### Pendientes vigentes al 16 de noviembre
 
