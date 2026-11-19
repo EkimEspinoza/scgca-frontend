@@ -430,3 +430,9 @@ entrypoint = "./functions/crear-usuario/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/crear-usuario/*.html" ]
+
+[functions.importar-mov-tareo]
+enabled = true
+verify_jwt = true
+import_map = "./functions/importar-mov-tareo/deno.json"
+entrypoint = "./functions/importar-mov-tareo/index.ts"

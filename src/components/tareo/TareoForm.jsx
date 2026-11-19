@@ -101,7 +101,7 @@ export default function TareoForm({ open, registro, pendiente = false, guardando
       <Box component="form" onSubmit={guardar}>
         <DialogTitle>{pendiente ? 'Resolver observación de Tareo' : 'Actualizar movimiento de Tareo'}</DialogTitle>
         <DialogContent dividers>
-          {pendiente && <Alert severity="info" sx={{ mb: 1.5 }}>Al guardar, el sistema volverá a validar el registro. Si todas las observaciones quedan resueltas, pasará automáticamente a Cargados; si alguna continúa, seguirá en Pendientes.</Alert>}
+          {pendiente && <Alert severity="info" sx={{ mb: 1.5 }}>Al guardar, el sistema volverá a validar el registro. Si queda válido, pasará a En proceso; los registros de la empresa y el año pasarán a Procesados cuando ya no queden pendientes.</Alert>}
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5, pt: 0.5 }}>
             <TextField label="Nro. parte" value={valores.nro_parte} size="small" disabled />
             <TextField label="Código de centro de costo" type="number" value={valores.cod_cc} onChange={cambiar('cod_cc')} size="small" required disabled={guardando} error={Boolean(erroresCampo.cod_cc)} helperText={erroresCampo.cod_cc} sx={ocultarIncrementales} />

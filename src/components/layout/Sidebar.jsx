@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { Fragment, useRef, useState } from 'react'
 import {
     Dashboard as DashboardIcon,
     Assessment,
@@ -10,6 +10,7 @@ import {
     Category,
     AdminPanelSettings,
     AccessTime,
+    Person,
     LightMode,
     DarkMode,
 } from '@mui/icons-material'
@@ -125,6 +126,9 @@ function Sidebar({
     const rutasTareos = ['/mov-tareo']
     const tareosActivo = rutasTareos.some((path) => location.pathname.startsWith(path))
     const [tareosOpen, setTareosOpen] = useState(tareosActivo)
+    const rutasManoObra = ['/grupo-labor', '/labor-final', '/labor', '/jornal', '/tipo-jornal', '/mov-mo']
+    const manoObraActivo = rutasManoObra.some((path) => location.pathname.startsWith(path))
+    const [manoObraOpen, setManoObraOpen] = useState(manoObraActivo)
     const rutasAccesos = ['/usuarios', '/modulos', '/permisos']
     const accesosActivo = rutasAccesos.some((path) => location.pathname.startsWith(path))
     const [accesosOpen, setAccesosOpen] = useState(accesosActivo)
@@ -217,7 +221,16 @@ function Sidebar({
             text: 'Mov. Tareo',
             path: '/mov-tareo',
             moduleCode: 'MOV_TAREO',
+            permissions: ['ADMIN'],
         },
+    ]
+    const manoObraItems = [
+        { text: 'Labor', path: '/labor', permissions: ['ADMIN'] },
+        { text: 'Labor Final', path: '/labor-final', permissions: ['ADMIN'] },
+        { text: 'Grupo Labor', path: '/grupo-labor', permissions: ['ADMIN'] },
+        { text: 'Jornal', path: '/jornal', permissions: ['ADMIN'] },
+        { text: 'Tipo de Jornal', path: '/tipo-jornal', permissions: ['ADMIN'] },
+        { text: 'Mov. Mano de Obra', path: '/mov-mo', permissions: ['ADMIN'], separador: true },
     ]
 
     const accesosItems = [
@@ -247,11 +260,13 @@ function Sidebar({
         return true
     })
     const tareosVisibles = tareosItems.filter((item) =>
+        (!item.permissions || item.permissions.includes(permiso)) &&
         perfil?.modulos?.some((modulo) =>
             modulo.codigo === item.moduleCode &&
             (permiso === 'ADMIN' || ['QUERY', 'WRITER'].includes(modulo.nivel)),
         ),
     )
+    const manoObraVisibles = manoObraItems.filter((item) => !item.permissions || item.permissions.includes(permiso))
 
     /*
      * Navegar a una ruta y cerrar el menú móvil cuando corresponda.
@@ -293,6 +308,15 @@ function Sidebar({
             return
         }
         setTareosOpen((prev) => !prev)
+    }
+
+    const handleManoObraToggle = () => {
+        if (!isMobile && collapsed) {
+            onToggle()
+            setManoObraOpen(true)
+            return
+        }
+        setManoObraOpen((prev) => !prev)
     }
 
     const handleAccesosToggle = () => {
@@ -416,6 +440,26 @@ function Sidebar({
                                             <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
                                         </ListItemButton>
                                     ))}
+                                </List>
+                            </Collapse>
+                        </>
+                    )}
+
+                    {manoObraVisibles.length > 0 && (
+                        <>
+                            <ListItemButton onClick={handleManoObraToggle} sx={{ minHeight: 42, px: 2, backgroundColor: manoObraActivo ? 'action.hover' : 'transparent', '&:hover': { backgroundColor: 'action.hover' } }}>
+                                <ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: 'center' }}><Person fontSize="small" /></ListItemIcon>
+                                <ListItemText primary="Mano de Obra" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
+                                {manoObraOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
+                            </ListItemButton>
+                            <Collapse in={manoObraOpen} timeout="auto" unmountOnExit>
+                                <List component="div" disablePadding>
+                                    {manoObraVisibles.map((item) => <Fragment key={item.path}>
+                                        {item.separador && <Divider sx={{ mx: 2, my: 0.75 }} />}
+                                        <ListItemButton selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
+                                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
+                                        </ListItemButton>
+                                    </Fragment>)}
                                 </List>
                             </Collapse>
                         </>
@@ -673,6 +717,39 @@ function Sidebar({
                                         <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
                                             <AccessTime fontSize="small" />
                                         </ListItemIcon>
+                                    </ListItemButton>
+                                </Box>
+                            </Tooltip>
+                        )}
+                    </>
+                )}
+
+                {manoObraVisibles.length > 0 && (
+                    <>
+                        {!collapsed && (
+                            <ListItemButton onClick={handleManoObraToggle} sx={{ minHeight: 42, px: 2, backgroundColor: manoObraActivo ? 'action.hover' : 'transparent', '&:hover': { backgroundColor: 'action.hover' } }}>
+                                <ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: 'center' }}><Person fontSize="small" /></ListItemIcon>
+                                <ListItemText primary="Mano de Obra" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
+                                {manoObraOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
+                            </ListItemButton>
+                        )}
+                        {!collapsed && (
+                            <Collapse in={manoObraOpen} timeout="auto" unmountOnExit>
+                                <List component="div" disablePadding>
+                                    {manoObraVisibles.map((item) => <Fragment key={item.path}>
+                                        {item.separador && <Divider sx={{ mx: 2, my: 0.75 }} />}
+                                        <ListItemButton selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
+                                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
+                                        </ListItemButton>
+                                    </Fragment>)}
+                                </List>
+                            </Collapse>
+                        )}
+                        {collapsed && (
+                            <Tooltip title="Mano de Obra" placement="right">
+                                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <ListItemButton onClick={handleManoObraToggle} sx={{ minHeight: 42, justifyContent: 'center', px: 2, backgroundColor: manoObraActivo ? 'action.hover' : 'transparent' }}>
+                                        <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}><Person fontSize="small" /></ListItemIcon>
                                     </ListItemButton>
                                 </Box>
                             </Tooltip>

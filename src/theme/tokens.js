@@ -11,7 +11,7 @@ export const tokens = {
         border: 'rgba(255, 255, 255, 0.08)', rowDivider: 'rgba(255, 255, 255, 0.05)',
         textPrimary: '#E6EAF0', textSecondary: '#9AA4B2', textDisabled: '#8792A0',
         primary: '#1B8247', primaryLight: '#2FB468', primaryDark: '#16683B',
-        hover: 'rgba(255, 255, 255, 0.04)', selected: 'rgba(47, 180, 104, 0.14)',
+        hover: 'rgba(255, 255, 255, 0.04)', stickyHover: '#1D2229', selected: 'rgba(47, 180, 104, 0.14)',
         primarySoft: 'rgba(47, 180, 104, 0.14)',
         calendarIconFilter: 'invert(58%) sepia(49%) saturate(546%) hue-rotate(93deg) brightness(96%) contrast(91%)',
         tareo: {

@@ -62,7 +62,7 @@ function EstadoTareo({ estado, nroParte, onChange, cambiando }) {
   </Box>
 }
 
-export default function TareoTable({ filas, empresas = [], mostrarEmpresa = false, pendientes, cargando, total, pagina, filasPorPagina, onCambiarPagina, onCambiarFilasPorPagina, puedeEditar, onEditar, onCambiarEstado, cambiandoEstadoId }) {
+export default function TareoTable({ filas, empresas = [], mostrarEmpresa = false, pendientes, enProceso = false, cargando, total, pagina, filasPorPagina, onCambiarPagina, onCambiarFilasPorPagina, puedeEditar, onEditar, onCambiarEstado, cambiandoEstadoId }) {
   const mobile = useMediaQuery('(max-width: 767.95px)')
   const tablet = useMediaQuery('(min-width: 768px) and (max-width: 1199.95px)')
   const [detalle, setDetalle] = useState(null)
@@ -83,7 +83,8 @@ export default function TareoTable({ filas, empresas = [], mostrarEmpresa = fals
         etapasCatalogoSolicitado.current = false
       })
   }, [filas])
-  const tieneAcciones = puedeEditar || tablet
+  const puedeEditarFila = puedeEditar && !enProceso
+  const tieneAcciones = puedeEditarFila || tablet
   const etapaTieneDatos = filas.some((fila) => String(fila.etapa_tareo ?? '').trim())
   const observacionTieneDatos = filas.some((fila) => pendientes
     ? (fila.errores_validacion ?? []).length > 0
@@ -151,12 +152,12 @@ export default function TareoTable({ filas, empresas = [], mostrarEmpresa = fals
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
               <Box sx={{ minWidth: 0 }}><Typography variant="caption" color="text.secondary">Nro. parte</Typography><Typography component="span" className="tareo-code tareo-code--primary" noWrap>{fila.nro_parte}</Typography></Box>
               <Box sx={{ textAlign: 'right', flexShrink: 0 }}><Typography variant="caption" color="text.secondary">Horas</Typography><Typography fontWeight={700} fontVariant="tabular-nums">{Number(fila.hora).toFixed(2)}</Typography></Box>
-              {puedeEditar && <Tooltip title={pendientes ? 'Resolver observación' : 'Actualizar registro'}><IconButton aria-label={`${pendientes ? 'Resolver observación de' : 'Actualizar'} ${fila.nro_parte}`} onClick={() => onEditar(fila)} sx={{ minWidth: 44, minHeight: 44 }}><EditIcon /></IconButton></Tooltip>}
+              {puedeEditarFila && <Tooltip title={pendientes ? 'Resolver observación' : 'Actualizar registro'}><IconButton aria-label={`${pendientes ? 'Resolver observación de' : 'Actualizar'} ${fila.nro_parte}`} onClick={() => onEditar(fila)} sx={{ minWidth: 44, minHeight: 44 }}><EditIcon /></IconButton></Tooltip>}
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
               {mostrarEmpresa && <Campo etiqueta="Empresa"><Typography variant="body2" noWrap>{nombreEmpresa(fila.id_empresa)}</Typography></Campo>}
               <Campo etiqueta="Fecha"><Typography variant="body2">{fechaCorta(fila.fecha_tareo)}</Typography></Campo>
-              <Campo etiqueta="Estado"><EstadoTareo estado={fila.estado} nroParte={fila.nro_parte} onChange={puedeEditar ? () => onCambiarEstado(fila) : undefined} cambiando={cambiandoEstadoId === fila.id_mov_tareo} /></Campo>
+              <Campo etiqueta="Estado"><EstadoTareo estado={fila.estado} nroParte={fila.nro_parte} onChange={puedeEditarFila ? () => onCambiarEstado(fila) : undefined} cambiando={cambiandoEstadoId === fila.id_mov_tareo} /></Campo>
               {mostrarEtapa && <Campo etiqueta="Etapa"><EtapaChip etapa={fila.etapa_tareo} etapasCatalogo={etapasCatalogo} /></Campo>}
               <Campo etiqueta="Centro de costo"><CodigoNombre codigo={fila.cod_cc} nombre={fila.centro_operativo?.desc_cc} codigoPk={fila.cod_cc_pk} /></Campo>
               <Campo etiqueta="Maquinaria"><CodigoNombre codigo={fila.cod_cc_maq} nombre={fila.maquinaria?.desc_cc} codigoPk={fila.cod_cc_pk_maq} /></Campo>
@@ -168,8 +169,8 @@ export default function TareoTable({ filas, empresas = [], mostrarEmpresa = fals
         <TableHead><TableRow>
           {mostrarEmpresa && <TableCell className="tareo-sticky-header-cell" sx={{ width: 120, minWidth: 120, maxWidth: 120, position: 'sticky', top: 0, left: 0, zIndex: 10, bgcolor: 'var(--table-header-bg)', whiteSpace: 'nowrap' }}>Empresa</TableCell>}
           {encabezadoOrdenable('Fecha', 'fecha', { width: 88, position: 'sticky', left: mostrarEmpresa ? 120 : 0, zIndex: 5, bgcolor: 'var(--table-header-bg)', whiteSpace: 'nowrap' })}
-          {encabezadoOrdenable('Nro. parte', 'parte', { width: 100, whiteSpace: 'nowrap' })}
-          {encabezadoOrdenable('Centro de costo', 'centro', { minWidth: 100, width: 120 })}
+          {encabezadoOrdenable('Nro. parte', 'parte', { width: 100, position: 'sticky', left: (mostrarEmpresa ? 120 : 0) + 88, zIndex: 5, bgcolor: 'var(--table-header-bg)', whiteSpace: 'nowrap' })}
+          {encabezadoOrdenable('Centro de costo', 'centro', { minWidth: 190, width: 190, maxWidth: 190, position: 'sticky', left: (mostrarEmpresa ? 120 : 0) + 88 + 100, zIndex: 5, bgcolor: 'var(--table-header-bg)' })}
           {encabezadoOrdenable('Maquinaria', 'maquinaria', { minWidth: 250, width: 250, maxWidth: 250 })}
           {encabezadoOrdenable('Horas', 'horas', { width: 66, whiteSpace: 'nowrap', textAlign: 'right', borderRight: 1, borderColor: 'divider' })}
           <TableCell sx={{ width: 100, whiteSpace: 'nowrap' }}>Estado</TableCell>
@@ -184,17 +185,17 @@ export default function TareoTable({ filas, empresas = [], mostrarEmpresa = fals
             <TableRow hover className="tareo-row-hover">
               {mostrarEmpresa && <TableCell className="tareo-sticky-cell" sx={{ width: 120, minWidth: 120, maxWidth: 120, position: 'sticky', left: 0, zIndex: 2, bgcolor: 'var(--tareo-sticky-cell-bg, var(--table-sticky-bg))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><Tooltip title={nombreEmpresa(fila.id_empresa)}><Typography variant="body2" noWrap>{nombreEmpresa(fila.id_empresa)}</Typography></Tooltip></TableCell>}
               <TableCell className="tareo-sticky-cell" sx={{ position: 'sticky', left: mostrarEmpresa ? 120 : 0, zIndex: 2, bgcolor: 'var(--tareo-sticky-cell-bg, var(--table-sticky-bg))', whiteSpace: 'nowrap' }}>{fechaCorta(fila.fecha_tareo)}</TableCell>
-              <TableCell><Typography component="span" className="tareo-code tareo-code--primary" noWrap>{fila.nro_parte}</Typography></TableCell>
-              <TableCell><CodigoNombre codigo={fila.cod_cc} nombre={fila.centro_operativo?.desc_cc} codigoPk={fila.cod_cc_pk} /></TableCell>
+              <TableCell className="tareo-sticky-cell" sx={{ width: 100, minWidth: 100, maxWidth: 100, position: 'sticky', left: (mostrarEmpresa ? 120 : 0) + 88, zIndex: 3, bgcolor: 'var(--tareo-sticky-cell-bg, var(--table-sticky-bg))', whiteSpace: 'nowrap', overflow: 'hidden' }}><Typography component="span" className="tareo-code tareo-code--primary" noWrap>{fila.nro_parte}</Typography></TableCell>
+              <TableCell className="tareo-sticky-cell" sx={{ minWidth: 190, width: 190, maxWidth: 190, position: 'sticky', left: (mostrarEmpresa ? 120 : 0) + 88 + 100, zIndex: 4, bgcolor: 'var(--tareo-sticky-cell-bg, var(--table-sticky-bg))', overflow: 'hidden' }}><CodigoNombre codigo={fila.cod_cc} nombre={fila.centro_operativo?.desc_cc} codigoPk={fila.cod_cc_pk} /></TableCell>
               <TableCell sx={{ width: 80, minWidth: 64, maxWidth: 80, overflow: 'hidden' }}><CodigoNombre codigo={fila.cod_cc_maq} nombre={fila.maquinaria?.desc_cc} codigoPk={fila.cod_cc_pk_maq} /></TableCell>
               <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums', borderRight: 1, borderColor: 'divider' }}>{Number(fila.hora).toFixed(2)}</TableCell>
-              <TableCell><EstadoTareo estado={fila.estado} nroParte={fila.nro_parte} onChange={puedeEditar ? () => onCambiarEstado(fila) : undefined} cambiando={cambiandoEstadoId === fila.id_mov_tareo} /></TableCell>
+              <TableCell><EstadoTareo estado={fila.estado} nroParte={fila.nro_parte} onChange={puedeEditarFila ? () => onCambiarEstado(fila) : undefined} cambiando={cambiandoEstadoId === fila.id_mov_tareo} /></TableCell>
               {mostrarEtapa && <TableCell sx={{ pl: 3, maxWidth: 200 }}><EtapaChip etapa={fila.etapa_tareo} etapasCatalogo={etapasCatalogo} /></TableCell>}
               {mostrarObservacion && <TableCell sx={{ display: { sm: 'none', lg: 'table-cell' } }}><Observacion fila={fila} pendientes={pendientes} /></TableCell>}
               {tieneAcciones && <TableCell className="tareo-sticky-cell" align="center" sx={{ position: 'sticky', right: 0, zIndex: 2, bgcolor: 'var(--tareo-sticky-cell-bg, var(--table-sticky-bg))', p: 0, width: tablet ? 96 : 60, '& .tareo-row-actions': { position: 'absolute', top: '50%', right: 0, transform: 'translateY(-50%)', display: 'flex', alignItems: 'center' } }}>
                 <Box className="tareo-row-actions">
                   {tablet && <Tooltip title="Ver observación"><IconButton aria-label={`Ver detalle de ${fila.nro_parte}`} onClick={() => setDetalle(detalle === fila.id_mov_tareo ? null : fila.id_mov_tareo)} sx={{ minWidth: 44, minHeight: 44 }}><InfoIcon fontSize="small" /></IconButton></Tooltip>}
-                  {puedeEditar && <Tooltip title={pendientes ? 'Resolver observación' : 'Actualizar registro'}><IconButton aria-label={`${pendientes ? 'Resolver observación de' : 'Actualizar'} ${fila.nro_parte}`} onClick={() => onEditar(fila)} sx={{ minWidth: 44, minHeight: 44 }}><EditIcon fontSize="small" /></IconButton></Tooltip>}
+              {puedeEditarFila && <Tooltip title={pendientes ? 'Resolver observación' : 'Actualizar registro'}><IconButton aria-label={`${pendientes ? 'Resolver observación de' : 'Actualizar'} ${fila.nro_parte}`} onClick={() => onEditar(fila)} sx={{ minWidth: 44, minHeight: 44 }}><EditIcon fontSize="small" /></IconButton></Tooltip>}
                 </Box>
               </TableCell>}
             </TableRow>

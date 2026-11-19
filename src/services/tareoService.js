@@ -1,48 +1,118 @@
 import { supabase } from '../lib/supabase'
 
+export async function obtenerResumenMensualTareo({ idEmpresa, fechaDesde, fechaHasta } = {}) {
+  const { data, error } = await supabase.rpc('resumen_mensual_mov_tareo', {
+    p_id_empresa: idEmpresa ? Number(idEmpresa) : null,
+    p_fecha_desde: fechaDesde || null,
+    p_fecha_hasta: fechaHasta || null,
+  })
+  if (error) throw error
+
+  const empresasIds = [...new Set((data ?? []).map((fila) => Number(fila.id_empresa)))]
+  if (!empresasIds.length) return []
+  const { data: empresas, error: errorEmpresas } = await supabase
+    .from('Dim_Empresa')
+    .select('id_empresa,nombre_comercial,descripcion')
+    .in('id_empresa', empresasIds)
+  if (errorEmpresas) throw errorEmpresas
+  const empresasPorId = new Map((empresas ?? []).map((empresa) => [Number(empresa.id_empresa), empresa]))
+  return (data ?? []).map((fila) => ({ ...fila, empresa: empresasPorId.get(Number(fila.id_empresa)) ?? null }))
+}
+
 export async function contarMovimientosTareo(idEmpresa, fechaDesde, fechaHasta) {
   let movimientos = supabase.from('mov_tareo').select('id_mov_tareo', { count: 'exact', head: true })
+  let enProceso = supabase.from('mov_tareo_proceso').select('id_mov_tareo', { count: 'exact', head: true })
   let pendientes = supabase.from('mov_tareo_pendiente').select('id_mov_tareo', { count: 'exact', head: true })
 
   if (idEmpresa) {
     movimientos = movimientos.eq('id_empresa', Number(idEmpresa))
+    enProceso = enProceso.eq('id_empresa', Number(idEmpresa))
     pendientes = pendientes.eq('id_empresa', Number(idEmpresa))
   }
   if (fechaDesde) {
     movimientos = movimientos.gte('fecha_tareo', fechaDesde)
+    enProceso = enProceso.gte('fecha_tareo', fechaDesde)
     pendientes = pendientes.gte('fecha_tareo', fechaDesde)
   }
   if (fechaHasta) {
     movimientos = movimientos.lte('fecha_tareo', fechaHasta)
+    enProceso = enProceso.lte('fecha_tareo', fechaHasta)
     pendientes = pendientes.lte('fecha_tareo', fechaHasta)
   }
 
-  const [resultadoMovimientos, resultadoPendientes] = await Promise.all([movimientos, pendientes])
+  const [resultadoMovimientos, resultadoEnProceso, resultadoPendientes] = await Promise.all([movimientos, enProceso, pendientes])
   if (resultadoMovimientos.error) throw resultadoMovimientos.error
+  if (resultadoEnProceso.error) throw resultadoEnProceso.error
   if (resultadoPendientes.error) throw resultadoPendientes.error
 
   return {
     registros: resultadoMovimientos.count ?? 0,
+    enProceso: resultadoEnProceso.count ?? 0,
     pendientes: resultadoPendientes.count ?? 0,
   }
 }
 
+export async function obtenerOpcionesFiltrosTareo({ pendientes = false, enProceso = false, idEmpresa = null, fechaDesde = null, fechaHasta = null } = {}) {
+  const tabla = pendientes ? 'mov_tareo_pendiente' : enProceso ? 'mov_tareo_proceso' : 'mov_tareo'
+  const registros = []
+  const tamanoPagina = 1000
+  for (let desde = 0; ; desde += tamanoPagina) {
+    let query = supabase.from(tabla).select('id_empresa,cod_cc_pk,cod_cc,cod_cc_pk_maq,cod_cc_maq').order('id_mov_tareo').range(desde, desde + tamanoPagina - 1)
+    if (idEmpresa) query = query.eq('id_empresa', Number(idEmpresa))
+    if (fechaDesde) query = query.gte('fecha_tareo', fechaDesde)
+    if (fechaHasta) query = query.lte('fecha_tareo', fechaHasta)
+    const { data, error } = await query
+    if (error) throw error
+    registros.push(...(data ?? []))
+    if (!data?.length || data.length < tamanoPagina) break
+  }
+
+  const codigos = [...new Set(registros.flatMap((fila) => [fila.cod_cc_pk, fila.cod_cc_pk_maq]).filter((codigo) => codigo != null && Number.isFinite(Number(codigo))).map(Number))]
+  const centrosResult = codigos.length
+    ? await supabase.from('dim_centro_costo').select('cod_cc_pk,cod_cc,desc_cc,id_empresa').in('cod_cc_pk', codigos).range(0, 9999)
+    : { data: [], error: null }
+  if (centrosResult.error) throw centrosResult.error
+  const centrosPorPk = new Map((centrosResult.data ?? []).map((centro) => [Number(centro.cod_cc_pk), centro]))
+  const obtenerOpciones = (pkKey, codKey) => {
+    const opciones = new Map()
+    registros.forEach((fila) => {
+      const pk = Number(fila[pkKey])
+      const codigo = fila[codKey]
+      const centro = Number.isFinite(pk) ? centrosPorPk.get(pk) : null
+      const valor = centro ? `pk:${centro.cod_cc_pk}` : codigo != null ? `cod:${codigo}` : null
+      if (!valor || opciones.has(valor)) return
+      opciones.set(valor, {
+        value: valor,
+        cod_cc_pk: centro?.cod_cc_pk ?? null,
+        cod_cc: centro?.cod_cc ?? codigo ?? null,
+        desc_cc: centro?.desc_cc ?? (codigo != null ? 'Centro no registrado' : ''),
+        id_empresa: centro?.id_empresa ?? fila.id_empresa ?? null,
+      })
+    })
+    return [...opciones.values()].sort((a, b) => String(a.desc_cc || a.cod_cc).localeCompare(String(b.desc_cc || b.cod_cc), 'es-PE', { numeric: true, sensitivity: 'base' }))
+  }
+  return { centros: obtenerOpciones('cod_cc_pk', 'cod_cc'), maquinarias: obtenerOpciones('cod_cc_pk_maq', 'cod_cc_maq') }
+}
+
 export async function listarMovimientosTareo({
   pendientes = false,
+  enProceso = false,
   idEmpresa,
   fechaDesde,
   fechaHasta,
   busqueda = '',
   estado = '',
+  centroCostoFiltro = '',
+  maquinariaFiltro = '',
   pagina = 0,
   filasPorPagina = 25,
 }) {
-  const tabla = pendientes ? 'mov_tareo_pendiente' : 'mov_tareo'
+  const tabla = pendientes ? 'mov_tareo_pendiente' : enProceso ? 'mov_tareo_proceso' : 'mov_tareo'
   const columnas = pendientes
     ? 'id_mov_tareo,nro_parte,cod_cc,cod_cc_maq,hora,fecha_tareo,etapa_tareo,id_empresa,cod_cc_pk,cod_cc_pk_maq,observacion,estado,estado_validacion,errores_validacion'
     : `id_mov_tareo,nro_parte,cod_cc,cod_cc_maq,hora,fecha_tareo,etapa_tareo,id_empresa,cod_cc_pk,cod_cc_pk_maq,observacion,estado,
-       centro_operativo:dim_centro_costo!mov_tareo_centro_costo_fkey(cod_cc,desc_cc),
-       maquinaria:dim_centro_costo!mov_tareo_maquinaria_fkey(cod_cc,desc_cc)`
+       centro_operativo:dim_centro_costo!${tabla}_centro_costo_fkey(cod_cc,desc_cc),
+       maquinaria:dim_centro_costo!${tabla}_maquinaria_fkey(cod_cc,desc_cc)`
 
   let query = supabase
     .from(tabla)
@@ -55,39 +125,14 @@ export async function listarMovimientosTareo({
   if (fechaDesde) query = query.gte('fecha_tareo', fechaDesde)
   if (fechaHasta) query = query.lte('fecha_tareo', fechaHasta)
   if (estado !== '' && estado != null) query = query.eq('estado', Number(estado))
+  for (const [filtro, columnaPk, columnaCodigo] of [[centroCostoFiltro, 'cod_cc_pk', 'cod_cc'], [maquinariaFiltro, 'cod_cc_pk_maq', 'cod_cc_maq']]) {
+    if (!filtro) continue
+    const [tipo, codigo] = String(filtro).split(':')
+    query = query.eq(tipo === 'pk' ? columnaPk : columnaCodigo, Number(codigo))
+  }
   if (busqueda.trim()) {
     const termino = busqueda.trim().replace(/[,.()%*\\]/g, ' ').replace(/\s+/g, ' ').trim()
-    const esCodigo = /^\d+$/.test(termino)
-    let busquedaCentros = supabase
-      .from('dim_centro_costo')
-      .select('cod_cc_pk')
-      .limit(500)
-
-    if (idEmpresa) busquedaCentros = busquedaCentros.eq('id_empresa', Number(idEmpresa))
-    if (esCodigo) {
-      busquedaCentros = busquedaCentros.or(`desc_cc.ilike.%${termino}%,cod_cc.eq.${termino},cod_cc_pk.eq.${termino}`)
-    } else if (termino) {
-      busquedaCentros = busquedaCentros.ilike('desc_cc', `%${termino}%`)
-    }
-
-    const { data: centrosEncontrados, error: errorBusquedaCentros } = await busquedaCentros
-    if (errorBusquedaCentros) throw errorBusquedaCentros
-
-    const clavesCentro = [...new Set((centrosEncontrados ?? []).map((centro) => Number(centro.cod_cc_pk)))]
-    const condiciones = [`nro_parte.ilike.%${termino}%`]
-    if (esCodigo) {
-      condiciones.push(
-        `cod_cc.eq.${termino}`,
-        `cod_cc_maq.eq.${termino}`,
-        `cod_cc_pk.eq.${termino}`,
-        `cod_cc_pk_maq.eq.${termino}`,
-      )
-    }
-    if (clavesCentro.length) {
-      const lista = `(${clavesCentro.join(',')})`
-      condiciones.push(`cod_cc_pk.in.${lista}`, `cod_cc_pk_maq.in.${lista}`)
-    }
-    if (termino) query = query.or(condiciones.join(','))
+    if (termino) query = query.ilike('nro_parte', `%${termino}%`)
   }
 
   const { data, error, count } = await query
@@ -157,13 +202,12 @@ export async function actualizarMovimientoTareo(idMovimiento, valores, pendiente
       .select('id_campana')
       .eq('id_empresa', idEmpresa)
       .eq('cod_cc_pk', centro.cod_cc_pk)
-      .eq('estado', true)
       .lte('fecha_inicio', valores.fecha_tareo)
       .gte('fecha_fin', valores.fecha_tareo)
       .limit(1)
       .maybeSingle()
     if (errorCampana) throw errorCampana
-    if (!campana) throw new Error('El centro de costo Levante no tiene una campaña operativa para la fecha seleccionada.')
+    if (!campana) throw new Error('El centro de costo Levante no tiene una campaña que cubra la fecha seleccionada.')
   }
 
   const tabla = pendientes ? 'mov_tareo_pendiente' : 'mov_tareo'
@@ -199,4 +243,79 @@ export async function actualizarEstadoMovimientoTareo(idMovimiento, estado, pend
 
   if (error) throw error
   if (!data) throw new Error('No se encontró el movimiento o no tienes permiso para cambiar su estado.')
+}
+
+export async function listarPartesTareoActivas(idEmpresa, fechaDesde, fechaHasta) {
+  const filas = []
+  const tamanoPagina = 1000
+  let desde = 0
+
+  while (true) {
+    let query = supabase
+      .from('mov_tareo')
+      .select('id_mov_tareo,nro_parte,fecha_tareo')
+      .eq('id_empresa', Number(idEmpresa))
+      .eq('estado', 1)
+      .gte('fecha_tareo', fechaDesde)
+      .lte('fecha_tareo', fechaHasta)
+      .order('id_mov_tareo')
+      .range(desde, desde + tamanoPagina - 1)
+
+    const { data, error } = await query
+    if (error) throw error
+    filas.push(...(data ?? []))
+    if (!data || data.length < tamanoPagina) break
+    desde += tamanoPagina
+  }
+
+  return filas
+}
+
+export async function buscarPartesTareoAusentes(idEmpresa, fechaDesde, fechaHasta, numerosDelArchivo) {
+  const filas = await listarPartesTareoActivas(idEmpresa, fechaDesde, fechaHasta)
+  const presentes = new Set(numerosDelArchivo.map(String))
+  return filas.filter((fila) => !presentes.has(String(fila.nro_parte)))
+}
+
+export async function importarMovimientosTareo(registros, alProgresar = () => {}) {
+  const tamanoLote = 500
+  const totales = { recibidos: 0, partes_unicas: 0, duplicados_consolidados: 0, ya_existentes: 0, cargados: 0, en_proceso: 0, procesados: 0, pendientes: 0 }
+  const lotes = Math.ceil(registros.length / tamanoLote)
+
+  for (let indice = 0; indice < lotes; indice += 1) {
+    const lote = registros.slice(indice * tamanoLote, (indice + 1) * tamanoLote)
+    const { data, error } = await supabase.functions.invoke('importar-mov-tareo', {
+      body: { id_empresa: lote[0].id_empresa, registros: lote, finalizar: indice === lotes - 1 },
+    })
+    if (error) {
+      const respuesta = error.context instanceof Response ? await error.context.clone().json().catch(() => null) : null
+      const mensaje = data?.error || respuesta?.error || error.message || 'No se pudo importar el lote.'
+      const fallo = new Error(`${mensaje} Se procesaron ${indice} de ${lotes} lotes; puedes volver a cargar el archivo sin duplicar lo ya guardado.`)
+      fallo.avance = { ...totales, lotesProcesados: indice, lotesTotales: lotes }
+      throw fallo
+    }
+    for (const campo of ['recibidos', 'partes_unicas', 'duplicados_consolidados', 'ya_existentes', 'cargados', 'en_proceso', 'procesados', 'pendientes']) {
+      totales[campo] += Number(data?.[campo] ?? 0)
+    }
+    alProgresar({ loteActual: indice + 1, lotesTotales: lotes, registrosProcesados: Math.min((indice + 1) * tamanoLote, registros.length), registrosTotales: registros.length })
+  }
+
+  return totales
+}
+
+export async function inactivarMovimientosTareo(ids, observacion) {
+  const idsUnicos = [...new Set(ids.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))]
+  let actualizados = 0
+  for (let indice = 0; indice < idsUnicos.length; indice += 500) {
+    const lote = idsUnicos.slice(indice, indice + 500)
+    const { data, error } = await supabase
+      .from('mov_tareo')
+      .update({ estado: 0, observacion, updated_at: new Date().toISOString() })
+      .in('id_mov_tareo', lote)
+      .eq('estado', 1)
+      .select('id_mov_tareo')
+    if (error) throw error
+    actualizados += data?.length ?? 0
+  }
+  return actualizados
 }

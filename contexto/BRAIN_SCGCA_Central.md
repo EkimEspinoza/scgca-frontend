@@ -1,6 +1,6 @@
 # BRAIN maestro de SCGCA Central
 
-**Actualizado:** 2026-11-16
+**Actualizado:** 2026-11-18
 **Estado:** documento formal e índice del conocimiento consolidado del proyecto.
 **Regla de actualización:** cuando el usuario diga **BRAIN OK**, incorporar los acuerdos y avances recientes en los archivos pertinentes. Actualizar todos los archivos afectados por un cambio, sin duplicar información innecesariamente.
 
@@ -156,11 +156,18 @@ La dirección visual documentada favorece tarjetas, apariencia suave, filtros cl
 - Siguen abiertas alertas de Advisors y preguntas de auditoría.
 - No se toma como vigente ningún porcentaje histórico de avance (30%, 55% o 58%).
 
+### Avances verificados al 17 de noviembre de 2026
+
+- Supabase Central verificó `Dim_GrupoLabor` (11 filas), `Dim_Labor_Final` (143 filas) y `Dim_TipoJornal` (3 filas). Las tres tienen RLS ADMIN-only y trigger para actualizar `updated_at`; `Dim_Labor_Final` referencia Grupo Labor y Tipo de Jornal.
+- La migración `20261118001519_dim_tipo_jornal_admin_catalog` está registrada en Supabase. Su sello horario UTC corresponde al 17 de noviembre en Lima.
+- En el frontend local se añadieron la vista `/tipo-jornal` al grupo Mano de Obra, CRUD/filtros/exportación Excel y acceso solo ADMIN. Labor Final muestra las descripciones de sus catálogos relacionados.
+- Los cambios de Mano de Obra están locales, sin commit/push. No se ejecutó build ni prueba manual de las vistas. La importación integral de Mov. Tareo también sigue pendiente de verificación.
+
 ## 03. Módulos y reglas del negocio
 
 ### Módulos identificados
 
-En el código: login, cambio de contraseña, Dashboard, Usuarios, Empresas, Variedades, Tipos de Centro de Costo, Tipos de Maquinaria, Etapas de Costo, Tipo de Cambio, Campañas, Comparativos, Centro de Costos, Distribución y una primera versión de Mov_Tareo. La importación Excel y la interfaz para corregir pendientes siguen pendientes.
+En el código: login, cambio de contraseña, Dashboard, Usuarios, Empresas, Variedades, Tipos de Centro de Costo, Tipos de Maquinaria, Etapas de Costo, Tipo de Cambio, Campañas, Comparativos, Centro de Costos, Distribución, Mov. Tareo y Mano de Obra (Grupo Labor, Labor Final y Tipo de Jornal).
 
 En los requisitos también aparecen Almacén, importación de Excel, Distribución mensual, reportes y Power BI. SCIRE y XRAY son integraciones futuras.
 
@@ -277,6 +284,14 @@ BRAIN OK significa consolidar los acuerdos y avances acumulados hasta ese moment
 - **CONFIRMADO — Supabase:** proyecto Central `ajzmheqoanihdujmgbhv`, con 59 migraciones registradas. Las 59 versiones coinciden con los archivos locales; el archivo de importación segura se renombró a `20261112233959_mov_tareo_importacion_segura.sql`. No se reaplicaron migraciones.
 - **CONFIRMADO — Git:** al iniciar, local `main` y `origin/main` estaban en `6c8857e1d5b25922710a39023fea749055e3dec7`. Los cambios de esta jornada quedaron en GitHub `main` y local con el commit `cf5706a` (`feat: unify module UI and Mov Tareo updates`).
 - **PENDIENTE — importación Mov_Tareo:** Supabase cuenta con rutinas backend para importación segura y revalidación, pero el botón Excel del frontend solo permite elegir el archivo; aún no procesa ni guarda su contenido. La carga acumulativa, la revisión de ausencias y la inactivación siguen pendientes.
+
+### Actualización al 18 de noviembre de 2026
+
+- **EN DESARROLLO — Mov_MO:** se construyó localmente la pantalla con tabs Procesados/En proceso/Pendientes/Resumen, filtros, tabla, edición de centro de costo/labor/etapa y cambio de estado. Se agregaron filtros de tipo de centro de costo, centro de costo dependiente y grupo de labor basados en los registros del periodo; solo deben ofrecer centros activos. Pendiente revisar la actualización, crear el flujo de nuevo registro y confirmar el comportamiento integral.
+- **PENDIENTE — filtros Mov_MO:** se ajustó la presentación para seguir la cuadrícula de dos filas de Mov_Tareo y se aumentó el espacio superior para evitar que los rótulos flotantes queden cortados. El usuario pidió tomar Mov_Tareo como referencia. Este ajuste local no se ha validado visualmente en navegador.
+- **PENDIENTE — conformidad integral:** revisar al 100 % Mov_Tareo y Mov_MO y volver a ejecutar la carga de toda la data para comprobar el flujo con el conjunto completo. No se ha iniciado esta nueva carga integral.
+- **CONFIRMADO — Supabase:** Central registra 75 migraciones; los 75 archivos locales coinciden en versión y nombre. Cinco archivos locales se renombraron para hacerlos corresponder a migraciones que ya estaban aplicadas; no se volvió a ejecutar SQL. `importar-mov-tareo` está en versión 2 y sus fuentes locales coinciden con las desplegadas; `crear-usuario` v9 y `actualizar-usuario` v3 siguen activas.
+- **CONFIRMADO — compilación local:** `npm run build` aprobó con Vite 8.2.2 y 11,848 módulos. Se corrigió el import del icono `AddCircleOutlineOutlined` en MovMOForm. `git diff --cached --check` pasó; no se ejecutaron pruebas unitarias ni revisión visual manual.
 
 ### Pendientes vigentes al 16 de noviembre
 

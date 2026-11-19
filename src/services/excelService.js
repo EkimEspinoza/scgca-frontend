@@ -76,6 +76,51 @@ export function prepararDatosComparativosExcel(comparativos) {
   }))
 }
 
+export function prepararDatosGruposLaborExcel(grupos) {
+  return grupos.map((grupo) => ({
+    Código: grupo.Id_Grupo_Labor ?? '',
+    'Descripción del grupo': grupo.DescripcionLabor ?? '',
+    'Tipo de grupo': grupo.TIPO_GRUPO ?? '',
+    Estado: Number(grupo.estado) === 1 ? 'Activo' : 'Inactivo',
+  }))
+}
+
+export function prepararDatosLaboresFinalesExcel(labores) {
+  return labores.map((labor) => ({
+    Código: labor.Id_Lab_Fin ?? '',
+    Descripción: labor.DESCRIPCION ?? '',
+    'Grupo de labor': labor.grupoLabor?.DescripcionLabor ?? '',
+    'Tipo de jornal': labor.tipoJornal?.Descripcion ?? labor.id_Tipo_Jornal ?? '',
+    Estado: Number(labor.estado) === 1 ? 'Activo' : 'Inactivo',
+  }))
+}
+
+export function prepararDatosLaboresExcel(labores) {
+  return labores.map((labor) => ({
+    Código: labor.Id_Lab ?? '',
+    'Labor (SCIRE)': labor.Lab_SCIRE ?? '',
+    'Labor final': labor.laborFinal?.DESCRIPCION ?? labor.Id_Lab_Fin ?? '',
+    Estado: Number(labor.estado) === 1 ? 'Activo' : 'Inactivo',
+  }))
+}
+
+export function prepararDatosTiposJornalExcel(tipos) {
+  return tipos.map((tipo) => ({
+    Código: tipo.Id_Tipo_Jornal ?? '',
+    Descripción: tipo.Descripcion ?? '',
+    Estado: Number(tipo.estado) === 1 ? 'Activo' : 'Inactivo',
+  }))
+}
+
+export function prepararDatosJornalesExcel(periodos, tipos) {
+  return periodos.map((periodo) => ({
+    Inicio: periodo.Inicio ?? '',
+    Fin: periodo.Fin ?? '',
+    ...Object.fromEntries(tipos.map((tipo) => [tipo.Descripcion, periodo.importes[tipo.Id_Tipo_Jornal] ?? ''])),
+    Estado: Number(periodo.estado) === 1 ? 'Activo' : 'Inactivo',
+  }))
+}
+
 function descargarExcel(datos, nombreHoja, nombreArchivo, anchosColumnas) {
   const hoja = XLSX.utils.json_to_sheet(datos)
   hoja['!cols'] = anchosColumnas.map((wch) => ({ wch }))
@@ -154,4 +199,91 @@ export function exportarComparativosExcel(comparativos, nombreArchivo = 'Compara
     nombreArchivo,
     [40, 14],
   )
+}
+
+export function exportarGruposLaborExcel(grupos, nombreArchivo = 'Grupos_de_Labor') {
+  descargarExcel(prepararDatosGruposLaborExcel(grupos), 'Grupos de Labor', nombreArchivo, [12, 42, 16, 14])
+}
+
+export function exportarLaboresFinalesExcel(labores, nombreArchivo = 'Labor_Final') {
+  descargarExcel(prepararDatosLaboresFinalesExcel(labores), 'Labor Final', nombreArchivo, [12, 48, 36, 18, 14])
+}
+
+export function exportarLaboresExcel(labores, nombreArchivo = 'Labor') {
+  descargarExcel(prepararDatosLaboresExcel(labores), 'Labor', nombreArchivo, [12, 55, 55, 14])
+}
+
+export function exportarTiposJornalExcel(tipos, nombreArchivo = 'Tipos_de_Jornal') {
+  descargarExcel(prepararDatosTiposJornalExcel(tipos), 'Tipos de Jornal', nombreArchivo, [12, 42, 14])
+}
+
+export function exportarJornalesExcel(periodos, tipos, nombreArchivo = 'Jornales') {
+  descargarExcel(prepararDatosJornalesExcel(periodos, tipos), 'Jornales', nombreArchivo, [14, 14, ...tipos.map(() => 22), 14])
+}
+
+export function exportarMovimientosMOExcel(filas, pendientes = false) {
+  const etiquetaValidacion = (error) => {
+    const codigo = typeof error === 'string' ? error : error?.codigo ?? error?.code ?? error?.message ?? String(error)
+    return codigo === 'SIN_CAMPANA_EN_FECHA' ? 'No existe una campaña activa para la fecha' : codigo.replaceAll('_', ' ').toLocaleLowerCase('es-PE')
+  }
+  const datos = filas.map((fila) => ({
+    Empresa: fila.empresa?.nombre_comercial ?? fila.empresa?.descripcion ?? fila.id_empresa ?? '',
+    Fecha: fila.fec_labor ?? '',
+    'Tipo de centro de costo': fila.centro?.tipo_cc?.des_tip_cc ?? '',
+    'Centro de costo': [fila.cod_cc, fila.centro?.desc_cc].filter(Boolean).join(' · '),
+    'Grupo de labor': fila.labor?.labor_final?.grupo_labor?.DescripcionLabor ?? '',
+    Labor: fila.labor?.Lab_SCIRE ?? fila.cod_labor ?? '',
+    'Labor SCIRE': fila.labor_scire ?? '',
+    'Importe S/': Number(fila.imp_labor_sol ?? 0),
+    'EsSalud S/': Number(fila.ess_labor_sol ?? 0),
+    'Importe total S/': Number(fila.imp_labor_sol ?? 0) + Number(fila.ess_labor_sol ?? 0),
+    Etapa: fila.etapa_costo ?? '',
+    Observación: fila.obs ?? '',
+    Estado: Number(fila.estado) === 1 ? 'Activo' : 'Inactivo',
+    ...(pendientes ? { Validación: (fila.errores_validacion ?? []).map(etiquetaValidacion).join('; ') || fila.estado_validacion || 'Pendiente de revisión' } : {}),
+  }))
+  const nombre = pendientes ? 'Mov_MO_Pendientes' : 'Mov_MO_Procesados'
+  descargarExcel(datos, pendientes ? 'Pendientes' : 'Procesados', nombre, [24, 14, 30, 46, 36, 36, 46, 16, 16, 20, 26, 36, 14, 46])
+}
+
+export function exportarMovimientosTareoExcel(filas, pendientes = false, nombreArchivo = 'Mov_Tareo') {
+  const etiquetaValidacion = (error) => {
+    const codigo = typeof error === 'string' ? error : error?.codigo ?? error?.code ?? error?.message ?? String(error)
+    return codigo === 'SIN_CAMPANA_EN_FECHA' ? 'No existe una campaña para la fecha' : codigo.replaceAll('_', ' ').toLocaleLowerCase('es-PE')
+  }
+  const datos = filas.map((fila) => ({
+    Empresa: fila.empresa?.nombre_comercial ?? fila.empresa?.descripcion ?? fila.id_empresa ?? '',
+    Fecha: fila.fecha_tareo ?? '',
+    'Nro. parte': fila.nro_parte ?? '',
+    'Centro de costo': [fila.cod_cc, fila.centro_operativo?.desc_cc].filter(Boolean).join(' · '),
+    Maquinaria: [fila.cod_cc_maq, fila.maquinaria?.desc_cc].filter(Boolean).join(' · '),
+    Horas: Number(fila.hora ?? 0),
+    Etapa: fila.etapa_tareo ?? '',
+    Observación: fila.observacion ?? '',
+    Estado: Number(fila.estado) === 1 ? 'Activo' : 'Inactivo',
+    ...(pendientes ? { Validación: (fila.errores_validacion ?? []).map(etiquetaValidacion).join('; ') || fila.estado_validacion || 'Pendiente de revisión' } : {}),
+  }))
+  descargarExcel(datos, pendientes ? 'Pendientes' : 'Tareo', pendientes ? 'Mov_Tareo_Pendientes' : nombreArchivo, [24, 14, 18, 42, 42, 12, 24, 48, 14, 46])
+}
+
+export function exportarResumenMensualMOExcel(filas, nombreArchivo = 'Mov_MO_Resumen') {
+  const datos = filas.map((fila) => ({
+    Empresa: fila.empresa?.nombre_comercial ?? fila.empresa?.descripcion ?? fila.id_empresa ?? '',
+    Año: String(fila.periodo ?? '').slice(0, 4),
+    Mes: fila.periodo ? new Intl.DateTimeFormat('es-PE', { month: 'long' }).format(new Date(`${fila.periodo}T00:00:00`)) : '',
+    'Importe S/': Number(fila.importe_labor ?? 0),
+    'EsSalud S/': Number(fila.ess_labor ?? 0),
+    'Importe total S/': Number(fila.importe_total ?? 0),
+  }))
+  descargarExcel(datos, 'Resumen mensual', nombreArchivo, [30, 12, 18, 18, 18, 20])
+}
+
+export function exportarResumenMensualTareoExcel(filas, nombreArchivo = 'Mov_Tareo_Resumen') {
+  const datos = filas.map((fila) => ({
+    Empresa: fila.empresa?.nombre_comercial ?? fila.empresa?.descripcion ?? fila.id_empresa ?? '',
+    Año: String(fila.periodo ?? '').slice(0, 4),
+    Mes: fila.periodo ? new Intl.DateTimeFormat('es-PE', { month: 'long' }).format(new Date(`${fila.periodo}T00:00:00`)) : '',
+    'Cantidad de registros': Number(fila.cantidad_registros ?? 0),
+  }))
+  descargarExcel(datos, 'Resumen mensual', nombreArchivo, [32, 12, 18, 24])
 }

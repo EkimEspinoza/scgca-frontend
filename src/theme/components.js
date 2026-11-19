@@ -204,6 +204,15 @@ export const componentOverrides = {
    * SELECT
    * ======================================================
    */
+  MuiMenuItem: {
+    styleOverrides: { root: { fontSize: '12px' } },
+  },
+  MuiAutocomplete: {
+    styleOverrides: {
+      input: { fontSize: '12px' },
+      option: { fontSize: '12px', '& .MuiTypography-root': { fontSize: '12px' } },
+    },
+  },
   MuiSelect: {
     defaultProps: {
       size: 'small',
@@ -283,13 +292,13 @@ export const componentOverrides = {
           color: theme.palette.text.primary,
           paddingTop: 6,
           paddingBottom: 6,
-          fontSize: '0.75rem',
+          fontSize: '10px',
         },
         '& .MuiTableCell-head.MuiTableCell-head': {
           paddingTop: 10,
           paddingBottom: 10,
           color: theme.scgca?.themeId === 'dark' ? theme.palette.text.primary : theme.palette.text.secondary,
-          ...(theme.scgca?.themeId === 'light' ? { backgroundColor: 'rgba(245, 246, 248, 0.68)' } : {}),
+          ...(theme.scgca?.themeId === 'light' ? { backgroundColor: 'var(--table-header-bg)' } : {}),
         },
         '& .MuiTableRow-root.MuiTableRow-root.tareo-row-hover:hover > .MuiTableCell-root': {
           backgroundColor: 'var(--table-sticky-hover-bg)',
@@ -303,7 +312,7 @@ export const componentOverrides = {
 
         ...(theme.scgca?.themeId === 'dark' ? {
           '& .MuiTableCell-head.MuiTableCell-head': {
-            backgroundColor: 'rgba(18, 18, 18, 0.56)',
+            backgroundColor: 'var(--table-header-bg)',
             color: theme.palette.text.primary,
             fontSize: '0.68rem',
             fontWeight: 700,
@@ -329,6 +338,17 @@ export const componentOverrides = {
 
   /*
    * ======================================================
+   * TABLE
+   * ======================================================
+   */
+  MuiTable: {
+    defaultProps: {
+      size: 'small',
+    },
+  },
+
+  /*
+   * ======================================================
    * TABLE HEAD
    * ======================================================
    */
@@ -351,13 +371,15 @@ export const componentOverrides = {
 
         padding: '6px 12px',
 
-        fontSize: '0.75rem',
+        fontSize: '10px',
 
         color: theme.palette.text.primary,
       }),
 
       head: ({ theme }) => ({
         padding: '11px 14px',
+
+        fontSize: '0.75rem',
 
         fontWeight: 700,
 
@@ -660,7 +682,7 @@ componentOverrides.MuiCssBaseline.styleOverrides = (theme) => {
       '--table-header-bg': theme.scgca?.surfaces?.elevated ?? theme.palette.background.paper,
       '--table-sticky-bg': theme.palette.background.paper,
       '--table-sticky-even-bg': theme.palette.background.paper,
-      '--table-sticky-hover-bg': theme.scgca?.tableHover ?? theme.palette.action.hover,
+      '--table-sticky-hover-bg': theme.scgca?.tableStickyHover ?? theme.palette.background.paper,
       '--table-row-divider': theme.scgca?.surfaces?.rowDivider ?? theme.palette.divider,
       '--table-selected-bg': theme.palette.action.selected,
       '--radius-card': `${tokens.radius.medium}px`,
@@ -770,7 +792,7 @@ componentOverrides.MuiCssBaseline.styleOverrides = (theme) => {
       boxSizing: 'border-box',
       overflow: 'hidden',
       '& .MuiInputBase-root': { fontSize: '0.75rem', minHeight: 36 },
-      '& .MuiInputLabel-root, & .MuiMenuItem-root': { fontSize: '0.75rem' },
+      '& .MuiInputLabel-root': { fontSize: '0.75rem' },
       '& .MuiButton-root': { minHeight: 36, borderRadius: `${tokens.radius.small}px`, whiteSpace: 'nowrap' },
       '& .MuiIconButton-root:not(.Mui-disabled)': { color: theme.palette.text.secondary },
       '& .MuiIconButton-root:not(.Mui-disabled):hover': { backgroundColor: theme.palette.action.hover, color: theme.palette.text.primary },
@@ -791,6 +813,15 @@ componentOverrides.MuiCssBaseline.styleOverrides = (theme) => {
       gap: '8px',
       flexWrap: 'wrap',
     },
+    '.mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filters__row--catalog': { gridTemplateColumns: '120px minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr)' },
+    '.mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filters__row--controls': { gridTemplateColumns: 'minmax(220px, 1.5fr) minmax(190px, 220px) 128px auto', alignItems: 'center' },
+    '.mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filter__year, .mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filter__type, .mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filter__center, .mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filter__group, .mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filter__state, .mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filter__search, .mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filter__dates': { width: '100%', minWidth: 0 },
+    '.mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filters__actions': { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', minWidth: 0 },
+    '.mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filters__actions .MuiButton-root': { minWidth: 0, paddingInline: '8px', fontSize: '12px' },
+    '.mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filters__actions .MuiIconButton-root': { width: 36, height: 36 },
+    '.mov-mo-filters--summary': { gridTemplateColumns: '120px minmax(190px, 220px) 128px minmax(0, 1fr)', alignItems: 'center' },
+    '.mov-mo-filters--summary .mov-mo-filter__year, .mov-mo-filters--summary .mov-mo-filter__dates, .mov-mo-filters--summary .mov-mo-filter__state': { width: '100%', minWidth: 0 },
+    '.mov-mo-filters--summary .mov-mo-filters__actions': { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', minWidth: 0 },
     '.app-filters-layout': { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', alignItems: 'center', gap: '12px', width: '100%', minWidth: 0 },
     '.app-filters-layout--with-actions': { gridTemplateColumns: 'minmax(0, 1fr) auto auto' },
     '.app-filters-controls': { minWidth: 0 },
@@ -810,15 +841,20 @@ componentOverrides.MuiCssBaseline.styleOverrides = (theme) => {
       '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover, &:focus-visible, &:active': { transform: 'none' } },
     },
     '.usuarios-filters .MuiOutlinedInput-root.Mui-focused': { boxShadow: 'none' },
-    '.tareo-filters-panel.tareo-filters-panel': { width: '100%', maxWidth: '100%', padding: '12px', borderRadius: `${tokens.radius.medium}px`, border: '1px solid', borderColor: theme.palette.divider, backgroundColor: theme.palette.background.paper, boxSizing: 'border-box', overflow: 'hidden', '& .MuiInputBase-root': { fontSize: '0.75rem', minHeight: 36 }, '& .MuiInputLabel-root, & .MuiMenuItem-root': { fontSize: '0.75rem' } },
-    '.tareo-filters-panel__layout': { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto auto', alignItems: 'center', gap: '12px', width: '100%', minWidth: 0 },
-    '.tareo-filters-panel__controls': { display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 },
-    '.tareo-filters-panel__year': { flex: '0 0 120px', minWidth: 110 },
-    '.tareo-filters-panel__state': { flex: '0 0 128px', minWidth: 115 },
-    '.tareo-filters-panel__search': { flex: '1 1 280px', minWidth: 155, '& .MuiInputBase-root': { backgroundColor: theme.palette.background.paper } },
-    '.tareo-filters-panel__dates': { flex: '0 0 220px', minWidth: 180, borderRadius: `${tokens.radius.small}px`, color: theme.palette.text.secondary },
-    '.tareo-filters-panel__divider': { height: 36, borderColor: theme.palette.divider },
-    '.tareo-filters-panel__actions': { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' },
+    '.tareo-filters-panel.tareo-filters-panel': { width: '100%', maxWidth: '100%', padding: '12px', borderRadius: `${tokens.radius.medium}px`, border: '1px solid', borderColor: theme.palette.divider, backgroundColor: theme.palette.background.paper, boxSizing: 'border-box', overflow: 'hidden', '& .MuiInputBase-root': { fontSize: '0.75rem', minHeight: 36 }, '& .MuiInputLabel-root': { fontSize: '0.75rem' } },
+    '.tareo-filters-panel__layout': { display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '8px', width: '100%', minWidth: 0 },
+    '.tareo-filters-panel__controls': { display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 },
+    '.tareo-filters-panel__row': { display: 'grid', alignItems: 'center', gap: '8px', width: '100%', minWidth: 0 },
+    '.tareo-filters-panel__row--primary': { gridTemplateColumns: '120px minmax(0, 1fr) minmax(0, 1fr)' },
+    '.tareo-filters-panel__row--secondary': { gridTemplateColumns: 'minmax(250px, 1.5fr) minmax(180px, 220px) 128px auto auto', alignItems: 'center' },
+    '.tareo-filters-panel--summary .tareo-filters-panel__controls': { display: 'grid', gridTemplateColumns: '120px minmax(180px, 220px) minmax(0, 1fr)', alignItems: 'center' },
+    '.tareo-filters-panel--summary .tareo-filters-panel__row': { display: 'contents' },
+    '.tareo-filters-panel__year': { width: '100%', minWidth: 0 },
+    '.tareo-filters-panel__state': { width: '100%', minWidth: 0 },
+    '.tareo-filters-panel__center, .tareo-filters-panel__machinery': { width: '100%', minWidth: 0, '& .MuiInputBase-root': { backgroundColor: theme.palette.background.paper } },
+    '.tareo-filters-panel__search': { width: '100%', minWidth: 0, '& .MuiInputBase-root': { backgroundColor: theme.palette.background.paper } },
+    '.tareo-filters-panel__dates': { width: '100%', minWidth: 0, borderRadius: `${tokens.radius.small}px`, color: theme.palette.text.secondary },
+    '.tareo-filters-panel__actions': { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', minWidth: 0 },
     '.tareo-filters-panel__upload, .app-excel-action-button': { minWidth: 0, height: 40, borderRadius: `${tokens.radius.small}px`, color: theme.palette.text.secondary, borderColor: theme.palette.divider, '&:hover': { borderColor: theme.palette.text.secondary, backgroundColor: theme.palette.action.hover } },
     '.tareo-filters-panel__active': { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid', borderColor: theme.palette.divider },
     '.tareo-filters-panel__active-chip': { maxWidth: 280, borderRadius: `${tokens.radius.small}px`, borderColor: theme.palette.divider, color: theme.palette.text.secondary, '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
@@ -827,9 +863,14 @@ componentOverrides.MuiCssBaseline.styleOverrides = (theme) => {
       '.app-filters-layout, .app-filters-layout--with-actions': { gridTemplateColumns: 'minmax(0, 1fr)' },
       '.app-filters-controls .app-filters-row': { flexWrap: 'wrap' },
       '.app-filters-divider': { width: '100%', height: 0, borderTop: '1px solid', borderLeft: 0 },
-      '.tareo-filters-panel__layout': { gridTemplateColumns: 'minmax(0, 1fr)' },
-      '.tareo-filters-panel__controls': { flexWrap: 'wrap' },
-      '.tareo-filters-panel__divider': { width: '100%', height: 0, borderTop: '1px solid', borderLeft: 0 },
+      '.tareo-filters-panel__row--primary': { gridTemplateColumns: '120px repeat(2, minmax(0, 1fr))' },
+      '.mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filters__row--catalog': { gridTemplateColumns: '100px repeat(3, minmax(0, 1fr))' },
+      '.mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filters__row--controls': { gridTemplateColumns: 'minmax(0, 1.4fr) minmax(170px, 200px) 110px auto' },
+      '.mov-mo-filters--summary': { gridTemplateColumns: '100px minmax(170px, 200px) 110px minmax(0, 1fr)' },
+      '.tareo-filters-panel__row--secondary': { gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) 128px auto', alignItems: 'center' },
+      '.tareo-filters-panel__actions': { gridColumn: '1 / -1' },
+      '.tareo-filters-panel--summary .tareo-filters-panel__controls': { gridTemplateColumns: '120px minmax(180px, 220px) minmax(0, 1fr)' },
+      '.tareo-filters-panel--summary .tareo-filters-panel__actions': { gridColumn: 'auto' },
     },
     '.app-page-header': { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', minWidth: 0, marginBottom: '12px' },
     '.app-page-header__main': { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
@@ -890,8 +931,13 @@ componentOverrides.MuiCssBaseline.styleOverrides = (theme) => {
       '.app-filters-actions > .MuiButton-root': { flex: '1 1 auto' },
       '.app-active-filter-chip': { maxWidth: '100%' },
       '.tareo-filters-panel': { padding: '10px' },
-      '.tareo-filters-panel__controls': { alignItems: 'stretch', flexDirection: 'column' },
-      '.tareo-filters-panel__year, .tareo-filters-panel__state, .tareo-filters-panel__search, .tareo-filters-panel__dates': { width: '100%', minWidth: 0, flex: '1 1 auto' },
+      '.mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filters__row': { gridTemplateColumns: 'minmax(0, 1fr)', gap: '8px' },
+      '.mov-mo-filters:not(.mov-mo-filters--summary) .mov-mo-filters__actions': { justifyContent: 'flex-end', flexWrap: 'wrap' },
+      '.mov-mo-filters--summary': { gridTemplateColumns: 'minmax(0, 1fr)' },
+      '.mov-mo-filters--summary .mov-mo-filters__actions': { justifyContent: 'flex-end', flexWrap: 'wrap' },
+      '.tareo-filters-panel__row--primary, .tareo-filters-panel__row--secondary': { gridTemplateColumns: 'minmax(0, 1fr)' },
+      '.tareo-filters-panel--summary .tareo-filters-panel__controls': { gridTemplateColumns: 'minmax(0, 1fr)' },
+      '.tareo-filters-panel__year, .tareo-filters-panel__state, .tareo-filters-panel__center, .tareo-filters-panel__machinery, .tareo-filters-panel__search, .tareo-filters-panel__dates': { width: '100%', minWidth: 0, flex: '1 1 auto' },
       '.tareo-filters-panel__actions': { width: '100%' },
       '.tareo-filters-panel__upload': { width: '100%' },
       '.tareo-filters-panel__active-chip': { maxWidth: '100%' },
@@ -937,19 +983,20 @@ componentOverrides.MuiOutlinedInput.styleOverrides.root = ({ theme }) => ({
   '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: theme.scgca?.focusColor ?? theme.palette.primary.main, borderWidth: 2 },
   '&.Mui-focused': { outline: 'none', boxShadow: `0 0 0 3px ${alpha(theme.scgca?.focusColor ?? theme.palette.primary.main, 0.18)}` },
 })
-componentOverrides.MuiSelect.styleOverrides.select = { minHeight: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }
+componentOverrides.MuiSelect.styleOverrides.select = { minHeight: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', fontSize: '12px' }
 
 componentOverrides.MuiTableContainer.styleOverrides.root = ({ theme }) => ({
   border: '1px solid', borderColor: theme.palette.divider, borderRadius: tokens.radius.medium,
   boxShadow: 'none', backgroundColor: theme.palette.background.paper, overflowX: 'auto',
-  '& .MuiTableCell-root': { borderColor: 'var(--table-row-divider)', color: theme.palette.text.primary, padding: '12px 14px', fontSize: '0.875rem' },
+  '& .MuiTableCell-root': { borderColor: 'var(--table-row-divider)', color: theme.palette.text.primary, padding: '12px 14px', fontSize: '10px' },
   '& .MuiTableCell-head': { paddingTop: 11, paddingBottom: 11, color: theme.palette.text.secondary, backgroundColor: 'var(--table-header-bg)', fontSize: '0.8rem', fontWeight: 500, letterSpacing: 0, textTransform: 'none' },
-  '& .tareo-table .MuiTableCell-body': { fontSize: '0.75rem', lineHeight: 1.4, padding: '6px 14px', '& .MuiTypography-root': { fontSize: 'inherit', lineHeight: 'inherit' } },
+  '& .tareo-table .MuiTableCell-body': { fontSize: '10px', lineHeight: 1.4, padding: '6px 14px', '& .MuiTypography-root': { fontSize: 'inherit', lineHeight: 'inherit' } },
   '& .tareo-table .MuiTableCell-head': { fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.35 },
   '& .MuiTableRow-root': { backgroundColor: theme.palette.background.paper, transition: 'background-color 120ms ease' },
   '& .MuiTableRow-root:hover > .MuiTableCell-root': { backgroundColor: theme.palette.action.hover },
   '& .MuiTableCell-root.tareo-sticky-cell': { backgroundColor: 'var(--table-sticky-bg)' },
   '& .MuiTableRow-root:hover > .MuiTableCell-root.tareo-sticky-cell': { backgroundColor: 'var(--table-sticky-hover-bg)' },
+  '& .MuiTableRow-root.Mui-selected > .MuiTableCell-root.tareo-sticky-cell': { backgroundColor: 'var(--table-sticky-hover-bg)' },
   '& .tareo-table .MuiTableCell-head': { backgroundColor: 'var(--table-header-bg)', backgroundImage: 'none', backdropFilter: 'none', WebkitBackdropFilter: 'none' },
 })
 
@@ -975,7 +1022,7 @@ componentOverrides.MuiTableContainer.styleOverrides.root = (args) => {
         height: 36,
         boxSizing: 'border-box',
         padding: '6px 14px',
-        fontSize: '0.75rem',
+        fontSize: '10px',
         lineHeight: 1.4,
         '& .MuiTypography-root': { fontSize: 'inherit', lineHeight: 'inherit' },
       },
@@ -983,7 +1030,7 @@ componentOverrides.MuiTableContainer.styleOverrides.root = (args) => {
         height: 36,
         boxSizing: 'border-box',
         padding: '6px 14px',
-        fontSize: '0.75rem',
+        fontSize: '10px',
         lineHeight: 1.4,
       },
       '& .MuiTable-root .MuiTableCell-root.app-table-action-cell': { position: 'relative', padding: 0 },

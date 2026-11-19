@@ -41,7 +41,13 @@ const PermisosPorModulo = lazy(() => import('./pages/accesos/PermisosPorModulo')
 const Campanas = lazy(() => import('./pages/maestros/Campanas'))
 const Comparativos = lazy(() => import('./pages/maestros/Comparativos'))
 const Distribucion = lazy(() => import('./pages/procesos/Distribucion'))
-const Tareo = lazy(() => import('./pages/Tareo'))
+const Tareo = lazy(() => import('./pages/tareo/Tareo'))
+const GrupoLabor = lazy(() => import('./pages/manoObra/GrupoLabor'))
+const LaborFinal = lazy(() => import('./pages/manoObra/LaborFinal'))
+const Labor = lazy(() => import('./pages/manoObra/Labor'))
+const Jornal = lazy(() => import('./pages/manoObra/Jornal'))
+const TipoJornal = lazy(() => import('./pages/manoObra/TipoJornal'))
+const MovMO = lazy(() => import('./pages/manoObra/MovMO'))
 
 /*
  * =========================================
@@ -911,9 +917,21 @@ function App() {
         path="/mov-tareo"
         element={
           <ProtectedRoute>
-            <PermissionRoute moduleCode="MOV_TAREO" requiredLevel="QUERY">
+            <PermissionRoute requiredPermissions={['ADMIN']} moduleCode="MOV_TAREO" requiredLevel="QUERY">
               <MainLayout onLogout={logout}>
                 <Tareo />
+              </MainLayout>
+            </PermissionRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mov-mo"
+        element={
+          <ProtectedRoute>
+            <PermissionRoute requiredPermissions={['ADMIN']}>
+              <MainLayout onLogout={logout}>
+                <MovMO />
               </MainLayout>
             </PermissionRoute>
           </ProtectedRoute>
@@ -1026,6 +1044,66 @@ function App() {
                 onLogout={logout}
               >
                 <EtapasCosto />
+              </MainLayout>
+            </PermissionRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/grupo-labor"
+        element={
+          <ProtectedRoute>
+            <PermissionRoute requiredPermissions={['ADMIN']}>
+              <MainLayout onLogout={logout}>
+                <GrupoLabor />
+              </MainLayout>
+            </PermissionRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/labor-final"
+        element={
+          <ProtectedRoute>
+            <PermissionRoute requiredPermissions={['ADMIN']}>
+              <MainLayout onLogout={logout}>
+                <LaborFinal />
+              </MainLayout>
+            </PermissionRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tipo-jornal"
+        element={
+          <ProtectedRoute>
+            <PermissionRoute requiredPermissions={['ADMIN']}>
+              <MainLayout onLogout={logout}>
+                <TipoJornal />
+              </MainLayout>
+            </PermissionRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/jornal"
+        element={
+          <ProtectedRoute>
+            <PermissionRoute requiredPermissions={['ADMIN']}>
+              <MainLayout onLogout={logout}>
+                <Jornal />
+              </MainLayout>
+            </PermissionRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/labor"
+        element={
+          <ProtectedRoute>
+            <PermissionRoute requiredPermissions={['ADMIN']}>
+              <MainLayout onLogout={logout}>
+                <Labor />
               </MainLayout>
             </PermissionRoute>
           </ProtectedRoute>

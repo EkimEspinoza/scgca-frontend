@@ -242,11 +242,6 @@ function Header({
                 handleEmpresaChange
               }
               sx={{
-                fontSize: {
-                  xs: 13,
-                  sm: 14,
-                },
-
                 fontWeight: 600,
 
                 backgroundColor:

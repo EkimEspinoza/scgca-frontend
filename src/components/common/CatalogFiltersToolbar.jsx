@@ -7,16 +7,16 @@ import FiltersToolbar from './FiltersToolbar'
 export default function CatalogFiltersToolbar({
   title, description, loading, totalRegistros, busqueda, filtroEstado, error,
   searchValue = busqueda, searchPlaceholder, searchLabel, createLabel, canCreate = true,
-  onExportar, onCreate, onCambioBusqueda, onCambioEstado, onCerrarError, showInlineClear = false,
+  onExportar, onCreate, onCambioBusqueda, onCambioEstado, onCerrarError, showInlineClear = false, hideSearchChip = false,
 }) {
   const activeFilters = []
-  if (busqueda?.trim()) activeFilters.push({ id: 'busqueda', label: `Búsqueda: ${busqueda}`, onRemove: () => onCambioBusqueda({ target: { value: '' } }) })
+  if (busqueda?.trim() && !hideSearchChip) activeFilters.push({ id: 'busqueda', label: `Búsqueda: ${busqueda}`, onRemove: () => onCambioBusqueda({ target: { value: '' } }) })
   if (filtroEstado && filtroEstado !== 'todos') {
     const stateLabel = { activos: 'Activo', inactivos: 'Inactivo' }[filtroEstado] ?? filtroEstado
     activeFilters.push({ id: 'estado', label: `Estado: ${stateLabel}`, onRemove: () => onCambioEstado('todos') })
   }
 
-  const clear = activeFilters.length ? () => {
+  const clear = (busqueda?.trim() || (filtroEstado && filtroEstado !== 'todos')) ? () => {
     if (busqueda?.trim()) onCambioBusqueda({ target: { value: '' } })
     if (filtroEstado && filtroEstado !== 'todos') onCambioEstado('todos')
   } : undefined

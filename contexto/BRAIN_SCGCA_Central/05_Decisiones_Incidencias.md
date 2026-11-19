@@ -1,6 +1,12 @@
 # Decisiones e incidencias — SCGCA Central
 
-**Actualizado:** 2026-11-16
+**Actualizado:** 2026-11-18
+
+## Actualización del 18 de noviembre de 2026
+
+- **Mov_MO — diseño de filtros:** usar como referencia el panel de filtros de Mov_Tareo. Mantener los controles agrupados en dos filas en escritorio, con Año/Tipo de centro de costo/Centro de costo/Grupo de labor en la primera y búsqueda/fechas/estado/acciones en la segunda. Evitar scroll horizontal anidado y reservar espacio superior para las etiquetas flotantes. El cambio visual quedó en local; pendiente validación en navegador.
+- **Mov_MO — siguiente paso:** revisar Actualizar, implementar Nuevo registro y realizar una validación completa de ambos módulos antes de volver a procesar toda la data. La carga integral no debe duplicar registros existentes.
+- **Alineación Supabase — 18 de noviembre:** Central y local tienen 75 migraciones con versiones/nombres coincidentes tras renombrar cinco archivos locales cuyas migraciones ya estaban aplicadas. No se ejecutó SQL adicional. La Edge Function `importar-mov-tareo` está en v2 y sus archivos locales coinciden con lo desplegado; `crear-usuario` v9 y `actualizar-usuario` v3 están activas.
 
 ## 09. Decisiones, incidencias e historial del BRAIN
 
@@ -85,3 +91,4 @@ Mantener este archivo como memoria consolidada. Distinguir hechos actuales de pr
 
 - **2026-11-16 — Alineación y diseño global:** se extendieron estilos compartidos de filtros, acciones, limpieza, encabezados y tablas; además se corrigió la superposición de celdas fijas sobre los encabezados Empresa/Fecha/Acciones de Mov_Tareo. El usuario confirmó el último ajuste visual. Build aprobado; sin revisión visual adicional en navegador.
 - **2026-11-16 — Supabase/migraciones:** Supabase Central (`ajzmheqoanihdujmgbhv`) registra 59 migraciones y sus versiones coinciden con los 59 archivos SQL locales. Se corrigió el nombre/versión local de `20261112233959_mov_tareo_importacion_segura.sql`; no se reaplicó SQL. La importación Excel continúa pendiente en frontend aunque las rutinas backend estén desplegadas.
+- **2026-11-17 — Mano de Obra:** se creó `Dim_TipoJornal` con Jornal Básico, Jornal Operador Maquinaria y Jefes de Campo o Administrativos; todos activos y con fechas. RLS limita todas las operaciones a ADMIN y `Dim_Labor_Final.id_Tipo_Jornal` quedó como FK. Se agregó `/tipo-jornal` al grupo Mano de Obra y la ruta/vista restringidas a ADMIN; Labor Final muestra nombres de Grupo Labor y Tipo de Jornal. La migración remota es `20261118001519_dim_tipo_jornal_admin_catalog` (sello UTC; día local Lima 17/11). No se hizo build, prueba manual ni sincronización GitHub.

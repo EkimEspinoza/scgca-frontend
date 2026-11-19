@@ -1,6 +1,6 @@
 # Plan de trabajo y seguimiento — SCGCA Central
 
-**Actualizado:** 2026-11-16
+**Actualizado:** 2026-11-18
 La lista registra pendientes y seguimiento. La actualización visual de Centro de Costos y Campañas quedó publicada. Tipo de Cambio usa tres decimales y quedó preparado para ingreso manual mientras se identifica una API de SUNAT estable.
 
 ## 07. Prioridades y plan de trabajo
@@ -30,10 +30,19 @@ Estos temas no constituyen autorización para modificar producción.
 | R-06 | Modularizar seis pantallas de maestros y reducir la carga inicial con `import()` dinámico para Excel y páginas diferidas | 2026-11-04 | Incremental | Build local aprobado; pendiente publicar en GitHub | No se ejecutaron pruebas unitarias, lint ni medición de red en navegador. El chunk de Supabase continúa en 332.09 KB y requiere medición de carga real si se desea optimizarlo después. | Build Vite 8.2.2: entrada 353.86 KB; `excelService` 331.07 KB diferido; sin advertencia >500 KB. `git diff --check` sin errores |
 | R-07 | Completar y rediseñar Distribución mensual desde referencia visual multimes | 2026-11-05 | Incremental | Código local integrado en `main`; esquema/migraciones aplicados en Supabase; validación manual pendiente | Validar selector mínimo 2017, matriz mensual, edición, borrador, cierres independientes y reapertura ADMIN. Máximo 3 meses por rango. Importación/exportación Excel quedan como implementaciones futuras; no se muestra variedad ni se filtra por campaña. | Build local aprobado; consulta SQL confirmó 0.0000 % al centro excluido y 25.0000 % a los otros cuatro. Las 49 migraciones locales coinciden por versión con Supabase. |
 | R-08 | Implementar Mov_Tareo para registrar horas trabajadas de maquinaria por centro de costo de inversión Campo, Vivero y LEVANTE | 2026-11-05 | Incremental | Primera versión en `main`; UI global unificada; backend de importación segura desplegado; interfaz de importación pendiente | Implementar importación acumulativa por empresa/año con clave `(id_empresa, nro_parte)`, sin volver a insertar ni sobrescribir existentes. Validar las filas nuevas; detectar partes ausentes para revisión e inactivación con historial. Completar UI de importación, Pendientes e historial; revisar filtro inicial de año/fechas y evaluar tarjetas mensuales. | Build 2026-11-16 aprobado (11,809 módulos). Las 59 migraciones locales coinciden con Supabase. |
+| R-09 | Crear vistas ADMIN para catálogos de Mano de Obra: Grupo Labor, Labor Final y Tipo de Jornal | Acordado 2026-11-17 | Incremental | Tablas/RLS en Supabase y vistas implementadas localmente; pendiente build y validación manual | Probar CRUD, filtros, cambio de estado, exportación y visualización de descripciones relacionadas. Cambios sin commit/push. | Migración Supabase `20261118001519`; consulta SQL verificó filas, RLS, FK y triggers. |
 PF-010 está implementada e integrada en GitHub `main`; pendiente validar manualmente los flujos de catálogo y asignación, y publicar el frontend en hosting. La matriz de cuentas de prueba EMPRESAS sigue pendiente de alinear.
 
 Mover al plan solo propuestas acordadas. Mantener su historial y estado en el archivo de propuestas.
 
 ## Trabajo en curso
 
-El módulo en curso es **Mov_Tareo**. La línea visual compartida cubre encabezados, filtros, tablas, acciones y temas claro/oscuro. Supabase registra rutinas backend para importación segura, pero falta conectar el flujo Excel de la interfaz. Próximos pasos: importación acumulativa, revisión de partes ausentes, resolución de Pendientes e historial; después revisar el filtro inicial de año/fechas y evaluar tarjetas mensuales. La verificación visual en navegador sigue pendiente.
+El trabajo activo abarca **Mov_Tareo** e **inicio de Mano de Obra**. Para Tareo falta la prueba integral de importación Excel y validar resolución de pendientes/partes ausentes. En Mano de Obra, las tablas y vistas ADMIN de Grupo Labor, Labor Final y Tipo de Jornal están implementadas localmente; siguen pendientes compilación y revisión manual. Los cambios del día no se han publicado en GitHub.
+
+### Pendientes para la siguiente jornada — 2026-11-19
+
+1. Revisar y completar la acción **Actualizar** en Mov_MO.
+2. Diseñar e implementar **Nuevo registro** en Mov_MO.
+3. Dar conformidad funcional completa a Mov_Tareo y Mov_MO.
+4. Volver a procesar/cargar toda la data para validar ambos flujos con el conjunto completo; definir antes el alcance y evitar duplicar registros ya procesados.
+5. Validar visualmente en navegador el ajuste de los filtros de Mov_MO inspirado en Mov_Tareo. El build de producción aprobó; no se ejecutaron pruebas unitarias ni revisión visual manual.

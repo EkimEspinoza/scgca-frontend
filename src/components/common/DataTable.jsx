@@ -73,7 +73,6 @@ function DataTable({
                                 sx={(theme) => ({
                                     fontWeight: 700,
                                     color: 'text.secondary',
-                                    py: theme.scgca?.themeId === 'dark' ? 1.5 : 1,
                                     ...(theme.scgca?.themeId === 'dark' ? {
                                         fontSize: '0.68rem',
                                         letterSpacing: '0.08em',
@@ -137,12 +136,11 @@ function DataTable({
                                     <TableCell
                                         key={column.key}
                                         align={column.align || 'left'}
-                                        sx={(theme) => ({
-                                            py: theme.scgca?.themeId === 'dark' ? 1.5 : 1,
+                                        sx={{
                                             borderBottom: '1px solid',
                                             borderColor: 'divider',
                                             ...(column.cellSx || {}),
-                                        })}
+                                        }}
                                     >
                                         {typeof column.render === 'function'
                                             ? column.render(row)

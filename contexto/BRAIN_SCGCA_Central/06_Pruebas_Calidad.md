@@ -1,10 +1,14 @@
 # Pruebas y calidad — SCGCA Central
 
-**Actualizado:** 2026-11-16
+**Actualizado:** 2026-11-17
 
 ## 08. Pruebas y calidad
 
 ### Evidencia reciente
+
+- **2026-11-18, alineación local/Supabase:** `npm run build` aprobó con Vite 8.2.2 y 11,848 módulos; `git diff --cached --check` no encontró errores. Supabase Central y local tienen 75 migraciones con versiones y nombres coincidentes. `importar-mov-tareo` v2 se comparó archivo por archivo y coincide con local. No se ejecutaron pruebas unitarias ni revisión visual manual.
+
+- **2026-11-17, Mano de Obra/Supabase:** se verificaron las cuatro políticas ADMIN-only de cada tabla `Dim_GrupoLabor`, `Dim_Labor_Final` y `Dim_TipoJornal`; triggers `updated_at`, FK de Tipo de Jornal a Labor Final, y tres filas activas con fechas. Verificación SQL de metadatos/datos aprobada. No se ejecutó build ni prueba manual de las vistas; interfaz NO VERIFICADA.
 
 - **2026-11-16, alineación UI/Supabase:** `npm run build` aprobado con Vite 8.2.2 y 11,809 módulos transformados. `git diff --check` sin errores de whitespace (avisos LF/CRLF). Supabase Central registra 59 migraciones y sus versiones coinciden con los archivos SQL locales. No se ejecutaron pruebas unitarias, lint ni revisión visual manual. El build no equivale a despliegue en hosting.
 
