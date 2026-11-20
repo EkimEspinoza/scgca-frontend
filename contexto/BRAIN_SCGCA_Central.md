@@ -301,7 +301,7 @@ BRAIN OK significa consolidar los acuerdos y avances acumulados hasta ese moment
 - **CONFIRMADO — Mov_Tareo:** las observaciones de importación se limitan a 20 caracteres en la Edge Function `importar-mov-tareo` v3 y en los seis registros operativos mediante `20261119210956_restringir_observaciones_a_20_caracteres`. Se añadieron validaciones de tipos de centro y se conserva el comportamiento histórico de registros inactivos en las migraciones `20261119233816`, `20261119234226` y `20261119235737`.
 - **CONFIRMADO — sincronización de Supabase:** Central está activo. Supabase registra 80 migraciones; los 80 archivos locales coinciden exactamente por versión y nombre. `importar-mov-tareo` está en v3 con `verify_jwt=true`; `crear-usuario` v9 y `actualizar-usuario` v3 siguen activas.
 - **CONFIRMADO — compilación local:** `npm run build` pasó con Vite 8.2.2 y 11,849 módulos. `git diff --check` terminó sin errores; mostró solo avisos LF/CRLF. No se ejecutaron pruebas unitarias, lint ni pruebas manuales en navegador.
-- **PENDIENTE — GitHub:** al preparar este cierre, el código local aún tenía cambios sin commit; publicar los cambios y el BRAIN en `main` es parte del cierre solicitado. El push no publica el frontend en un hosting.
+- **CONFIRMADO — GitHub:** los cambios de código, migraciones y función se publicaron en `main` con el commit `c7211ff` (`feat: finalize MovMO labor filters and Tareo validation`). El BRAIN actualizado se sincroniza en el cierre documental siguiente. El push no publica el frontend en un hosting.
 
 ### Pendientes vigentes al 16 de noviembre
 
