@@ -9,6 +9,7 @@ const ALIAS_COLUMNAS = {
   CODCCPK: 'cod_cc_pk', CODCCPKMAQ: 'cod_cc_pk_maq', CODPKMAQ: 'cod_cc_pk_maq',
   OBSERVACION: 'observacion', ESTADO: 'estado',
 }
+const MAX_CARACTERES_OBSERVACION = 20
 
 function normalizarEncabezado(valor) {
   return String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '')
@@ -96,6 +97,7 @@ export async function leerArchivoTareo(file) {
     if (!Number.isFinite(registro.hora) || registro.hora < 0 || Math.abs(registro.hora * 100 - Math.round(registro.hora * 100)) > 1e-8) validaciones.push('HORA debe ser un número no negativo de hasta 2 decimales')
     if (!registro.fecha_tareo) validaciones.push('FECHA_TAREO inválida')
     if (columnas.id_empresa && (!Number.isSafeInteger(registro.id_empresa) || registro.id_empresa <= 0)) validaciones.push('ID_EMPRESA inválido')
+    if (registro.observacion?.length > MAX_CARACTERES_OBSERVACION) validaciones.push(`OBSERVACION supera ${MAX_CARACTERES_OBSERVACION} caracteres`)
     if (registro.estado == null) validaciones.push('ESTADO debe ser 1/Activo o 0/Inactivo')
     if (validaciones.length) {
       errores.push({ fila: filaExcel, id_empresa: Number.isSafeInteger(registro.id_empresa) ? registro.id_empresa : null, nro_parte: registro.nro_parte || '—', motivo: validaciones.join('; ') })

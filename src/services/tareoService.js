@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { obtenerPorIdsPaginado, obtenerTodasLasPaginas } from './paginacionService'
 
 export async function obtenerResumenMensualTareo({ idEmpresa, fechaDesde, fechaHasta } = {}) {
   const { data, error } = await supabase.rpc('resumen_mensual_mov_tareo', {
@@ -68,11 +69,9 @@ export async function obtenerOpcionesFiltrosTareo({ pendientes = false, enProces
   }
 
   const codigos = [...new Set(registros.flatMap((fila) => [fila.cod_cc_pk, fila.cod_cc_pk_maq]).filter((codigo) => codigo != null && Number.isFinite(Number(codigo))).map(Number))]
-  const centrosResult = codigos.length
-    ? await supabase.from('dim_centro_costo').select('cod_cc_pk,cod_cc,desc_cc,id_empresa').in('cod_cc_pk', codigos).range(0, 9999)
-    : { data: [], error: null }
-  if (centrosResult.error) throw centrosResult.error
-  const centrosPorPk = new Map((centrosResult.data ?? []).map((centro) => [Number(centro.cod_cc_pk), centro]))
+  const centrosCatalogo = await obtenerPorIdsPaginado(codigos, (ids, desde, hasta) => supabase.from('dim_centro_costo')
+    .select('cod_cc_pk,cod_cc,desc_cc,id_empresa').in('cod_cc_pk', ids).order('cod_cc_pk').range(desde, hasta))
+  const centrosPorPk = new Map(centrosCatalogo.map((centro) => [Number(centro.cod_cc_pk), centro]))
   const obtenerOpciones = (pkKey, codKey) => {
     const opciones = new Map()
     registros.forEach((fila) => {
@@ -92,6 +91,23 @@ export async function obtenerOpcionesFiltrosTareo({ pendientes = false, enProces
     return [...opciones.values()].sort((a, b) => String(a.desc_cc || a.cod_cc).localeCompare(String(b.desc_cc || b.cod_cc), 'es-PE', { numeric: true, sensitivity: 'base' }))
   }
   return { centros: obtenerOpciones('cod_cc_pk', 'cod_cc'), maquinarias: obtenerOpciones('cod_cc_pk_maq', 'cod_cc_maq') }
+}
+
+export async function obtenerCatalogoCentrosEditarTareo(idEmpresa) {
+  const centros = await obtenerTodasLasPaginas((desde, hasta) => supabase.from('dim_centro_costo')
+    .select('cod_cc_pk,cod_cc,desc_cc,id_empresa,id_tip_cc,estado')
+    .eq('id_empresa', Number(idEmpresa))
+    .order('desc_cc')
+    .order('cod_cc_pk')
+    .range(desde, hasta))
+  const tipoIds = [...new Set(centros.map((centro) => Number(centro.id_tip_cc)).filter(Number.isFinite))]
+  if (!tipoIds.length) return centros
+  const { data: tipos, error } = await supabase.from('Dim_TipoCC')
+    .select('id_tip_cc,des_tip_cc')
+    .in('id_tip_cc', tipoIds)
+  if (error) throw error
+  const tipoPorId = new Map((tipos ?? []).map((tipo) => [Number(tipo.id_tip_cc), tipo.des_tip_cc]))
+  return centros.map((centro) => ({ ...centro, des_tip_cc: tipoPorId.get(Number(centro.id_tip_cc)) ?? '' }))
 }
 
 export async function listarMovimientosTareo({
@@ -220,7 +236,7 @@ export async function actualizarMovimientoTareo(idMovimiento, valores, pendiente
       cod_cc_pk_maq: maquinaria.cod_cc_pk,
       hora,
       fecha_tareo: valores.fecha_tareo,
-      etapa_tareo: valores.etapa_tareo?.trim() || null,
+      etapa_tareo: valores.etapa_tareo == null || valores.etapa_tareo === '' ? null : Number(valores.etapa_tareo),
       observacion: valores.observacion?.trim() || null,
       updated_at: new Date().toISOString(),
     })

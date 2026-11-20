@@ -1,10 +1,12 @@
 # Pruebas y calidad — SCGCA Central
 
-**Actualizado:** 2026-11-17
+**Actualizado:** 2026-11-19
 
 ## 08. Pruebas y calidad
 
 ### Evidencia reciente
+
+- **2026-11-19, Mov_MO/Tareo:** `npm run build` aprobó con Vite 8.2.2 y 11,849 módulos; `git diff --check` terminó sin errores de whitespace (avisos LF/CRLF). Supabase Central y local tienen 80 migraciones con versión y nombre coincidentes. Se confirmó por consulta SQL la FK `mov_mo.cod_labor → Dim_Labor_Final.Id_Lab_Fin`; se verificaron 7,095 filas existentes antes del cambio. `importar-mov-tareo` quedó en v3 y valida observaciones de máximo 20 caracteres. No se ejecutaron pruebas unitarias, lint ni prueba manual de navegador.
 
 - **2026-11-18, alineación local/Supabase:** `npm run build` aprobó con Vite 8.2.2 y 11,848 módulos; `git diff --cached --check` no encontró errores. Supabase Central y local tienen 75 migraciones con versiones y nombres coincidentes. `importar-mov-tareo` v2 se comparó archivo por archivo y coincide con local. No se ejecutaron pruebas unitarias ni revisión visual manual.
 

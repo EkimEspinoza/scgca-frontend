@@ -1,6 +1,6 @@
 # BRAIN maestro de SCGCA Central
 
-**Actualizado:** 2026-11-18
+**Actualizado:** 2026-11-19
 **Estado:** documento formal e índice del conocimiento consolidado del proyecto.
 **Regla de actualización:** cuando el usuario diga **BRAIN OK**, incorporar los acuerdos y avances recientes en los archivos pertinentes. Actualizar todos los archivos afectados por un cambio, sin duplicar información innecesariamente.
 
@@ -293,6 +293,15 @@ BRAIN OK significa consolidar los acuerdos y avances acumulados hasta ese moment
 - **CONFIRMADO — Supabase:** Central registra 75 migraciones; los 75 archivos locales coinciden en versión y nombre. Cinco archivos locales se renombraron para hacerlos corresponder a migraciones que ya estaban aplicadas; no se volvió a ejecutar SQL. `importar-mov-tareo` está en versión 2 y sus fuentes locales coinciden con las desplegadas; `crear-usuario` v9 y `actualizar-usuario` v3 siguen activas.
 - **CONFIRMADO — compilación local:** `npm run build` aprobó con Vite 8.2.2 y 11,848 módulos. Se corrigió el import del icono `AddCircleOutlineOutlined` en MovMOForm. `git diff --cached --check` pasó; no se ejecutaron pruebas unitarias ni revisión visual manual.
 - **CONFIRMADO — GitHub:** el commit `fa129ca` (`feat: implement MovMO and labor master workflows`) se publicó en `main`; el BRAIN actualizado se publicó en `fc1c6f0`. Local y `origin/main` quedaron alineados en `fc1c6f0b71522e3a74c58340b7087b8932b4d17b`. El push no publica el frontend en un hosting.
+
+### Actualización al 19 de noviembre de 2026
+
+- **CONFIRMADO — relación de Labor en Mov_MO:** `mov_mo.cod_labor` representa `Dim_Labor_Final.Id_Lab_Fin`; la columna Labor muestra `Dim_Labor_Final.DESCRIPCION`. `labor_scire` conserva el texto original de SCIRE. La FK incorrecta de `mov_mo.cod_labor` hacia `Dim_Labor.Id_Lab` se corrigió en Supabase con `20261120011210_mov_mo_cod_labor_references_labor_final`. Antes de aplicarla se verificó que los 7,095 registros de `mov_mo` tenían un Id_Lab_Fin válido; la FK nueva se consultó después de aplicarla.
+- **CONFIRMADO — filtros de Mano de Obra:** se separó la búsqueda en Labor SCIRE y Labor final. SCIRE consulta directamente `mov_mo.labor_scire`, evitando incluir otros alias que compartan el mismo Id_Lab_Fin. Labor final busca la descripción del catálogo y filtra por Id_Lab_Fin. Si ambos campos se completan, se combinan como filtros AND. Se agregó una espera de 400 ms antes de ejecutar la consulta.
+- **CONFIRMADO — Mov_Tareo:** las observaciones de importación se limitan a 20 caracteres en la Edge Function `importar-mov-tareo` v3 y en los seis registros operativos mediante `20261119210956_restringir_observaciones_a_20_caracteres`. Se añadieron validaciones de tipos de centro y se conserva el comportamiento histórico de registros inactivos en las migraciones `20261119233816`, `20261119234226` y `20261119235737`.
+- **CONFIRMADO — sincronización de Supabase:** Central está activo. Supabase registra 80 migraciones; los 80 archivos locales coinciden exactamente por versión y nombre. `importar-mov-tareo` está en v3 con `verify_jwt=true`; `crear-usuario` v9 y `actualizar-usuario` v3 siguen activas.
+- **CONFIRMADO — compilación local:** `npm run build` pasó con Vite 8.2.2 y 11,849 módulos. `git diff --check` terminó sin errores; mostró solo avisos LF/CRLF. No se ejecutaron pruebas unitarias, lint ni pruebas manuales en navegador.
+- **PENDIENTE — GitHub:** al preparar este cierre, el código local aún tenía cambios sin commit; publicar los cambios y el BRAIN en `main` es parte del cierre solicitado. El push no publica el frontend en un hosting.
 
 ### Pendientes vigentes al 16 de noviembre
 

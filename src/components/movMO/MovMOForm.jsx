@@ -4,6 +4,7 @@ import { AddCircleOutlineOutlined, EditOutlined, PaymentsOutlined } from '@mui/i
 import { supabase } from '../../lib/supabase'
 import { obtenerLabores } from '../../services/laborService'
 import { obtenerEtapasCosto } from '../../services/etapaCostoService'
+import { obtenerCentrosCatalogoMO } from '../../services/movMOService'
 
 const fechaLocalHoy = () => {
   const hoy = new Date()
@@ -38,28 +39,33 @@ export default function MovMOForm({ open, registro, guardando, onClose, onGuarda
   const [valores, setValores] = useState(valoresIniciales(registro, empresaInicial, fechaInicial))
   const centrosPorPk = useMemo(() => new Map(centros.map((centro) => [String(centro.cod_cc_pk), centro])), [centros])
   const centroSeleccionado = centrosPorPk.get(valores.cod_cc_pk) ?? null
+  const valorEtapaActual = String(valores.etapa_costo ?? '').trim()
+  const etapaSeleccionada = etapas.find((etapa) => /^\d+$/.test(valorEtapaActual) && Number(etapa.cod_etapa) === Number(valorEtapaActual))
+    ?? etapas.find((etapa) => etapa.etapa_costo?.trim().toLocaleLowerCase('es-PE') === valorEtapaActual.toLocaleLowerCase('es-PE'))
+  const etapaIdActual = etapaSeleccionada ? String(etapaSeleccionada.cod_etapa) : ''
   const requiereEtapa = modoNuevo ? esInversionCampo(centroSeleccionado, tipos) : !soloAjustesProcesado || esInversionCampo(centroSeleccionado, tipos)
   const centrosDisponibles = centros.filter((centro) => String(centro.id_empresa) === valores.id_empresa && (centro.estado || Number(centro.cod_cc_pk) === Number(registro?.cod_cc_pk)))
   const laboresActivas = labores.filter((labor) => Number(labor.estado) === 1 || Number(labor.Id_Lab) === Number(registro?.cod_labor))
-  const etapasActivas = etapas.filter((etapa) => etapa.estado || etapa.etapa_costo === registro?.etapa_costo)
+  const etapasActivas = etapas.filter((etapa) => etapa.estado || Number(etapa.cod_etapa) === Number(etapaSeleccionada?.cod_etapa))
 
   useEffect(() => {
     if (!open) return
     let vigente = true
-    setValores(valoresIniciales(modoNuevo ? null : registro, empresaInicial, fechaInicial))
+    const valoresDelFormulario = valoresIniciales(modoNuevo ? null : registro, empresaInicial, fechaInicial)
+    setValores(valoresDelFormulario)
     setError('')
     setCargandoCatalogos(true)
     Promise.all([
       supabase.from('Dim_Empresa').select('id_empresa,nombre_comercial,descripcion,estado').eq('estado', true).order('nombre_comercial'),
-      supabase.from('dim_centro_costo').select('cod_cc_pk,id_empresa,cod_cc,desc_cc,id_tip_cc,estado').order('desc_cc').range(0, 9999),
+      obtenerCentrosCatalogoMO(valoresDelFormulario.id_empresa),
       obtenerLabores(),
       obtenerEtapasCosto(),
       supabase.from('Dim_TipoCC').select('id_tip_cc,des_tip_cc'),
-    ]).then(([empresasResult, centrosResult, catalogoLabores, catalogoEtapas, tiposResult]) => {
-      for (const resultado of [empresasResult, centrosResult, tiposResult]) if (resultado.error) throw resultado.error
+    ]).then(([empresasResult, centrosResultado, catalogoLabores, catalogoEtapas, tiposResult]) => {
+      for (const resultado of [empresasResult, tiposResult]) if (resultado.error) throw resultado.error
       if (!vigente) return
       setEmpresas(empresasResult.data ?? [])
-      setCentros(centrosResult.data ?? [])
+      setCentros(centrosResultado ?? [])
       setLabores(catalogoLabores ?? [])
       setEtapas(catalogoEtapas ?? [])
       setTipos(new Map((tiposResult.data ?? []).map((tipo) => [Number(tipo.id_tip_cc), tipo.des_tip_cc])))
@@ -78,6 +84,8 @@ export default function MovMOForm({ open, registro, guardando, onClose, onGuarda
       setError('Completa la empresa, el centro de costo y la labor requerida.')
       return
     }
+    if (requiereEtapa && valorEtapaActual && !etapaSeleccionada) { setError('La etapa seleccionada ya no existe en el catálogo. Elige una etapa válida.'); return }
+    if (valores.obs.length > 20) { setError('La observación no debe superar 20 caracteres.'); return }
     if (modoNuevo && !/^\d{4}-\d{2}-\d{2}$/.test(valores.fec_labor)) { setError('Selecciona una fecha válida para el movimiento.'); return }
     if (modoNuevo && (valores.imp_labor_sol === '' || Number(valores.imp_labor_sol) < 0 || Number(valores.ess_labor_sol) < 0)) {
       setError('Ingresa importes válidos. No se permiten valores negativos.')
@@ -85,9 +93,10 @@ export default function MovMOForm({ open, registro, guardando, onClose, onGuarda
     }
     try {
       setError('')
+      const etapaCostoId = etapaSeleccionada ? Number(etapaSeleccionada.cod_etapa) : null
       const datos = modoNuevo
-        ? { id_empresa: Number(valores.id_empresa), fec_labor: valores.fec_labor, cod_cc_pk: centro.cod_cc_pk, cod_cc: centro.cod_cc, cod_labor: Number(valores.cod_labor), labor_scire: labores.find((labor) => Number(labor.Id_Lab) === Number(valores.cod_labor))?.Lab_SCIRE ?? '', imp_labor_sol: Number(valores.imp_labor_sol), ess_labor_sol: Number(valores.ess_labor_sol || 0), etapa_costo: requiereEtapa ? valores.etapa_costo || null : null, obs: valores.obs.trim() || 'Registro manual para ajuste del periodo' }
-        : { cod_cc_pk: centro.cod_cc_pk, cod_cc: centro.cod_cc, ...(!soloAjustesProcesado ? { cod_labor: Number(valores.cod_labor) } : {}), ...(requiereEtapa ? { etapa_costo: valores.etapa_costo || null } : {}) }
+        ? { id_empresa: Number(valores.id_empresa), fec_labor: valores.fec_labor, cod_cc_pk: centro.cod_cc_pk, cod_cc: centro.cod_cc, cod_labor: Number(valores.cod_labor), labor_scire: labores.find((labor) => Number(labor.Id_Lab) === Number(valores.cod_labor))?.Lab_SCIRE ?? '', imp_labor_sol: Number(valores.imp_labor_sol), ess_labor_sol: Number(valores.ess_labor_sol || 0), etapa_costo: requiereEtapa ? etapaCostoId : null, obs: valores.obs.trim() || 'Ajuste manual' }
+        : { cod_cc_pk: centro.cod_cc_pk, cod_cc: centro.cod_cc, ...(!soloAjustesProcesado ? { cod_labor: Number(valores.cod_labor) } : {}), etapa_costo: requiereEtapa ? etapaCostoId : null, obs: valores.obs.trim() || null }
       await onGuardar(datos)
     } catch (err) { setError(err?.message || 'No se pudo guardar el movimiento.') }
   }
@@ -122,6 +131,7 @@ export default function MovMOForm({ open, registro, guardando, onClose, onGuarda
             renderInput={(params) => <TextField {...params} required label="Centro de costo" placeholder="Buscar centro" />}
             disabled={cargandoCatalogos || guardando || !valores.id_empresa}
           />
+          {!modoNuevo && <TextField size="small" label="Tipo de centro de costo" value={tipos.get(Number(centroSeleccionado?.id_tip_cc)) ?? ''} disabled />}
           {modoNuevo ? <Autocomplete
             size="small" options={laboresActivas} value={laboresActivas.find((labor) => String(labor.Id_Lab) === valores.cod_labor) ?? null}
             onChange={(_event, labor) => setValores((actuales) => ({ ...actuales, cod_labor: labor ? String(labor.Id_Lab) : '' }))}
@@ -139,13 +149,13 @@ export default function MovMOForm({ open, registro, guardando, onClose, onGuarda
             <TextField size="small" type="number" label="EsSalud S/" value={valores.ess_labor_sol} onChange={cambiar('ess_labor_sol')} required disabled={guardando} inputProps={{ min: 0, step: '0.01', inputMode: 'decimal' }} InputProps={{ startAdornment: <InputAdornment position="start"><PaymentsOutlined fontSize="small" /></InputAdornment> }} sx={{ '& input[type=number]': { appearance: 'textfield' }, '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { display: 'none' } }} />
           </>}
           {requiereEtapa && <FormControl size="small" fullWidth disabled={cargandoCatalogos || guardando} sx={{ gridColumn: { xs: 'auto', sm: '1 / -1' } }}>
-            <InputLabel id="mov-mo-edit-etapa-label">Etapa de labor</InputLabel>
-            <Select labelId="mov-mo-edit-etapa-label" label="Etapa de labor" value={valores.etapa_costo} onChange={cambiar('etapa_costo')}>
+            <InputLabel id="mov-mo-edit-etapa-label">Etapa de costo</InputLabel>
+            <Select labelId="mov-mo-edit-etapa-label" label="Etapa de costo" value={etapaIdActual} onChange={cambiar('etapa_costo')}>
               <MenuItem value="">Sin etapa</MenuItem>
-              {etapasActivas.map((etapa) => <MenuItem key={etapa.cod_etapa} value={etapa.etapa_costo}>{etapa.etapa_costo}</MenuItem>)}
+              {etapasActivas.map((etapa) => <MenuItem key={etapa.cod_etapa} value={String(etapa.cod_etapa)}>{etapa.etapa_costo}</MenuItem>)}
             </Select>
           </FormControl>}
-          {modoNuevo && <TextField size="small" label="Observación" value={valores.obs} onChange={cambiar('obs')} multiline minRows={2} maxRows={4} inputProps={{ maxLength: 500 }} helperText={`${valores.obs.length}/500 caracteres`} sx={{ gridColumn: '1 / -1' }} />}
+          <TextField size="small" label="Observación" value={valores.obs} onChange={cambiar('obs')} multiline minRows={2} maxRows={4} inputProps={{ maxLength: 20 }} helperText={`${valores.obs.length}/20 caracteres`} sx={{ gridColumn: '1 / -1' }} />
           {cargandoCatalogos && <Box sx={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 1 }}><CircularProgress size={16} />Cargando catálogos…</Box>}
         </Box>
         {modoNuevo && <Alert severity="info" sx={{ mt: 2 }}>Este registro se agregará directamente a Procesados para ajustar el mes. La empresa y la fecha determinan el periodo del movimiento.</Alert>}

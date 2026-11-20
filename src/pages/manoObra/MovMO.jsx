@@ -18,7 +18,10 @@ export default function MovMO() {
   const [total, setTotal] = useState(0)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
-  const [busqueda, setBusqueda] = useState('')
+  const [busquedaScire, setBusquedaScire] = useState('')
+  const [busquedaFinal, setBusquedaFinal] = useState('')
+  const [busquedaScireAplicada, setBusquedaScireAplicada] = useState('')
+  const [busquedaFinalAplicada, setBusquedaFinalAplicada] = useState('')
   const [estado, setEstado] = useState('')
   const [tipoCentroId, setTipoCentroId] = useState('')
   const [centroCostoPk, setCentroCostoPk] = useState('')
@@ -47,7 +50,7 @@ export default function MovMO() {
       const [listado, totales] = await Promise.all([
         pestana === 3
           ? obtenerResumenMensualMO({ idEmpresa, fechaDesde, fechaHasta, estado })
-          : listarMovimientosMO({ pestana, pagina, filasPorPagina, idEmpresa, fechaDesde, fechaHasta, busqueda, estado, tipoCentroId, centroCostoPk, grupoLaborId }),
+          : listarMovimientosMO({ pestana, pagina, filasPorPagina, idEmpresa, fechaDesde, fechaHasta, busquedaScire: busquedaScireAplicada, busquedaFinal: busquedaFinalAplicada, estado, tipoCentroId, centroCostoPk, grupoLaborId }),
         contarMovimientosMO({ idEmpresa, fechaDesde, fechaHasta }),
       ])
       setFilas(pestana === 3 ? listado : listado.filas)
@@ -59,9 +62,17 @@ export default function MovMO() {
       setFilas([])
       setTotal(0)
     } finally { setCargando(false) }
-  }, [pestana, pagina, filasPorPagina, idEmpresa, fechaDesde, fechaHasta, busqueda, estado, tipoCentroId, centroCostoPk, grupoLaborId])
+  }, [pestana, pagina, filasPorPagina, idEmpresa, fechaDesde, fechaHasta, busquedaScireAplicada, busquedaFinalAplicada, estado, tipoCentroId, centroCostoPk, grupoLaborId])
 
   useEffect(() => { void cargar() }, [cargar])
+
+  useEffect(() => {
+    const temporizador = setTimeout(() => {
+      setBusquedaScireAplicada(busquedaScire.trim())
+      setBusquedaFinalAplicada(busquedaFinal.trim())
+    }, 400)
+    return () => clearTimeout(temporizador)
+  }, [busquedaScire, busquedaFinal])
 
   useEffect(() => {
     let activo = true
@@ -131,7 +142,8 @@ export default function MovMO() {
     setPagina(0)
   }
   const limpiarFiltros = () => {
-    setBusqueda('')
+    setBusquedaScire('')
+    setBusquedaFinal('')
     setEstado('')
     setTipoCentroId('')
     setCentroCostoPk('')
@@ -144,7 +156,10 @@ export default function MovMO() {
     setTipoCentroId('')
     setCentroCostoPk('')
     setGrupoLaborId('')
-    if (valor === 3) setBusqueda('')
+    if (valor === 3) {
+      setBusquedaScire('')
+      setBusquedaFinal('')
+    }
   }
   const cambiarFilasPorPagina = (event) => { setFilasPorPagina(Number(event.target.value)); setPagina(0) }
   const exportarExcel = async () => {
@@ -157,7 +172,7 @@ export default function MovMO() {
         const { exportarResumenMensualMOExcel } = await import('../../services/excelService')
         exportarResumenMensualMOExcel(datos)
       } else {
-        const filtros = { pestana, idEmpresa, fechaDesde, fechaHasta, busqueda, estado, tipoCentroId, centroCostoPk, grupoLaborId }
+        const filtros = { pestana, idEmpresa, fechaDesde, fechaHasta, busquedaScire: busquedaScireAplicada, busquedaFinal: busquedaFinalAplicada, estado, tipoCentroId, centroCostoPk, grupoLaborId }
         const lote = 1000
         const primeraPagina = await listarMovimientosMO({ ...filtros, pagina: 0, filasPorPagina: lote })
         const todasLasFilas = [...primeraPagina.filas]
@@ -194,7 +209,8 @@ export default function MovMO() {
       </Box>
       <MovMOFilters
         anio={anio} onAnio={cambiarAnio} estado={estado} onEstado={(valor) => { setEstado(valor); setPagina(0) }}
-        busqueda={busqueda} onBusqueda={(valor) => { setBusqueda(valor); setPagina(0) }}
+        busquedaScire={busquedaScire} onBusquedaScire={(valor) => { setBusquedaScire(valor); setPagina(0) }}
+        busquedaFinal={busquedaFinal} onBusquedaFinal={(valor) => { setBusquedaFinal(valor); setPagina(0) }}
         fechaDesde={fechaDesde} onFechaDesde={(valor) => cambiarFecha('desde', valor)}
         fechaHasta={fechaHasta} onFechaHasta={(valor) => cambiarFecha('hasta', valor)}
         onLimpiar={limpiarFiltros} tipoCentroId={tipoCentroId} onTipoCentro={(valor) => { setTipoCentroId(valor); setCentroCostoPk(''); setPagina(0) }} tiposCentro={opcionesFiltros.tipos}

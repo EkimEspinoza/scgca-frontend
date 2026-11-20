@@ -157,7 +157,7 @@ export default function TareoImportDialog({ open, file, empresas = [], empresasC
         registros: periodo.registros,
         idsParaInactivar: [...seleccionados],
         duplicadosConsolidados: duplicadosEmpresa,
-        motivoAusencia: `No aparece en el archivo acumulado ${file?.name?.slice(0, 160) || 'de Tareo'} (revisado hasta ${periodo.fechaHasta}).`,
+        motivoAusencia: 'Ausente en archivo',
         alProgresar: setProgreso,
       })
     } catch (error) {

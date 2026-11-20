@@ -231,13 +231,13 @@ export function exportarMovimientosMOExcel(filas, pendientes = false) {
     Fecha: fila.fec_labor ?? '',
     'Tipo de centro de costo': fila.centro?.tipo_cc?.des_tip_cc ?? '',
     'Centro de costo': [fila.cod_cc, fila.centro?.desc_cc].filter(Boolean).join(' · '),
-    'Grupo de labor': fila.labor?.labor_final?.grupo_labor?.DescripcionLabor ?? '',
-    Labor: fila.labor?.Lab_SCIRE ?? fila.cod_labor ?? '',
+    'Grupo de labor': fila.labor?.grupo_labor?.DescripcionLabor ?? '',
+    Labor: fila.labor?.DESCRIPCION ?? fila.cod_labor ?? '',
     'Labor SCIRE': fila.labor_scire ?? '',
     'Importe S/': Number(fila.imp_labor_sol ?? 0),
     'EsSalud S/': Number(fila.ess_labor_sol ?? 0),
     'Importe total S/': Number(fila.imp_labor_sol ?? 0) + Number(fila.ess_labor_sol ?? 0),
-    Etapa: fila.etapa_costo ?? '',
+    Etapa: fila.etapa_costo_descripcion ?? fila.etapa_costo ?? '',
     Observación: fila.obs ?? '',
     Estado: Number(fila.estado) === 1 ? 'Activo' : 'Inactivo',
     ...(pendientes ? { Validación: (fila.errores_validacion ?? []).map(etiquetaValidacion).join('; ') || fila.estado_validacion || 'Pendiente de revisión' } : {}),
@@ -249,7 +249,8 @@ export function exportarMovimientosMOExcel(filas, pendientes = false) {
 export function exportarMovimientosTareoExcel(filas, pendientes = false, nombreArchivo = 'Mov_Tareo') {
   const etiquetaValidacion = (error) => {
     const codigo = typeof error === 'string' ? error : error?.codigo ?? error?.code ?? error?.message ?? String(error)
-    return codigo === 'SIN_CAMPANA_EN_FECHA' ? 'No existe una campaña para la fecha' : codigo.replaceAll('_', ' ').toLocaleLowerCase('es-PE')
+    const etiquetas = { TIPO_CENTRO_COSTO_NO_PERMITIDO: 'Tipo de centro de costo no permitido', TIPO_MAQUINARIA_NO_PERMITIDO: 'Tipo no permitido: solo maquinaria o pozos y reservorios' }
+    return etiquetas[codigo] ?? (codigo === 'SIN_CAMPANA_EN_FECHA' ? 'No existe una campaña para la fecha' : codigo.replaceAll('_', ' ').toLocaleLowerCase('es-PE'))
   }
   const datos = filas.map((fila) => ({
     Empresa: fila.empresa?.nombre_comercial ?? fila.empresa?.descripcion ?? fila.id_empresa ?? '',

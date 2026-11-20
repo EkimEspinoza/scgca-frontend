@@ -1,6 +1,6 @@
 # Plan de trabajo y seguimiento — SCGCA Central
 
-**Actualizado:** 2026-11-18
+**Actualizado:** 2026-11-19
 La lista registra pendientes y seguimiento. La actualización visual de Centro de Costos y Campañas quedó publicada. Tipo de Cambio usa tres decimales y quedó preparado para ingreso manual mientras se identifica una API de SUNAT estable.
 
 ## 07. Prioridades y plan de trabajo
@@ -37,12 +37,12 @@ Mover al plan solo propuestas acordadas. Mantener su historial y estado en el ar
 
 ## Trabajo en curso
 
-El trabajo activo abarca **Mov_Tareo** y **Mov_MO**. La importación de Tareo ya tiene interfaz local, backend desplegado y build aprobado; falta la recarga integral y validar pendientes/ausencias. En Mano de Obra, los catálogos y la vista Mov_MO están implementados y publicados; faltan revisión manual y conformidad funcional.
+El trabajo activo abarca **Mov_Tareo** y **Mov_MO**. La importación de Tareo tiene backend desplegado y reglas actualizadas; falta la recarga integral y validar pendientes/ausencias. En Mano de Obra, los catálogos, la vista, los formularios y los filtros separados están implementados; la relación de `cod_labor` con `Dim_Labor_Final` ya está corregida en Supabase. El usuario indicó que las vistas de actualización y creación están bien; falta la conformidad funcional completa.
 
-### Pendientes para la siguiente jornada — 2026-11-19
+### Pendientes después del cierre del 19 de noviembre de 2026
 
-1. Revisar y completar la acción **Actualizar** en Mov_MO.
-2. Diseñar e implementar **Nuevo registro** en Mov_MO.
-3. Dar conformidad funcional completa a Mov_Tareo y Mov_MO.
-4. Volver a procesar/cargar toda la data para validar ambos flujos con el conjunto completo; definir antes el alcance y evitar duplicar registros ya procesados.
-5. Validar visualmente en navegador el ajuste de los filtros de Mov_MO inspirado en Mov_Tareo. El build de producción aprobó; no se ejecutaron pruebas unitarias ni revisión visual manual.
+1. Revisar manualmente en navegador la búsqueda independiente por **Labor SCIRE** y **Labor final**, incluyendo `RCH 6500 - SECTORISTA DE CAMPO` y búsqueda por descripción final. El build pasó, pero no se hizo prueba visual/funcional con datos reales después del cambio.
+2. Dar conformidad funcional completa a Mov_Tareo y Mov_MO, incluyendo edición, nuevo registro, estado, filtros, resumen y exportaciones.
+3. Volver a cargar la data completa de Tareo y Mano de Obra para revisar el conjunto total; acordar el alcance antes de ejecutar y evitar duplicar registros ya procesados.
+4. Diseñar e implementar la importación Excel de Mov_MO con identificación por empresa, año y mes, revisión de duplicados y flujo de pendientes, sin sobrescribir datos ya procesados.
+5. Publicar en GitHub `main` los cambios locales de esta jornada y el BRAIN actualizado. El frontend no tiene despliegue automático a hosting.

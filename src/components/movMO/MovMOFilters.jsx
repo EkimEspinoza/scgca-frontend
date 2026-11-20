@@ -25,7 +25,7 @@ function lastDayOfMonth(value) {
 }
 
 export default function MovMOFilters({
-  anio, onAnio, estado, onEstado, busqueda, onBusqueda, fechaDesde, onFechaDesde, fechaHasta, onFechaHasta, onLimpiar,
+  anio, onAnio, estado, onEstado, busquedaScire = '', onBusquedaScire, busquedaFinal = '', onBusquedaFinal, fechaDesde, onFechaDesde, fechaHasta, onFechaHasta, onLimpiar,
   tipoCentroId = '', onTipoCentro, tiposCentro = [], centroCostoPk = '', onCentroCosto, centrosCosto = [],
   grupoLaborId = '', onGrupoLabor, gruposLabor = [], opcionesCargando = false,
   mostrarImportar = false, mostrarExportar = false, exportando = false, totalExportable = 0, onExportar,
@@ -59,7 +59,10 @@ export default function MovMOFilters({
         </>}
       </Box>
       <Box className="mov-mo-filters__row mov-mo-filters__row--controls" sx={{ display: resumenEnUnaFila ? 'contents' : 'grid', alignItems: 'center', gap: 1, width: '100%', minWidth: 0 }}>
-        {mostrarBusqueda && <TextField className="app-search-input mov-mo-filter__search" size="small" label="Buscar" placeholder="Labor o Labor SCIRE" value={busqueda} onChange={(event) => onBusqueda(event.target.value)} slotProps={{ input: { startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>, endAdornment: <InputAdornment position="end"><Tooltip title="Limpiar búsqueda"><span><IconButton size="small" onClick={() => onBusqueda('')} disabled={!busqueda} aria-label="Limpiar búsqueda"><CleaningServices fontSize="small" /></IconButton></span></Tooltip></InputAdornment> } }} />}
+        {mostrarBusqueda && <>
+          <TextField className="app-search-input mov-mo-filter__search mov-mo-filter__search-scire" size="small" label="Labor SCIRE" placeholder="Código o descripción SCIRE" value={busquedaScire} onChange={(event) => onBusquedaScire(event.target.value)} slotProps={{ input: { startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>, endAdornment: <InputAdornment position="end"><Tooltip title="Limpiar Labor SCIRE"><span><IconButton size="small" onClick={() => onBusquedaScire('')} disabled={!busquedaScire} aria-label="Limpiar búsqueda de Labor SCIRE"><CleaningServices fontSize="small" /></IconButton></span></Tooltip></InputAdornment> } }} />
+          <TextField className="app-search-input mov-mo-filter__search mov-mo-filter__search-final" size="small" label="Labor final" placeholder="Descripción de labor final" value={busquedaFinal} onChange={(event) => onBusquedaFinal(event.target.value)} slotProps={{ input: { startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>, endAdornment: <InputAdornment position="end"><Tooltip title="Limpiar Labor final"><span><IconButton size="small" onClick={() => onBusquedaFinal('')} disabled={!busquedaFinal} aria-label="Limpiar búsqueda de Labor final"><CleaningServices fontSize="small" /></IconButton></span></Tooltip></InputAdornment> } }} />
+        </>}
         <Tooltip title={fechaDesde && fechaHasta ? `${monthLabel(fechaDesde)} – ${monthLabel(fechaHasta)}` : 'Seleccionar rango de fechas'}>
           <Button className="tareo-filters-panel__dates mov-mo-filter__dates" variant="outlined" color="inherit" startIcon={<CalendarMonth sx={{ color: 'primary.main' }} />} onClick={(event) => setRangoAnchor(event.currentTarget)} aria-label={`Fechas: ${labelRango}`} aria-haspopup="dialog" aria-expanded={Boolean(rangoAnchor)} sx={{ minHeight: 40, justifyContent: 'flex-start', px: 1.5 }}>
             <Box component="span" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0, overflow: 'hidden' }}>

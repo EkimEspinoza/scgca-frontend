@@ -7,8 +7,8 @@ import { ArrowDownward, ArrowUpward, Edit as EditIcon, InfoOutlined as InfoIcon,
 import { obtenerEtapasCosto } from '../../services/etapaCostoService'
 
 const mensajesError = {
-  HORA_CERO: 'Horas en cero', CENTRO_COSTO_NO_EXISTE: 'Centro de costo no existe',
-  MAQUINARIA_NO_EXISTE: 'Maquinaria no existe', CAMPANA_NO_EXISTE: 'No existe campaña operativa para la fecha',
+  HORA_CERO: 'Horas en cero', CENTRO_COSTO_NO_EXISTE: 'Centro de costo no existe', TIPO_CENTRO_COSTO_NO_PERMITIDO: 'Tipo de centro de costo no permitido',
+  MAQUINARIA_NO_EXISTE: 'Maquinaria no existe', TIPO_MAQUINARIA_NO_PERMITIDO: 'Tipo no permitido: solo maquinaria o pozos y reservorios', CAMPANA_NO_EXISTE: 'No existe campaña operativa para la fecha',
   CENTRO_COSTO_NO_REGISTRADO: 'Centro de costo no registrado', CODIGO_CENTRO_COSTO_NO_COINCIDE: 'El código del centro no coincide',
   CENTRO_COSTO_INACTIVO: 'Centro de costo inactivo', MAQUINARIA_NO_REGISTRADA: 'Maquinaria no registrada',
   CODIGO_MAQUINARIA_NO_COINCIDE: 'El código de maquinaria no coincide', MAQUINARIA_INACTIVA: 'Maquinaria inactiva',

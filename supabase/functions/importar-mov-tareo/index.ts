@@ -27,7 +27,7 @@ function validarRegistro(value: unknown): value is RegistroTareo {
     typeof row.hora === "number" && Number.isFinite(row.hora) && row.hora >= 0 &&
     Math.abs(Number(row.hora) * 100 - Math.round(Number(row.hora) * 100)) <= 1e-8 && fechaValida &&
     (row.etapa_tareo == null || (typeof row.etapa_tareo === "string" && row.etapa_tareo.length <= 50)) &&
-    (row.observacion == null || (typeof row.observacion === "string" && row.observacion.length <= 500)) &&
+    (row.observacion == null || (typeof row.observacion === "string" && row.observacion.length <= 20)) &&
     (row.estado === 0 || row.estado === 1);
 }
 

@@ -1,11 +1,17 @@
 # Decisiones e incidencias — SCGCA Central
 
-**Actualizado:** 2026-11-18
+**Actualizado:** 2026-11-19
 
 ## Actualización del 18 de noviembre de 2026
 
 - **Mov_MO — diseño de filtros:** usar como referencia el panel de filtros de Mov_Tareo. Mantener los controles agrupados en dos filas en escritorio, con Año/Tipo de centro de costo/Centro de costo/Grupo de labor en la primera y búsqueda/fechas/estado/acciones en la segunda. Evitar scroll horizontal anidado y reservar espacio superior para las etiquetas flotantes. El cambio visual quedó en local; pendiente validación en navegador.
 - **Mov_MO — siguiente paso:** revisar Actualizar, implementar Nuevo registro y realizar una validación completa de ambos módulos antes de volver a procesar toda la data. La carga integral no debe duplicar registros existentes.
+
+## Actualización del 19 de noviembre de 2026
+
+- **Mov_MO — relación de labor:** `cod_labor` almacena `Dim_Labor_Final.Id_Lab_Fin`. La columna Labor presenta `Dim_Labor_Final.DESCRIPCION`; `labor_scire` mantiene el texto de origen. Se corrigió la FK de `mov_mo` para apuntar a `Dim_Labor_Final` con la migración `20261120011210_mov_mo_cod_labor_references_labor_final`. Los 7,095 registros existentes fueron comprobados contra el catálogo antes de aplicar la FK.
+- **Mov_MO — búsqueda:** se decidió separar Labor SCIRE de Labor final. El primer filtro busca directamente en `mov_mo.labor_scire`, para evitar incluir filas de otros alias ligados al mismo Id_Lab_Fin. El segundo busca descripciones de `Dim_Labor_Final` y filtra por sus Id_Lab_Fin. Si ambos se completan, se aplican en conjunto; la interfaz espera 400 ms tras la escritura antes de consultar.
+- **Tareo — observación:** se limita a 20 caracteres en el cliente, la Edge Function y las seis tablas de transición/procesamiento. `importar-mov-tareo` quedó desplegada en versión 3 con autenticación JWT activa.
 - **Alineación Supabase — 18 de noviembre:** Central y local tienen 75 migraciones con versiones/nombres coincidentes tras renombrar cinco archivos locales cuyas migraciones ya estaban aplicadas. No se ejecutó SQL adicional. La Edge Function `importar-mov-tareo` está en v2 y sus archivos locales coinciden con lo desplegado; `crear-usuario` v9 y `actualizar-usuario` v3 están activas.
 
 ## 09. Decisiones, incidencias e historial del BRAIN
