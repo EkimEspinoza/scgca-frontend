@@ -46,4 +46,4 @@ El trabajo activo abarca **Mov_Tareo** y **Mov_MO**. La importación de Tareo ti
 3. Volver a cargar la data completa de Tareo y Mano de Obra para revisar el conjunto total; acordar el alcance antes de ejecutar y evitar duplicar registros ya procesados.
 4. Diseñar e implementar la importación Excel de Mov_MO con identificación por empresa, año y mes, revisión de duplicados y flujo de pendientes, sin sobrescribir datos ya procesados.
 
-- **CONFIRMADO — GitHub:** el código, las migraciones locales y la función actualizada se publicaron en `main` con el commit `c7211ff`. El BRAIN de esta jornada se publica en el commit documental de cierre. Esto no despliega el frontend a hosting.
+- **CONFIRMADO — GitHub:** el código, las migraciones locales y la función actualizada se publicaron en `main` con el commit `c7211ff`; el BRAIN se publicó en `815c56b`. Esto no despliega el frontend a hosting.
