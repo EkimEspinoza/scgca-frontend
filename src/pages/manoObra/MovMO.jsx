@@ -8,7 +8,7 @@ import MovMOTable from '../../components/movMO/MovMOTable'
 import MovMOForm from '../../components/movMO/MovMOForm'
 import MovMOResumenTable from '../../components/movMO/MovMOResumenTable'
 import { useEmpresa } from '../../context/useEmpresa'
-import { actualizarEstadoMovimientoMO, actualizarMovimientoMO, contarMovimientosMO, crearMovimientoMO, listarMovimientosMO, obtenerOpcionesFiltrosMO, obtenerResumenMensualMO } from '../../services/movMOService'
+import { actualizarEstadoMovimientoMO, actualizarMovimientoMO, contarMovimientosMO, crearMovimientoMO, listarMovimientosMO, obtenerOpcionesFiltrosMO, obtenerResumenMensualMO, revalidarPendientesMO } from '../../services/movMOService'
 
 export default function MovMO() {
   const { empresaActual } = useEmpresa()
@@ -40,6 +40,8 @@ export default function MovMO() {
   const [registroCambioEstado, setRegistroCambioEstado] = useState(null)
   const [cambiandoEstadoId, setCambiandoEstadoId] = useState(null)
   const [exportandoExcel, setExportandoExcel] = useState(false)
+  const [revalidandoPendientes, setRevalidandoPendientes] = useState(false)
+  const [resultadoRevalidacion, setResultadoRevalidacion] = useState('')
   const idEmpresa = empresaActual?.id_empresa ?? null
 
   const cargar = useCallback(async () => {
@@ -190,6 +192,20 @@ export default function MovMO() {
       setError(err?.message || 'No se pudieron exportar los registros a Excel.')
     } finally { setExportandoExcel(false) }
   }
+  const revalidarPendientes = async () => {
+    if (fechaDesde > fechaHasta) { setError('El mes inicial no puede ser posterior al mes final.'); return }
+    setRevalidandoPendientes(true)
+    setError('')
+    setResultadoRevalidacion('')
+    try {
+      const resultado = await revalidarPendientesMO({ idEmpresa, fechaDesde, fechaHasta })
+      setResultadoRevalidacion(`Revisión completada: ${Number(resultado.revisados ?? 0).toLocaleString('es-PE')} revisados, ${Number(resultado.procesados ?? 0).toLocaleString('es-PE')} pasaron a procesados y ${Number(resultado.pendientes ?? 0).toLocaleString('es-PE')} continúan pendientes.`)
+      await cargar()
+    } catch (err) {
+      console.error('Error revalidando pendientes de Mano de Obra:', err)
+      setError(err?.message || 'No se pudieron revalidar los pendientes de Mano de Obra.')
+    } finally { setRevalidandoPendientes(false) }
+  }
   const pestanas = [
     { label: 'Procesados', count: resumen.procesados, icon: <ListAlt fontSize="small" /> },
     { label: 'En proceso', count: resumen.enProceso, icon: <FactCheck fontSize="small" /> },
@@ -217,9 +233,11 @@ export default function MovMO() {
         centroCostoPk={centroCostoPk} onCentroCosto={(valor) => { setCentroCostoPk(valor); setPagina(0) }} centrosCosto={opcionesFiltros.centros}
         grupoLaborId={grupoLaborId} onGrupoLabor={(valor) => { setGrupoLaborId(valor); setPagina(0) }} gruposLabor={opcionesFiltros.grupos} opcionesCargando={cargandoOpciones}
         mostrarImportar={pestana === 1} mostrarExportar={pestana !== 1} exportando={exportandoExcel} totalExportable={total} onExportar={exportarExcel}
+        mostrarRevalidar={pestana === 2} revalidando={revalidandoPendientes} onRevalidar={revalidarPendientes}
         mostrarNuevo={pestana === 0} onNuevo={() => setNuevoRegistroOpen(true)}
         mostrarBusqueda={pestana !== 3} mostrarFiltrosCatalogo={pestana !== 3} />
       {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
+      {resultadoRevalidacion && <Alert severity="success" onClose={() => setResultadoRevalidacion('')} sx={{ mb: 1 }}>{resultadoRevalidacion}</Alert>}
       {pestana === 3
         ? <MovMOResumenTable filas={filas} cargando={cargando} error="" />
         : <MovMOTable

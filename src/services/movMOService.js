@@ -183,9 +183,19 @@ export async function actualizarMovimientoMO({ pestana, idMovimiento, datos }) {
     cod_cc: Number(datos.cod_cc),
     updated_at: new Date().toISOString(),
   }
+  if (Object.hasOwn(datos, 'fec_labor')) actualizacion.fec_labor = datos.fec_labor
   if (pestana !== 0 && datos.cod_labor != null) actualizacion.cod_labor = Number(datos.cod_labor)
   if (Object.hasOwn(datos, 'etapa_costo')) actualizacion.etapa_costo = datos.etapa_costo == null || datos.etapa_costo === '' ? null : Number(datos.etapa_costo)
   if (Object.hasOwn(datos, 'obs')) actualizacion.obs = datos.obs
+  if (pestana === 2) {
+    const { data, error } = await supabase.rpc('resolver_pendiente_mov_mo', {
+      p_id_mov_mo: Number(idMovimiento),
+      p_datos: actualizacion,
+    })
+    if (error) throw error
+    if (!data) throw new Error('No se pudo resolver el movimiento pendiente.')
+    return data
+  }
   const { data, error } = await supabase.from(tabla).update(actualizacion).eq('id_mov_mo', Number(idMovimiento)).select('id_mov_mo').maybeSingle()
   if (error) throw error
   if (!data) throw new Error('No se encontró el movimiento o no tienes permiso para editarlo.')
@@ -215,4 +225,14 @@ export async function actualizarEstadoMovimientoMO({ pestana, idMovimiento, esta
     .eq('id_mov_mo', Number(idMovimiento)).select('id_mov_mo').maybeSingle()
   if (error) throw error
   if (!data) throw new Error('No se encontró el movimiento o no tienes permiso para cambiar su estado.')
+}
+
+export async function revalidarPendientesMO({ idEmpresa = null, fechaDesde = null, fechaHasta = null } = {}) {
+  const { data, error } = await supabase.rpc('revalidar_pendientes_mov_mo', {
+    p_id_empresa: idEmpresa ? Number(idEmpresa) : null,
+    p_fecha_desde: fechaDesde || null,
+    p_fecha_hasta: fechaHasta || null,
+  })
+  if (error) throw error
+  return data ?? { revisados: 0, procesados: 0, pendientes: 0 }
 }

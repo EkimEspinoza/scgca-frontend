@@ -1,9 +1,10 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Alert, Box, Card, CardContent, Checkbox, Chip, FormControl, FormControlLabel, FormGroup, IconButton, InputLabel, MenuItem, Popover, Select, Skeleton, Table, TableBody, TableCell,
+  Alert, Box, Card, CardContent, Checkbox, Chip, FormControlLabel, FormGroup, IconButton, Popover, Skeleton, Table, TableBody, TableCell,
   Switch, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tooltip, Typography, useMediaQuery,
 } from '@mui/material'
 import { ArrowDownward, ArrowUpward, Edit as EditIcon, InfoOutlined as InfoIcon, ViewColumn } from '@mui/icons-material'
+import SearchableSelect from '../common/SearchableSelect'
 import { obtenerEtapasCosto } from '../../services/etapaCostoService'
 
 const mensajesError = {
@@ -138,11 +139,15 @@ export default function TareoTable({ filas, empresas = [], mostrarEmpresa = fals
     <TableContainer className="app-data-table" sx={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: mobile ? 'hidden' : 'auto', scrollbarWidth: 'thin', scrollbarColor: 'var(--mui-palette-divider) transparent' }}>
       {mobile ? <Box role="list" aria-label="Movimientos de tareo" sx={{ p: 1, display: 'grid', gap: 1 }}>
         <Box role="group" aria-label="Ordenar movimientos" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5 }}>
-          <FormControl size="small" sx={{ minWidth: 150 }}><InputLabel id="tareo-sort-label">Ordenar por</InputLabel>
-            <Select labelId="tareo-sort-label" label="Ordenar por" value={orden.campo} onChange={(event) => setOrden((actual) => ({ ...actual, campo: event.target.value }))}>
-              <MenuItem value="fecha">Fecha</MenuItem><MenuItem value="parte">Nro. parte</MenuItem><MenuItem value="centro">Centro de costo</MenuItem><MenuItem value="maquinaria">Maquinaria</MenuItem><MenuItem value="horas">Horas</MenuItem>
-            </Select>
-          </FormControl>
+          <SearchableSelect
+            label="Ordenar por"
+            value={orden.campo}
+            options={[['fecha', 'Fecha'], ['parte', 'Nro. parte'], ['centro', 'Centro de costo'], ['maquinaria', 'Maquinaria'], ['horas', 'Horas']].map(([value, label]) => ({ value, label }))}
+            onChange={(event) => setOrden((actual) => ({ ...actual, campo: event.target.value }))}
+            disableClearable
+            fullWidth={false}
+            sx={{ minWidth: 150 }}
+          />
           <Tooltip title={orden.direccion === 'asc' ? 'Orden ascendente' : 'Orden descendente'}><IconButton aria-label={orden.direccion === 'asc' ? 'Cambiar a orden descendente' : 'Cambiar a orden ascendente'} onClick={() => setOrden((actual) => ({ ...actual, direccion: actual.direccion === 'asc' ? 'desc' : 'asc' }))} sx={{ minWidth: 44, minHeight: 44, color: 'text.secondary' }}>{orden.direccion === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />}</IconButton></Tooltip>
         </Box>
         {cargando && Array.from({ length: 5 }, (_, i) => <Card key={i} variant="outlined"><CardContent sx={{ p: '12px !important' }}><Skeleton width="45%" /><Skeleton /><Skeleton width="70%" /></CardContent></Card>)}

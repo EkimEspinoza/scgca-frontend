@@ -16,6 +16,7 @@ import {
 } from '@mui/material'
 
 import { crearCentroCosto, actualizarCentroCosto } from '../../services/centroCostoService'
+import SearchableSelect from '../common/SearchableSelect'
 
 function CentroCostoForm({
   open,
@@ -403,103 +404,57 @@ function CentroCostoForm({
           />
 
           {/* Tipo de centro de costo */}
-          <FormControl
-            fullWidth
+          <SearchableSelect
+            label="Tipo Centro de Costo"
+            value={tipoCcId}
+            options={[{ id_tip_cc: '', des_tip_cc: 'Seleccione un tipo' }, ...tiposCentroCosto]}
+            getOptionValue={(tipo) => tipo.id_tip_cc === '' ? '' : String(tipo.id_tip_cc)}
+            getOptionLabel={(tipo) => tipo.des_tip_cc}
+            onChange={handleTipoCcChange}
             error={Boolean(errores.tipoCcId)}
+            helperText={errores.tipoCcId}
             disabled={loadingMaestros || guardando}
-          >
-            <InputLabel>Tipo Centro de Costo</InputLabel>
-
-            <Select
-              value={tipoCcId}
-              label="Tipo Centro de Costo"
-              onChange={handleTipoCcChange}
-            >
-              <MenuItem value=""><em>Seleccione un tipo</em></MenuItem>
-
-              {tiposCentroCosto.map((tipo) => (
-                <MenuItem key={tipo.id_tip_cc} value={String(tipo.id_tip_cc)}>
-                  {tipo.des_tip_cc}
-                </MenuItem>
-              ))}
-            </Select>
-
-            {errores.tipoCcId && <FormHelperText>{errores.tipoCcId}</FormHelperText>}
-          </FormControl>
+          />
 
           {/* Tipo de maquinaria */}
           {mostrarTipoMaquinaria && (
-            <FormControl
-              fullWidth
+            <SearchableSelect
+              label="Tipo Maquinaria"
+              value={tipoMaqId}
+              options={[{ id_tipo_maq: '', des_tipo_maquinaria: 'Seleccione' }, ...tiposMaquinaria]}
+              getOptionValue={(tipo) => tipo.id_tipo_maq === '' ? '' : String(tipo.id_tipo_maq)}
+              getOptionLabel={(tipo) => tipo.des_tipo_maquinaria}
+              onChange={handleTipoMaqChange}
               error={Boolean(errores.tipoMaqId)}
+              helperText={errores.tipoMaqId}
               disabled={loadingMaestros || guardando}
-            >
-              <InputLabel>Tipo Maquinaria</InputLabel>
-
-              <Select
-                value={tipoMaqId}
-                label="Tipo Maquinaria"
-                onChange={handleTipoMaqChange}
-              >
-                <MenuItem value=""><em>Seleccione</em></MenuItem>
-
-                {tiposMaquinaria.map((tipo) => (
-                  <MenuItem key={tipo.id_tipo_maq} value={String(tipo.id_tipo_maq)}>
-                    {tipo.des_tipo_maquinaria}
-                  </MenuItem>
-                ))}
-              </Select>
-
-              {errores.tipoMaqId && <FormHelperText>{errores.tipoMaqId}</FormHelperText>}
-            </FormControl>
+            />
           )}
 
           {/* Comparativo */}
           {mostrarComparativo && (
-            <FormControl
-              fullWidth
+            <SearchableSelect
+              label="Comparativo"
+              value={comparativoId}
+              options={[{ id_comparativo: '', descripcion: 'Sin asignar' }, ...comparativos]}
+              getOptionValue={(comparativo) => comparativo.id_comparativo === '' ? '' : String(comparativo.id_comparativo)}
+              getOptionLabel={(comparativo) => comparativo.descripcion}
+              onChange={handleComparativoChange}
               disabled={loadingMaestros || guardando}
-            >
-              <InputLabel>Comparativo</InputLabel>
-
-              <Select
-                value={comparativoId}
-                label="Comparativo"
-                onChange={handleComparativoChange}
-              >
-                <MenuItem value=""><em>Sin asignar</em></MenuItem>
-
-                {comparativos.map((comparativo) => (
-                  <MenuItem key={comparativo.id_comparativo} value={String(comparativo.id_comparativo)}>
-                    {comparativo.descripcion}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            />
           )}
 
           {/* Variedad */}
           {mostrarVariedad && (
-            <FormControl
-              fullWidth
+            <SearchableSelect
+              label="Variedad"
+              value={variedadId}
+              options={[{ id_variedad: '', descripcion: 'Sin asignar' }, ...variedades]}
+              getOptionValue={(variedad) => variedad.id_variedad === '' ? '' : String(variedad.id_variedad)}
+              getOptionLabel={(variedad) => variedad.descripcion}
+              onChange={handleVariedadChange}
               disabled={loadingMaestros || guardando}
-            >
-              <InputLabel>Variedad</InputLabel>
-
-              <Select
-                value={variedadId}
-                label="Variedad"
-                onChange={handleVariedadChange}
-              >
-                <MenuItem value=""><em>Sin asignar</em></MenuItem>
-
-                {variedades.map((variedad) => (
-                  <MenuItem key={variedad.id_variedad} value={String(variedad.id_variedad)}>
-                    {variedad.descripcion}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            />
           )}
 
           {/* VISTA PREVIA */}

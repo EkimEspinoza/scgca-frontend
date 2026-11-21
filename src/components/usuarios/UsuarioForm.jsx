@@ -28,6 +28,7 @@ import {
 } from '@mui/material'
 
 import { esPermisoAdministrador, obtenerEtiquetaPermiso, validarFormularioUsuario } from './usuarioRules'
+import SearchableSelect from '../common/SearchableSelect'
 
 import {
   Business as BusinessIcon,
@@ -587,47 +588,17 @@ function UsuarioForm({
               gap: 2,
             }}
           >
-            <FormControl
-              fullWidth
-              size="small"
-              error={Boolean(
-                errores.id_permiso,
-              )}
+            <SearchableSelect
+              label="Permiso"
+              value={formulario.id_permiso}
+              options={permisos}
+              getOptionValue={(permiso) => String(permiso.id_permiso)}
+              getOptionLabel={(permiso) => obtenerEtiquetaPermiso(permiso.nombre)}
+              onChange={manejarPermiso}
+              error={Boolean(errores.id_permiso)}
+              helperText={errores.id_permiso}
               disabled={guardando}
-            >
-              <InputLabel>
-                Permiso
-              </InputLabel>
-
-              <Select
-                value={
-                  formulario.id_permiso
-                }
-                label="Permiso"
-                onChange={
-                  manejarPermiso
-                }
-              >
-                {permisos.map(
-                  (permiso) => (
-                    <MenuItem
-                      key={
-                        permiso.id_permiso
-                      }
-                      value={
-                        permiso.id_permiso
-                      }
-                    >
-                      {obtenerEtiquetaPermiso(permiso.nombre)}
-                    </MenuItem>
-                  ),
-                )}
-              </Select>
-
-              <FormHelperText>
-                {errores.id_permiso}
-              </FormHelperText>
-            </FormControl>
+            />
 
 
             <FormControl

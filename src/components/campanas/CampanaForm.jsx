@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material'
 import StatusChip from '../common/StatusChip'
+import SearchableSelect from '../common/SearchableSelect'
 
 function CampanaForm({
   formulario,
@@ -92,22 +93,18 @@ function CampanaForm({
           {modoContextual && !modoEdicion && <FormHelperText>Empresa definida por el Centro de Costo seleccionado.</FormHelperText>}
         </FormControl>
 
-        <FormControl fullWidth size="small" required disabled={modoEdicion || centroCostoBloqueado || !formulario.id_empresa}>
-          <InputLabel>Centro de Costo</InputLabel>
-          <Select
-            value={formulario.cod_cc_pk ?? ''}
-            label="Centro de Costo"
-            onChange={(event) => onChange('cod_cc_pk', event.target.value)}
-          >
-            <MenuItem value="">Seleccione un Centro de Costo</MenuItem>
-            {centrosCosto.map((centroCosto) => (
-              <MenuItem key={centroCosto.cod_cc_pk} value={String(centroCosto.cod_cc_pk)}>
-                {centroCosto.cod_cc}{' - '}{centroCosto.desc_cc}
-              </MenuItem>
-            ))}
-          </Select>
-          {modoContextual && !modoEdicion && <FormHelperText>Centro de Costo definido por el contexto seleccionado.</FormHelperText>}
-        </FormControl>
+        <SearchableSelect
+          fullWidth
+          required
+          label="Centro de Costo"
+          value={formulario.cod_cc_pk ?? ''}
+          options={[{ cod_cc_pk: '', cod_cc: '', desc_cc: 'Seleccione un Centro de Costo' }, ...centrosCosto]}
+          getOptionValue={(centroCosto) => String(centroCosto.cod_cc_pk)}
+          getOptionLabel={(centroCosto) => centroCosto.cod_cc_pk ? `${centroCosto.cod_cc} - ${centroCosto.desc_cc ?? ''}` : centroCosto.desc_cc}
+          onChange={(event) => onChange('cod_cc_pk', event.target.value)}
+          disabled={modoEdicion || centroCostoBloqueado || !formulario.id_empresa}
+          helperText={modoContextual && !modoEdicion ? 'Centro de Costo definido por el contexto seleccionado.' : undefined}
+        />
 
         <TextField
           fullWidth

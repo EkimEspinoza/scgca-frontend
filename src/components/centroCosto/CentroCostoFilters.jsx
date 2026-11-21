@@ -10,6 +10,7 @@ import {
 } from '@mui/material'
 import { Search as SearchIcon, CleaningServices as CleaningServicesIcon } from '@mui/icons-material'
 import FiltersToolbar from '../common/FiltersToolbar'
+import SearchableSelect from '../common/SearchableSelect'
 
 function CentroCostoFilters({
   empresas,
@@ -84,77 +85,61 @@ function CentroCostoFilters({
           </Select>
         </FormControl>
 
-        <FormControl
+        <SearchableSelect
           size="small"
           disabled={cargando}
+          label="Tipo de Centro de Costo"
+          value={tipoCcId ?? ''}
+          options={[{ id_tip_cc: '', des_tip_cc: 'Todos' }, ...tiposCentroCosto]}
+          getOptionValue={(tipo) => tipo.id_tip_cc}
+          getOptionLabel={(tipo) => tipo.des_tip_cc}
+          onChange={onTipoCcChange}
           sx={{ flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 240px', lg: '1.4 1 240px' }, minWidth: { xs: 0, sm: 220, lg: 220 } }}
-        >
-          <InputLabel>Tipo de Centro de Costo</InputLabel>
-          <Select value={tipoCcId ?? ''} label="Tipo de Centro de Costo" onChange={onTipoCcChange}>
-            <MenuItem value="">Todos</MenuItem>
-            {tiposCentroCosto.map((tipo) => (
-              <MenuItem key={tipo.id_tip_cc} value={tipo.id_tip_cc}>
-                {tipo.des_tip_cc}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        />
 
         {/* Tipo de maquinaria se habilita según el tipo de centro de costo. */}
         {mostrarTipoMaquinaria && (
-          <FormControl
+          <SearchableSelect
             size="small"
             disabled={cargando || !tipoCcId}
+            label="Tipo de Maquinaria"
+            value={tipoMaqId ?? ''}
+            options={[{ id_tipo_maq: '', des_tipo_maquinaria: 'Todos' }, ...tiposMaquinariaFiltrados]}
+            getOptionValue={(tipo) => tipo.id_tipo_maq}
+            getOptionLabel={(tipo) => tipo.des_tipo_maquinaria}
+            onChange={onTipoMaqChange}
             sx={{ flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 180px' }, minWidth: { xs: 0, sm: 160 } }}
-          >
-            <InputLabel>Tipo de Maquinaria</InputLabel>
-            <Select value={tipoMaqId ?? ''} label="Tipo de Maquinaria" onChange={onTipoMaqChange}>
-              <MenuItem value="">Todos</MenuItem>
-              {tiposMaquinariaFiltrados.map((tipo) => (
-                <MenuItem key={tipo.id_tipo_maq} value={tipo.id_tipo_maq}>
-                  {tipo.des_tipo_maquinaria}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          />
         )}
 
         {/* Comparativo se habilita según el tipo de centro de costo. */}
         {mostrarComparativo && (
-          <FormControl
+          <SearchableSelect
             size="small"
             disabled={cargando || !tipoCcId}
+            label="Comparativo"
+            value={comparativoId ?? ''}
+            options={[{ id_comparativo: '', descripcion: 'Todos' }, ...comparativosFiltrados]}
+            getOptionValue={(item) => item.id_comparativo}
+            getOptionLabel={(item) => item.descripcion}
+            onChange={onComparativoChange}
             sx={{ flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 170px' }, minWidth: { xs: 0, sm: 140 } }}
-          >
-            <InputLabel>Comparativo</InputLabel>
-            <Select value={comparativoId ?? ''} label="Comparativo" onChange={onComparativoChange}>
-              <MenuItem value="">Todos</MenuItem>
-              {comparativosFiltrados.map((item) => (
-                <MenuItem key={item.id_comparativo} value={item.id_comparativo}>
-                  {item.descripcion}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          />
         )}
 
         {/* Variedad se habilita según el tipo de centro de costo. */}
         {mostrarVariedad && (
-          <FormControl
+          <SearchableSelect
             size="small"
             disabled={cargando || !tipoCcId}
+            label="Variedad"
+            value={variedadId ?? ''}
+            options={[{ id_variedad: '', descripcion: 'Todas' }, ...variedadesFiltradas]}
+            getOptionValue={(item) => item.id_variedad}
+            getOptionLabel={(item) => item.descripcion}
+            onChange={onVariedadChange}
             sx={{ flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 170px' }, minWidth: { xs: 0, sm: 140 } }}
-          >
-            <InputLabel>Variedad</InputLabel>
-            <Select value={variedadId ?? ''} label="Variedad" onChange={onVariedadChange}>
-              <MenuItem value="">Todas</MenuItem>
-              {variedadesFiltradas.map((item) => (
-                <MenuItem key={item.id_variedad} value={item.id_variedad}>
-                  {item.descripcion}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          />
         )}
 
         <TextField

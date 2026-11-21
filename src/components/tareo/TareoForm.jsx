@@ -8,10 +8,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
   CircularProgress,
   TextField,
   Typography,
@@ -19,6 +15,7 @@ import {
 import { obtenerEtapasCosto } from '../../services/etapaCostoService'
 import { obtenerCatalogoCentrosEditarTareo } from '../../services/tareoService'
 import { TIPOS_CC } from '../centroCosto/centroCostoRules'
+import SearchableSelect from '../common/SearchableSelect'
 
 const ocultarIncrementales = {
   '& input[type="number"]': { MozAppearance: 'textfield' },
@@ -171,15 +168,17 @@ export default function TareoForm({ open, registro, pendiente = false, guardando
             />
             <TextField label="Horas" type="number" value={valores.hora} onChange={cambiar('hora')} size="small" required disabled={guardando} error={Boolean(erroresCampo.hora)} helperText={erroresCampo.hora} sx={ocultarIncrementales} slotProps={{ htmlInput: { min: 0.01, step: 0.01 } }} />
             <TextField label="Fecha de tareo" type="date" value={valores.fecha_tareo} onChange={cambiar('fecha_tareo')} size="small" required disabled={guardando} error={Boolean(erroresCampo.fecha_tareo)} helperText={erroresCampo.fecha_tareo} slotProps={{ inputLabel: { shrink: true } }} />
-            <FormControl size="small" fullWidth disabled={guardando || cargandoEtapas} error={Boolean(errorEtapas)}>
-              <InputLabel id="etapa-tareo-label">Etapa de costo</InputLabel>
-              <Select labelId="etapa-tareo-label" label="Etapa de costo" value={etapaIdActual} onChange={cambiar('etapa_tareo')}>
-                <MenuItem value="">Sin etapa</MenuItem>
-                {etapasDisponibles.map((etapa) => <MenuItem key={etapa.cod_etapa} value={String(etapa.cod_etapa)}>{etapa.etapa_costo}</MenuItem>)}
-              </Select>
-              {errorEtapas && <Typography variant="caption" color="error.main" sx={{ mt: 0.5 }}>{errorEtapas}</Typography>}
-              {cargandoEtapas && <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>Cargando etapas…</Typography>}
-            </FormControl>
+            <SearchableSelect
+              label="Etapa de costo"
+              value={etapaIdActual}
+              options={[{ cod_etapa: '', etapa_costo: 'Sin etapa' }, ...etapasDisponibles]}
+              getOptionValue={(etapa) => etapa.cod_etapa === '' ? '' : String(etapa.cod_etapa)}
+              getOptionLabel={(etapa) => etapa.etapa_costo}
+              onChange={cambiar('etapa_tareo')}
+              disabled={guardando || cargandoEtapas}
+              error={Boolean(errorEtapas)}
+              helperText={errorEtapas || (cargandoEtapas ? 'Cargando etapas…' : '')}
+            />
             <Box sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}>
               <TextField label="Observación" value={valores.observacion} onChange={cambiar('observacion')} size="small" multiline minRows={1} maxRows={3} fullWidth disabled={guardando} inputProps={{ maxLength: maxObservacion }} error={Boolean(erroresCampo.observacion)} helperText={erroresCampo.observacion || <Typography component="span" variant="caption">{valores.observacion.length}/{maxObservacion} caracteres</Typography>} />
             </Box>

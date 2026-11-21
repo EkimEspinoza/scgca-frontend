@@ -1,4 +1,5 @@
 import {
+  Autocomplete,
   Box,
   FormControl,
   IconButton,
@@ -10,6 +11,7 @@ import {
 } from '@mui/material'
 import { CleaningServices as CleaningServicesIcon } from '@mui/icons-material'
 import FiltersToolbar from '../common/FiltersToolbar'
+import SearchableSelect from '../common/SearchableSelect'
 
 function CampanaFilters({
   empresas,
@@ -36,6 +38,9 @@ function CampanaFilters({
         .map((centro) => [centro.tipo_centro_costo.id_tip_cc, centro.tipo_centro_costo]),
     ).values(),
   ).sort((a, b) => a.des_tip_cc.localeCompare(b.des_tip_cc, 'es', { sensitivity: 'base' }))
+  const centrosCostoFiltrados = centrosCosto
+    .filter((centro) => !tipoCentroCostoSeleccionado || String(centro.tipo_centro_costo?.id_tip_cc) === String(tipoCentroCostoSeleccionado))
+    .sort((a, b) => (a.desc_cc ?? '').localeCompare(b.desc_cc ?? '', 'es', { sensitivity: 'base' }))
 
   return (
     <FiltersToolbar>
@@ -59,40 +64,35 @@ function CampanaFilters({
           </Select>
         </FormControl>
 
-        <FormControl
+        <SearchableSelect
           size="small"
           disabled={loading || !empresaSeleccionada}
+          label="Tipo de Centro de Costo"
+          value={tipoCentroCostoSeleccionado ?? ''}
+          options={[{ id_tip_cc: '', des_tip_cc: 'Todos' }, ...tiposCentroCosto]}
+          getOptionValue={(tipo) => tipo.id_tip_cc}
+          getOptionLabel={(tipo) => tipo.des_tip_cc}
+          onChange={onTipoCentroCostoChange}
           sx={{ flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 190px', lg: '1.2 1 240px' }, minWidth: { xs: 0, sm: 180, lg: 220 } }}
-        >
-          <InputLabel>Tipo de Centro de Costo</InputLabel>
-          <Select value={tipoCentroCostoSeleccionado ?? ''} label="Tipo de Centro de Costo" onChange={onTipoCentroCostoChange}>
-            <MenuItem value="">Todos</MenuItem>
-            {tiposCentroCosto.map((tipo) => (
-              <MenuItem key={tipo.id_tip_cc} value={tipo.id_tip_cc}>
-                {tipo.des_tip_cc}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        />
 
-        <FormControl
+        <Autocomplete
           size="small"
           disabled={loading || !empresaSeleccionada}
+          options={[
+            { cod_cc_pk: '', cod_cc: '', desc_cc: 'Todos', esTodos: true },
+            ...centrosCostoFiltrados,
+          ]}
+          value={
+            centrosCostoFiltrados.find((centro) => String(centro.cod_cc_pk) === String(centroCostoSeleccionado))
+            ?? { cod_cc_pk: '', cod_cc: '', desc_cc: 'Todos', esTodos: true }
+          }
+          getOptionLabel={(opcion) => opcion.esTodos ? 'Todos' : `${opcion.cod_cc} - ${opcion.desc_cc ?? ''}`}
+          isOptionEqualToValue={(opcion, valor) => String(opcion.cod_cc_pk) === String(valor.cod_cc_pk)}
+          onChange={(_event, opcion) => onCentroCostoChange({ target: { value: opcion?.esTodos ? '' : opcion?.cod_cc_pk ?? '' } })}
           sx={{ flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 190px', lg: '1.4 1 240px' }, minWidth: { xs: 0, sm: 180, lg: 220 } }}
-        >
-          <InputLabel>Centro de Costo</InputLabel>
-          <Select value={centroCostoSeleccionado ?? ''} label="Centro de Costo" onChange={onCentroCostoChange}>
-            <MenuItem value="">Todos</MenuItem>
-            {centrosCosto
-              .filter((centro) => !tipoCentroCostoSeleccionado || String(centro.tipo_centro_costo?.id_tip_cc) === String(tipoCentroCostoSeleccionado))
-              .sort((a, b) => (a.desc_cc ?? '').localeCompare(b.desc_cc ?? '', 'es', { sensitivity: 'base' }))
-              .map((centro) => (
-                <MenuItem key={centro.cod_cc_pk} value={centro.cod_cc_pk}>
-                  {centro.cod_cc}{' - '}{centro.desc_cc}
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
+          renderInput={(params) => <TextField {...params} label="Centro de Costo" placeholder="Buscar centro de costo" />}
+        />
 
         <TextField
           className="app-search-input"

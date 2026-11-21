@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Autocomplete, Box, Button, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Popover, Select, TextField, Tooltip, Typography } from '@mui/material'
-import { Add, CalendarMonth, CleaningServices, Search, TableView, UploadFile } from '@mui/icons-material'
+import { Add, CalendarMonth, CleaningServices, Refresh, Search, TableView, UploadFile } from '@mui/icons-material'
+import SearchableSelect from '../common/SearchableSelect'
 
 function monthLabel(value) {
   if (!value) return ''
@@ -30,6 +31,7 @@ export default function MovMOFilters({
   grupoLaborId = '', onGrupoLabor, gruposLabor = [], opcionesCargando = false,
   mostrarImportar = false, mostrarExportar = false, exportando = false, totalExportable = 0, onExportar,
   mostrarNuevo = false, onNuevo,
+  mostrarRevalidar = false, revalidando = false, onRevalidar,
   mostrarBusqueda = true, mostrarFiltrosCatalogo = true,
 }) {
   const [rangoAnchor, setRangoAnchor] = useState(null)
@@ -42,9 +44,9 @@ export default function MovMOFilters({
   return (
     <Box className={`app-filters-panel mov-mo-filters${resumenEnUnaFila ? ' mov-mo-filters--summary' : ''}`} sx={{ display: resumenEnUnaFila ? 'grid' : 'flex', flexDirection: resumenEnUnaFila ? undefined : 'column', gap: 1.5, p: 1.25, pt: 2.75, mb: 0, '& .MuiAutocomplete-input': { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' } }}>
       <Box className="mov-mo-filters__row mov-mo-filters__row--catalog" sx={{ display: resumenEnUnaFila ? 'contents' : 'grid', alignItems: 'center', gap: 1, width: '100%', minWidth: 0 }}>
-        <FormControl className="mov-mo-filter__year" size="small"><InputLabel id="mov-mo-year-label">Año</InputLabel><Select labelId="mov-mo-year-label" label="Año" value={anio} onChange={(event) => onAnio(event.target.value)}>{anios.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}</Select></FormControl>
+        <SearchableSelect className="mov-mo-filter__year" label="Año" value={anio} options={anios.map((value) => ({ value, label: value }))} onChange={(event) => onAnio(event.target.value)} />
         {mostrarFiltrosCatalogo && <>
-          <FormControl className="mov-mo-filter__type" size="small"><InputLabel id="mov-mo-tipo-cc-label">Tipo de centro de costo</InputLabel><Select labelId="mov-mo-tipo-cc-label" label="Tipo de centro de costo" value={tipoCentroId} onChange={(event) => onTipoCentro(event.target.value)} disabled={opcionesCargando}><MenuItem value="">Todos</MenuItem>{tiposCentro.map((tipo) => <MenuItem key={tipo.id_tip_cc} value={String(tipo.id_tip_cc)}>{tipo.des_tip_cc}</MenuItem>)}</Select></FormControl>
+          <SearchableSelect className="mov-mo-filter__type" label="Tipo de centro de costo" value={tipoCentroId} options={[{ id_tip_cc: '', des_tip_cc: 'Todos' }, ...tiposCentro]} getOptionValue={(tipo) => tipo.id_tip_cc === '' ? '' : String(tipo.id_tip_cc)} getOptionLabel={(tipo) => tipo.des_tip_cc} onChange={(event) => onTipoCentro(event.target.value)} disabled={opcionesCargando} />
           <Autocomplete
             className="mov-mo-filter__center"
             size="small" options={centrosDisponibles} loading={opcionesCargando} value={centroSeleccionado}
@@ -55,7 +57,7 @@ export default function MovMOFilters({
             sx={{ width: '100%', minWidth: 0, '& .MuiAutocomplete-input': { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }}
             renderInput={(params) => <TextField {...params} label="Centro de costo" placeholder={tipoCentroId ? 'Selecciona un centro' : 'Todos'} inputProps={{ ...params.inputProps, title: centroSeleccionado ? `${centroSeleccionado.cod_cc ?? ''} · ${centroSeleccionado.desc_cc ?? ''}` : undefined }} />}
           />
-          <FormControl className="mov-mo-filter__group" size="small"><InputLabel id="mov-mo-grupo-labor-label">Grupo de labor</InputLabel><Select labelId="mov-mo-grupo-labor-label" label="Grupo de labor" value={grupoLaborId} onChange={(event) => onGrupoLabor(event.target.value)} disabled={opcionesCargando}><MenuItem value="">Todos</MenuItem>{gruposLabor.map((grupo) => <MenuItem key={grupo.Id_Grupo_Labor} value={String(grupo.Id_Grupo_Labor)}>{grupo.DescripcionLabor}</MenuItem>)}</Select></FormControl>
+          <SearchableSelect className="mov-mo-filter__group" label="Grupo de labor" value={grupoLaborId} options={[{ Id_Grupo_Labor: '', DescripcionLabor: 'Todos' }, ...gruposLabor]} getOptionValue={(grupo) => grupo.Id_Grupo_Labor === '' ? '' : String(grupo.Id_Grupo_Labor)} getOptionLabel={(grupo) => grupo.DescripcionLabor} onChange={(event) => onGrupoLabor(event.target.value)} disabled={opcionesCargando} />
         </>}
       </Box>
       <Box className="mov-mo-filters__row mov-mo-filters__row--controls" sx={{ display: resumenEnUnaFila ? 'contents' : 'grid', alignItems: 'center', gap: 1, width: '100%', minWidth: 0 }}>
@@ -73,6 +75,7 @@ export default function MovMOFilters({
         </Tooltip>
         <FormControl className="mov-mo-filter__state" size="small"><InputLabel id="mov-mo-state-label">Estado</InputLabel><Select labelId="mov-mo-state-label" label="Estado" value={estado} onChange={(event) => onEstado(event.target.value)}><MenuItem value="">Todos</MenuItem><MenuItem value="1">Activo</MenuItem><MenuItem value="0">Inactivo</MenuItem></Select></FormControl>
         <Box className="mov-mo-filters__actions">
+          {mostrarRevalidar && <Tooltip title="Vuelve a validar los pendientes de la empresa y el rango de fechas seleccionados"><span><Button variant="outlined" color="inherit" startIcon={<Refresh />} onClick={onRevalidar} disabled={revalidando || totalExportable === 0}>{revalidando ? 'Revalidando…' : 'Revalidar pendientes'}</Button></span></Tooltip>}
           {mostrarExportar && <Tooltip title={exportando ? 'Preparando archivo Excel…' : 'Exportar registros filtrados a Excel'}><span><Button className="app-excel-action-button" variant="outlined" color="inherit" startIcon={<TableView />} onClick={onExportar} disabled={exportando || totalExportable === 0}>{exportando ? 'Exportando…' : 'Exportar Excel'}</Button></span></Tooltip>}
           {mostrarNuevo && <Button variant="contained" color="success" startIcon={<Add />} onClick={onNuevo}>Nuevo registro</Button>}
           {mostrarImportar && <Tooltip title="La carga se habilitará al definir reglas de validación e identificación para los registros de Mano de Obra"><span><Button variant="outlined" color="inherit" startIcon={<UploadFile />} disabled>Cargar Excel</Button></span></Tooltip>}

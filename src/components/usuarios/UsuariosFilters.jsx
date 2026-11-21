@@ -17,6 +17,7 @@ import {
 
 import { obtenerEtiquetaPermiso } from './usuarioRules'
 import FiltersToolbar from '../common/FiltersToolbar'
+import SearchableSelect from '../common/SearchableSelect'
 
 function UsuariosFilters({
   filtros,
@@ -99,7 +100,7 @@ function UsuariosFilters({
         </FormControl>
 
         {/* Permiso */}
-        <FormControl
+        <SearchableSelect
           size="small"
           sx={{
             width: {
@@ -108,45 +109,14 @@ function UsuariosFilters({
             },
             flexShrink: 0,
           }}
+          label="Permiso"
+          value={filtros.permiso}
+          options={[{ id_permiso: '', nombre: 'Todos' }, ...permisos]}
+          getOptionValue={(permiso) => permiso.id_permiso}
+          getOptionLabel={(permiso) => permiso.id_permiso === '' ? 'Todos' : obtenerEtiquetaPermiso(permiso.nombre)}
+          onChange={(event) => onFiltroChange('permiso', event.target.value)}
           disabled={loading}
-        >
-          <InputLabel>
-            Permiso
-          </InputLabel>
-
-          <Select
-            value={filtros.permiso}
-            label="Permiso"
-            onChange={(event) =>
-              onFiltroChange(
-                'permiso',
-                event.target.value,
-              )
-            }
-            sx={{
-              borderRadius: 1,
-            }}
-          >
-            <MenuItem value="">
-              Todos
-            </MenuItem>
-
-            {permisos.map(
-              (permiso) => (
-                <MenuItem
-                  key={
-                    permiso.id_permiso
-                  }
-                  value={
-                    permiso.id_permiso
-                  }
-                >
-                  {obtenerEtiquetaPermiso(permiso.nombre)}
-                </MenuItem>
-              ),
-            )}
-          </Select>
-        </FormControl>
+        />
 
         {/* Empresa */}
         <FormControl

@@ -3,6 +3,7 @@ import {
   Autocomplete, Box, Button, Collapse, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Paper, Popover, Select, TextField, Tooltip, Typography, useMediaQuery,
 } from '@mui/material'
 import { CalendarMonth, Clear as ClearIcon, CleaningServices as CleaningServicesIcon, FilterList as FilterIcon, Search as SearchIcon, TableView, UploadFile as UploadIcon } from '@mui/icons-material'
+import SearchableSelect from '../common/SearchableSelect'
 
 function dateLabel(value) {
   if (!value) return ''
@@ -68,12 +69,14 @@ export default function TareoFilters({ busqueda, onBusqueda, estado, onEstadoCha
         <Box className="tareo-filters-panel__layout">
           <Box className="tareo-filters-panel__controls">
             <Box className="tareo-filters-panel__row tareo-filters-panel__row--primary">
-            <FormControl className="tareo-filters-panel__year" size="small">
-              <InputLabel id="tareo-year-label">Año</InputLabel>
-              <Select labelId="tareo-year-label" label="Año" value={anio} onChange={(event) => onAnioChange(event.target.value)} inputProps={{ 'aria-label': 'Filtrar por año' }}>
-                {Array.from({ length: new Date().getFullYear() - 2017 + 1 }, (_, index) => new Date().getFullYear() - index).map((year) => <MenuItem key={year} value={String(year)}>{year}</MenuItem>)}
-              </Select>
-            </FormControl>
+            <SearchableSelect
+              className="tareo-filters-panel__year"
+              label="Año"
+              value={anio}
+              options={Array.from({ length: new Date().getFullYear() - 2017 + 1 }, (_, index) => new Date().getFullYear() - index).map((year) => ({ value: String(year), label: String(year) }))}
+              onChange={(event) => onAnioChange(event.target.value)}
+              inputProps={{ 'aria-label': 'Filtrar por año' }}
+            />
             {!modoResumen && <Autocomplete
               className="tareo-filters-panel__center"
               size="small"

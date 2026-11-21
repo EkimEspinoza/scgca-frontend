@@ -5,6 +5,7 @@ import {
   TableBody, TableCell, TableContainer, TableHead, TableRow, Typography,
 } from '@mui/material'
 import { obtenerEmpresas } from '../../services/empresaService'
+import SearchableSelect from '../common/SearchableSelect'
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 
@@ -187,18 +188,8 @@ export default function TareoImportDialog({ open, file, empresas = [], empresasC
                   {empresasArchivo.map((empresa) => <MenuItem key={empresa.id_empresa} value={String(empresa.id_empresa)} disabled={cargandoCatalogoEmpresas || !empresa.nombre_comercial?.trim()}>{nombreEmpresa(empresa)}</MenuItem>)}
                 </Select>
               </FormControl>
-              <FormControl size="small" fullWidth>
-                <InputLabel id="tareo-import-year">Año</InputLabel>
-                <Select labelId="tareo-import-year" label="Año" value={anio} onChange={(event) => setAnio(event.target.value)}>
-                  {aniosDisponibles.map((year) => <MenuItem key={year} value={year}>{year}</MenuItem>)}
-                </Select>
-              </FormControl>
-              <FormControl size="small" fullWidth>
-                <InputLabel id="tareo-import-cutoff">Cargar hasta</InputLabel>
-                <Select labelId="tareo-import-cutoff" label="Cargar hasta" value={mesCorte} onChange={(event) => setMesCorte(event.target.value)}>
-                  {MESES.map((mes, index) => <MenuItem key={mes} value={String(index + 1)}>{mes}</MenuItem>)}
-                </Select>
-              </FormControl>
+              <SearchableSelect label="Año" value={anio} options={aniosDisponibles.map((year) => ({ value: year, label: String(year) }))} onChange={(event) => setAnio(event.target.value)} />
+              <SearchableSelect label="Cargar hasta" value={mesCorte} options={MESES.map((mes, index) => ({ value: String(index + 1), label: mes }))} onChange={(event) => setMesCorte(event.target.value)} />
             </Box>
 
             {!empresaId && <Alert severity="warning">Selecciona la empresa del archivo para revisar sus permisos y evitar mezclar empresas.</Alert>}
