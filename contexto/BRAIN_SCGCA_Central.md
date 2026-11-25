@@ -320,4 +320,4 @@ BRAIN OK significa consolidar los acuerdos y avances acumulados hasta ese moment
 - **CONFIRMADO — selector de empresa:** se evita duplicar el selector global del encabezado con otro filtro Empresa en Cuenta, Usuarios, Centro de Costos y Campañas.
 - **CONFIRMADO — Supabase Central:** las migraciones `20261124231303`, `20261124232352` y `20261124234130` aparecen local y remotamente. Conteos verificados: Dim_TipoCuenta 11, Dim_Cuenta_Comparativo 263 y Dim_Cuenta 790. Total: 86 versiones de migración local/remota coincidentes; ninguna migración fue reaplicada.
 - **PENDIENTE — UI:** no se ejecutaron build, pruebas ni validación visual manual hoy; falta revisar paginación responsive y ambos temas.
-- **CONFIRMADO — GitHub:** se publicaron los commits `f7c359d` y `b33c866` (`feat: sync service catalogs and shared pagination`) en `main`; el repositorio local quedó alineado con `origin/main` en `b33c866`.
+- **CONFIRMADO — GitHub:** se publicaron `f7c359d`, `b33c866` (`feat: sync service catalogs and shared pagination`) y el Brain `5166fe6` en `main`; local y `origin/main` quedaron alineados en `5166fe6`.
