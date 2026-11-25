@@ -54,4 +54,4 @@ El trabajo activo abarca **Mov_Tareo** y **Mov_MO**. La importación de Tareo ti
 - **CONFIRMADO — conteo de resultados:** se colocó a la izquierda de la paginación en los catálogos revisados; en Centro de Costos se integró junto a la paginación propia. Queda validación responsive/visual.
 - **CONFIRMADO — filtro global de empresa:** se quitó duplicidad del selector donde empresa ya está controlada por el encabezado global.
 - **PENDIENTE — calidad frontend:** no se ejecutaron build, pruebas ni validación visual manual hoy.
-- **CONFIRMADO — GitHub:** `f7c359d`, `b33c866` (`feat: sync service catalogs and shared pagination`) y el Brain `5166fe6` están publicados en `main`; local y `origin/main` quedaron alineados en `5166fe6`.
+- **CONFIRMADO — GitHub:** el commit previo `f7c359d`, los cambios de catálogos/paginación y las actualizaciones del Brain están publicados en `main`; local y `origin/main` quedaron alineados al cerrar la jornada.
