@@ -1,3 +1,4 @@
+// Compone la pantalla Distribucion y conecta sus componentes.
 import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,

@@ -1,3 +1,4 @@
+// Define el componente reutilizable usuarioRules.
 export function esPermisoAdministrador(nombrePermiso) {
   return nombrePermiso === 'ADMIN'
 }

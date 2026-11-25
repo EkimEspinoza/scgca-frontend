@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de excelService.test.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {

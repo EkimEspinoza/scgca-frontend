@@ -1,3 +1,4 @@
+// Define el componente reutilizable MainLayout.
 import { useState } from 'react'
 import { Box, useMediaQuery } from '@mui/material'
 

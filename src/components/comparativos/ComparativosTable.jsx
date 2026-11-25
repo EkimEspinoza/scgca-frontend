@@ -1,3 +1,4 @@
+// Presenta la tabla de Comparativos.
 import { Edit } from '@mui/icons-material'
 import {
   Box,
@@ -200,6 +201,7 @@ export default function ComparativosTable({
         registrosPorPagina={registrosPorPagina}
         onPageChange={onChangePagina}
         onRowsPerPageChange={onChangeRegistrosPorPagina}
+        leadingContent={`${totalRegistros} ${totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}`}
       />
 
       <Dialog

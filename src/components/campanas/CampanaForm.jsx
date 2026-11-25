@@ -1,3 +1,4 @@
+// Presenta formularios y diálogos de Campana.
 import {
   Alert,
   Box,

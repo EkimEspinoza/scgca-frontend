@@ -1,3 +1,4 @@
+// Gestiona estado y acciones de useComparativos.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   actualizarComparativo,

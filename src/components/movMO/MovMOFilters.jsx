@@ -1,3 +1,4 @@
+// Presenta los filtros de MovMO.
 import { useState } from 'react'
 import { Autocomplete, Box, Button, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Popover, Select, TextField, Tooltip, Typography } from '@mui/material'
 import { Add, CalendarMonth, CleaningServices, Refresh, Search, TableView, UploadFile } from '@mui/icons-material'
@@ -42,9 +43,14 @@ export default function MovMOFilters({
   const centroSeleccionado = centrosDisponibles.find((centro) => String(centro.cod_cc_pk) === String(centroCostoPk)) ?? null
   const resumenEnUnaFila = !mostrarBusqueda && !mostrarFiltrosCatalogo
   return (
-    <Box className={`app-filters-panel mov-mo-filters${resumenEnUnaFila ? ' mov-mo-filters--summary' : ''}`} sx={{ display: resumenEnUnaFila ? 'grid' : 'flex', flexDirection: resumenEnUnaFila ? undefined : 'column', gap: 1.5, p: 1.25, pt: 2.75, mb: 0, '& .MuiAutocomplete-input': { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' } }}>
+    <Box className={`app-filters-panel mov-mo-filters${resumenEnUnaFila ? ' mov-mo-filters--summary' : ''}`} sx={{ display: resumenEnUnaFila ? 'grid' : 'flex', flexDirection: resumenEnUnaFila ? undefined : 'column', mb: 0, '& .MuiAutocomplete-input': { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' } }}>
       <Box className="mov-mo-filters__row mov-mo-filters__row--catalog" sx={{ display: resumenEnUnaFila ? 'contents' : 'grid', alignItems: 'center', gap: 1, width: '100%', minWidth: 0 }}>
-        <SearchableSelect className="mov-mo-filter__year" label="Año" value={anio} options={anios.map((value) => ({ value, label: value }))} onChange={(event) => onAnio(event.target.value)} />
+        <FormControl className="mov-mo-filter__year" size="small">
+          <InputLabel id="mov-mo-year-label">Año</InputLabel>
+          <Select labelId="mov-mo-year-label" label="Año" value={String(anio ?? '')} onChange={(event) => onAnio(event.target.value)} inputProps={{ 'aria-label': 'Filtrar por año' }}>
+            {anios.map((year) => <MenuItem key={year} value={year}>{year}</MenuItem>)}
+          </Select>
+        </FormControl>
         {mostrarFiltrosCatalogo && <>
           <SearchableSelect className="mov-mo-filter__type" label="Tipo de centro de costo" value={tipoCentroId} options={[{ id_tip_cc: '', des_tip_cc: 'Todos' }, ...tiposCentro]} getOptionValue={(tipo) => tipo.id_tip_cc === '' ? '' : String(tipo.id_tip_cc)} getOptionLabel={(tipo) => tipo.des_tip_cc} onChange={(event) => onTipoCentro(event.target.value)} disabled={opcionesCargando} />
           <Autocomplete

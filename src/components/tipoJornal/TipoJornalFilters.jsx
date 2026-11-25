@@ -1,3 +1,4 @@
+// Presenta los filtros de TipoJornal.
 import CatalogFiltersToolbar from '../common/CatalogFiltersToolbar'
 
 export default function TipoJornalFilters({ loading, totalRegistros, busqueda, filtroEstado, error, onExportar, onNuevo, onCambioBusqueda, onCambioEstado, onCerrarError }) {
@@ -18,5 +19,6 @@ export default function TipoJornalFilters({ loading, totalRegistros, busqueda, f
     searchLabel="Buscar tipo de jornal"
     createLabel="Nuevo Tipo de Jornal"
     showInlineClear
+    showResultCount={false}
   />
 }

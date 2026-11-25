@@ -1,3 +1,4 @@
+// Gestiona estado y acciones de useDistribucionRango.
 import { useCallback, useEffect, useState } from 'react'
 import {
   guardarDistribucionMes,

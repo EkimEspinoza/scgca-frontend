@@ -1,3 +1,4 @@
+// Presenta los filtros de Variedades.
 import CatalogFiltersToolbar from '../common/CatalogFiltersToolbar'
 
 export default function VariedadesFilters({ puedeAdministrar, loading, totalRegistros, busqueda, filtroEstado, error, onExportar, onNuevaVariedad, onCambioBusqueda, onCambioEstado, onCerrarError }) {
@@ -20,5 +21,6 @@ export default function VariedadesFilters({ puedeAdministrar, loading, totalRegi
     createLabel="Nueva variedad"
     canCreate={puedeAdministrar}
     showInlineClear
+    showResultCount={false}
   />
 }

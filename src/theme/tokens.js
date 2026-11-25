@@ -1,3 +1,4 @@
+// Define estilos compartidos del tema de la aplicación.
 export const tokens = {
   spacing: 8,
   radius: { small: 8, medium: 12, large: 16 },

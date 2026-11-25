@@ -1,3 +1,4 @@
+// Define el componente reutilizable PageHeader.
 import { Box, Button, Typography } from '@mui/material'
 
 function PageHeader({

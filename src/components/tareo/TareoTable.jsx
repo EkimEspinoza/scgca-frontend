@@ -1,3 +1,4 @@
+// Presenta la tabla de Tareo.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert, Box, Card, CardContent, Checkbox, Chip, FormControlLabel, FormGroup, IconButton, Popover, Skeleton, Table, TableBody, TableCell,

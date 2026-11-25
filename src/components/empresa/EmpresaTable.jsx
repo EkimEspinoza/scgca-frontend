@@ -1,3 +1,4 @@
+// Presenta la tabla de Empresa.
 import { Edit } from '@mui/icons-material'
 import {
   Box,
@@ -223,6 +224,7 @@ export default function EmpresaTable({
         onPageChange={onChangePagina}
         onRowsPerPageChange={onChangeRegistrosPorPagina}
         opciones={[5, 10]}
+        leadingContent={`${totalRegistros} ${totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}`}
       />
 
       <Dialog

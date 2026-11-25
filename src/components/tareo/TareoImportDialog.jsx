@@ -1,3 +1,4 @@
+// Define el componente reutilizable TareoImportDialog.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert, Box, Button, Checkbox, CircularProgress, Dialog, DialogActions, DialogContent,

@@ -1,362 +1,30 @@
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-    Alert, Box, Button, Card, CardContent, CircularProgress, Dialog,
-    DialogActions, DialogContent, DialogTitle, Divider, Grid, IconButton,
-    Paper, Snackbar, TextField, Typography
-} from '@mui/material'
-import {
-    CalendarMonth, CheckCircle, Close as CloseIcon, CloudDownload,
-    CurrencyExchange, Edit as EditIcon, Save, TrendingUp
-} from '@mui/icons-material'
-import {
-    obtenerTiposCambio,
-    obtenerUltimoTipoCambio,
-    obtenerSiguientePeriodo,
-    prepararTipoCambioManual,
-    crearTipoCambio,
-    actualizarTipoCambio
-} from '../../services/tipoCambioService'
+import useTipoCambio from '../../hooks/useTipoCambio'
+import { formatearPeriodo } from '../../hooks/tipoCambioFormatters'
+import { Alert, Box, Button, CircularProgress, IconButton, Paper, Snackbar, Typography } from '@mui/material'
+import { CloudDownload, CurrencyExchange } from '@mui/icons-material'
 import SearchInput from '../../components/common/SearchInput'
-import StatusChip from '../../components/common/StatusChip'
-import Pagination from '../../components/common/Pagination'
 import PageHeader from '../../components/common/PageHeader'
-import DataTable from '../../components/common/DataTable'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import { ActiveFilterChips } from '../../components/common/FiltersToolbar'
-
-const MESES = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-]
-
-const formularioInicial = {
-    tipo_cambio: '',
-    estado: true
-}
-
-const formatearPeriodo = (anho, mes) => {
-    if (!anho || !mes || Number(mes) < 1 || Number(mes) > 12) {
-        return 'Período no disponible'
-    }
-    return `${MESES[Number(mes) - 1]} ${anho}`
-}
-
-const formatearTipoCambio = (valor) => {
-    if (valor === null || valor === undefined || valor === '') return '—'
-    return Number(valor).toLocaleString('es-PE', {
-        minimumFractionDigits: 3,
-        maximumFractionDigits: 3
-    })
-}
-
-const formatearFecha = (fecha) => {
-    if (!fecha) return '—'
-    const valor = new Date(fecha)
-    if (Number.isNaN(valor.getTime())) return '—'
-    return valor.toLocaleString('es-PE', {
-        dateStyle: 'short',
-        timeStyle: 'short'
-    })
-}
+import TipoCambioTable from '../../components/TipoCambioTable'
+import TipoCambioDialogs from '../../components/TipoCambioDialogs'
 
 function TipoCambio() {
-    const [tiposCambio, setTiposCambio] = useState([])
-    const [ultimoTipoCambio, setUltimoTipoCambio] = useState(null)
-    const [siguientePeriodo, setSiguientePeriodo] = useState(null)
-    const [propuesta, setPropuesta] = useState(null)
-    const [tipoSeleccionado, setTipoSeleccionado] = useState(null)
-    const [formulario, setFormulario] = useState(formularioInicial)
-    const [erroresFormulario, setErroresFormulario] = useState({})
-    const [loading, setLoading] = useState(true)
-    const [consultando, setConsultando] = useState(false)
-    const [guardando, setGuardando] = useState(false)
-    const [error, setError] = useState('')
-    const [mensaje, setMensaje] = useState('')
-    const [dialogEdicionOpen, setDialogEdicionOpen] = useState(false)
-    const [dialogPropuestaOpen, setDialogPropuestaOpen] = useState(false)
-    const [busqueda, setBusqueda] = useState('')
-    const [pagina, setPagina] = useState(0)
-    const [registrosPorPagina, setRegistrosPorPagina] = useState(10)
-    const cargaInicialIniciada = useRef(false)
+    const {
+        siguientePeriodo, propuesta, setPropuesta, tipoSeleccionado,
+        formulario, erroresFormulario, loading, consultando, guardando, error, setError, mensaje, setMensaje,
+        dialogEdicionOpen, dialogPropuestaOpen, setDialogPropuestaOpen,
+        busqueda, pagina, registrosPorPagina, tiposCambioFiltrados, tiposCambioPaginados,
+        handleCambioBusqueda, handleChangePagina, handleChangeRegistrosPorPagina,
+        handlePrepararIngresoManual, handleConfirmarPropuesta, handleEditarTipo, handleCerrarEdicion,
+        handleChangeFormulario, handleGuardarEdicion,
+    } = useTipoCambio()
 
-    // =========================================================
-    // CARGAR HISTÓRICO Y PERÍODOS
-    // =========================================================
-    const cargarDatos = async () => {
-        try {
-            setLoading(true)
-            setError('')
-            const [historico, ultimo] = await Promise.all([
-                obtenerTiposCambio(),
-                obtenerUltimoTipoCambio()
-            ])
-            setTiposCambio(historico || [])
-            setUltimoTipoCambio(ultimo || null)
-
-            try {
-                const siguiente = await obtenerSiguientePeriodo()
-                setSiguientePeriodo(siguiente)
-            } catch {
-                setSiguientePeriodo(null)
-            }
-        } catch (err) {
-            console.error('Error cargando tipos de cambio:', err)
-            setError(err?.message || 'No se pudo cargar el histórico de tipos de cambio.')
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    useEffect(() => {
-        if (cargaInicialIniciada.current) return
-        cargaInicialIniciada.current = true
-        cargarDatos()
-    }, [])
-
-    // =========================================================
-    // BÚSQUEDA Y PAGINACIÓN
-    // =========================================================
-    const tiposCambioFiltrados = useMemo(() => {
-        const texto = busqueda.trim().toLowerCase()
-        if (!texto) return tiposCambio
-
-        return tiposCambio.filter((registro) => {
-            const periodo = formatearPeriodo(registro.anho, registro.mes).toLowerCase()
-            return (
-                String(registro.anho).includes(texto) ||
-                String(registro.mes).includes(texto) ||
-                periodo.includes(texto) ||
-                String(registro.tipo_cambio).includes(texto) ||
-                (registro.estado ? 'activo' : 'inactivo').includes(texto)
-            )
-        })
-    }, [tiposCambio, busqueda])
-
-    const tiposCambioPaginados = useMemo(() => {
-        const inicio = pagina * registrosPorPagina
-        return tiposCambioFiltrados.slice(inicio, inicio + registrosPorPagina)
-    }, [tiposCambioFiltrados, pagina, registrosPorPagina])
-
-    const handleCambioBusqueda = (event) => {
-        setBusqueda(event.target.value)
-        setPagina(0)
-    }
-
-    const handleChangePagina = (event, nuevaPagina) => {
-        setPagina(nuevaPagina)
-    }
-
-    const handleChangeRegistrosPorPagina = (event) => {
-        setRegistrosPorPagina(parseInt(event.target.value, 10))
-        setPagina(0)
-    }
-
-    // =========================================================
-    // PREPARAR INGRESO MANUAL
-    // =========================================================
-    const handlePrepararIngresoManual = async () => {
-        try {
-            setConsultando(true)
-            setError('')
-            setPropuesta(null)
-            const data = await prepararTipoCambioManual()
-            setPropuesta(data)
-            setDialogPropuestaOpen(true)
-        } catch (err) {
-            console.error('Error preparando el tipo de cambio:', err)
-            setError(err?.message || 'No se pudo preparar el registro manual.')
-        } finally {
-            setConsultando(false)
-        }
-    }
-
-    // =========================================================
-    // CONFIRMAR Y GUARDAR PROPUESTA
-    // =========================================================
-    const handleConfirmarPropuesta = async () => {
-        if (!propuesta) return
-
-        try {
-            setGuardando(true)
-            setError('')
-            await crearTipoCambio({
-                anho: propuesta.anho,
-                mes: propuesta.mes,
-                tipo_cambio: propuesta.tipo_cambio
-            })
-            setDialogPropuestaOpen(false)
-            setPropuesta(null)
-            setMensaje('Tipo de cambio registrado correctamente.')
-            setPagina(0)
-            await cargarDatos()
-        } catch (err) {
-            console.error('Error guardando el tipo de cambio:', err)
-            setError(err?.message || 'No se pudo registrar el tipo de cambio.')
-        } finally {
-            setGuardando(false)
-        }
-    }
-
-    // =========================================================
-    // EDITAR REGISTRO HISTÓRICO
-    // =========================================================
-    const handleEditarTipo = (registro) => {
-        setTipoSeleccionado(registro)
-        setFormulario({
-            tipo_cambio: String(registro.tipo_cambio ?? ''),
-            estado: registro.estado ?? true
-        })
-        setErroresFormulario({})
-        setDialogEdicionOpen(true)
-    }
-
-    const handleCerrarEdicion = () => {
-        if (guardando) return
-        setDialogEdicionOpen(false)
-        setTipoSeleccionado(null)
-        setFormulario(formularioInicial)
-        setErroresFormulario({})
-    }
-
-    const handleChangeFormulario = (event) => {
-        const { name, value } = event.target
-        setFormulario((prev) => ({ ...prev, [name]: value }))
-        setErroresFormulario((prev) => ({ ...prev, [name]: '' }))
-    }
-
-    const handleCambiarEstadoFormulario = () => {
-        setFormulario((prev) => ({ ...prev, estado: !prev.estado }))
-    }
-
-    const validarFormulario = () => {
-        const nuevosErrores = {}
-        const valor = Number(formulario.tipo_cambio)
-
-        if (formulario.tipo_cambio === '' || !Number.isFinite(valor) || valor <= 0) {
-            nuevosErrores.tipo_cambio = 'Ingresa un tipo de cambio mayor que cero.'
-        }
-
-        setErroresFormulario(nuevosErrores)
-        return Object.keys(nuevosErrores).length === 0
-    }
-
-    const handleGuardarEdicion = async () => {
-        if (!tipoSeleccionado || !validarFormulario()) return
-
-        try {
-            setGuardando(true)
-            setError('')
-            await actualizarTipoCambio(tipoSeleccionado.id_tipo_cambio, {
-                tipo_cambio: Number(formulario.tipo_cambio),
-                estado: formulario.estado
-            })
-            setDialogEdicionOpen(false)
-            setTipoSeleccionado(null)
-            setMensaje('Tipo de cambio actualizado correctamente.')
-            await cargarDatos()
-        } catch (err) {
-            console.error('Error actualizando el tipo de cambio:', err)
-            setError(err?.message || 'No se pudo actualizar el tipo de cambio.')
-        } finally {
-            setGuardando(false)
-        }
-    }
-
-    // =========================================================
-    // CERRAR NOTIFICACIONES
-    // =========================================================
     const handleCerrarMensaje = () => setMensaje('')
     const handleCerrarError = () => setError('')
 
-    // =========================================================
-    // COLUMNAS DEL HISTÓRICO
-    // =========================================================
-    const columnas = [
-        {
-            key: 'periodo',
-            label: 'Período',
-            width: '24%',
-            cellSx: {
-                position: 'relative',
-                pl: 1.5,
-                '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: 4,
-                    backgroundColor: 'primary.main'
-                }
-            },
-            render: (registro) => (
-                <Box>
-                    <Typography variant="body2" fontWeight={600}>
-                        {formatearPeriodo(registro.anho, registro.mes)}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        {registro.anho}-{String(registro.mes).padStart(2, '0')}
-                    </Typography>
-                </Box>
-            )
-        },
-        {
-            key: 'tipo_cambio',
-            label: 'Tipo de cambio',
-            width: '24%',
-            render: (registro) => (
-                <Typography variant="body2" fontWeight={700}>
-                    S/ {formatearTipoCambio(registro.tipo_cambio)}
-                </Typography>
-            )
-        },
-        {
-            key: 'updated_at',
-            label: 'Última actualización',
-            width: '24%',
-            render: (registro) => (
-                <Typography variant="body2" color="text.secondary">
-                    {formatearFecha(registro.updated_at || registro.created_at)}
-                </Typography>
-            )
-        },
-        {
-            key: 'acciones',
-            label: 'Acciones',
-            width: '12%',
-            align: 'center',
-            render: (registro) => (
-                <IconButton
-                    size="small"
-                    aria-label="Editar tipo de cambio"
-                    onClick={() => handleEditarTipo(registro)}
-                    sx={{
-                        p: 0.5,
-                        '&:hover': { backgroundColor: 'action.hover' }
-                    }}
-                >
-                    <EditIcon fontSize="small" />
-                </IconButton>
-            )
-        }
-    ]
-
-    // =========================================================
-    // TARJETAS DE RESUMEN
-    // =========================================================
-    const tarjetaSx = {
-        height: '100%',
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 1,
-        boxShadow: 'none',
-        backgroundColor: 'background.paper'
-    }
-
     const totalRegistros = tiposCambioFiltrados.length
-
-    // =========================================================
     // RENDER
     // =========================================================
     return (
@@ -583,251 +251,37 @@ function TipoCambio() {
                 </Paper>
             </Box>
             
-            {/* HISTÓRICO */}
-            <Paper
-                elevation={0}
-                sx={{
-                    width: '100%',
-                    minWidth: 0,
-                    minHeight: 300,
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    overflow: 'hidden',
-                    backgroundColor: 'background.paper'
-                }}
-            >
-                                <Divider />
-                <DataTable
-                    columns={columnas}
-                    rows={tiposCambioPaginados}
-                    loading={loading}
-                    emptyMessage="No existen tipos de cambio registrados."
-                    emptySearchMessage="No se encontraron tipos de cambio para la búsqueda."
-                    hasSearch={Boolean(busqueda.trim())}
-                    getRowKey={(registro) => registro.id_tipo_cambio}
-                />
-                <Pagination
-                    total={totalRegistros}
-                    pagina={pagina}
-                    registrosPorPagina={registrosPorPagina}
-                    onPageChange={handleChangePagina}
-                    onRowsPerPageChange={handleChangeRegistrosPorPagina}
-                />
-            </Paper>
+            <TipoCambioTable
+                rows={tiposCambioPaginados}
+                loading={loading}
+                busqueda={busqueda}
+                total={totalRegistros}
+                pagina={pagina}
+                registrosPorPagina={registrosPorPagina}
+                onEdit={handleEditarTipo}
+                onPageChange={handleChangePagina}
+                onRowsPerPageChange={handleChangeRegistrosPorPagina}
+            />
 
-            {/* DIÁLOGO DE INGRESO MANUAL */}
-            <Dialog
-                open={dialogPropuestaOpen}
-                onClose={() => !guardando && setDialogPropuestaOpen(false)}
-                fullWidth
-                maxWidth="sm"
-            >
-                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
-                    <Typography variant="h6" fontWeight={700}>
-                        Confirmar tipo de cambio
-                    </Typography>
-                    <IconButton
-                        onClick={() => setDialogPropuestaOpen(false)}
-                        disabled={guardando}
-                        size="small"
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent>
-                    {propuesta && (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-                            <Alert severity="info" sx={{ borderRadius: 1 }}>
-                                El valor inicia en 1.000. Reemplázalo manualmente por el tipo de cambio oficial antes de guardar.
-                            </Alert>
-                            <Box
-                                sx={{
-                                    p: 2.5,
-                                    border: '1px solid',
-                                    borderColor: 'divider',
-                                    borderRadius: 1,
-                                    textAlign: 'center'
-                                }}
-                            >
-                                <Typography variant="body2" color="text.secondary">
-                                    Período consultado
-                                </Typography>
-                                <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-                                    {formatearPeriodo(propuesta.anho, propuesta.mes)}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Tipo de cambio (editable)
-                                </Typography>
-                                <TextField
-                                    label="Tipo de cambio"
-                                    type="number"
-                                    value={propuesta.tipo_cambio}
-                                    onChange={(event) => setPropuesta((actual) => ({
-                                        ...actual,
-                                        tipo_cambio: event.target.value
-                                    }))}
-                                    inputProps={{ min: 0, step: '0.001' }}
-                                    helperText="Ingresa el valor oficial con hasta tres decimales."
-                                    fullWidth
-                                    required
-                                    sx={{
-                                        mt: 1,
-                                        '& input[type=number]': { MozAppearance: 'textfield' },
-                                        '& input[type=number]::-webkit-outer-spin-button': {
-                                            WebkitAppearance: 'none',
-                                            margin: 0
-                                        },
-                                        '& input[type=number]::-webkit-inner-spin-button': {
-                                            WebkitAppearance: 'none',
-                                            margin: 0
-                                        }
-                                    }}
-                                />
-                            </Box>
-                            <Typography variant="caption" color="text.secondary">
-                                El registro no se guarda hasta que confirmes. Verifica el valor antes de continuar.
-                            </Typography>
-                        </Box>
-                    )}
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button
-                        onClick={() => setDialogPropuestaOpen(false)}
-                        disabled={guardando}
-                        startIcon={<CloseIcon />}
-                        sx={{ borderRadius: 1, textTransform: 'none', fontWeight: 600 }}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleConfirmarPropuesta}
-                        disabled={guardando || !propuesta}
-                        startIcon={
-                            guardando
-                                ? <CircularProgress size={18} color="inherit" />
-                                : <CheckCircle />
-                        }
-                        sx={{ borderRadius: 1, textTransform: 'none', fontWeight: 600 }}
-                    >
-                        {guardando ? 'Guardando...' : 'Confirmar y guardar'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* DIÁLOGO DE EDICIÓN */}
-            <Dialog
-                open={dialogEdicionOpen}
-                onClose={handleCerrarEdicion}
-                fullWidth
-                maxWidth="sm"
-            >
-                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
-                    <Typography variant="h6" fontWeight={700}>
-                        Editar tipo de cambio
-                    </Typography>
-                    <IconButton onClick={handleCerrarEdicion} disabled={guardando} size="small">
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-                        <TextField
-                            label="Período"
-                            value={
-                                tipoSeleccionado
-                                    ? formatearPeriodo(tipoSeleccionado.anho, tipoSeleccionado.mes)
-                                    : ''
-                            }
-                            fullWidth
-                            disabled
-                        />
-                        <TextField
-                            label="Tipo de cambio"
-                            name="tipo_cambio"
-                            type="number"
-                            value={formulario.tipo_cambio}
-                            onChange={handleChangeFormulario}
-                            error={Boolean(erroresFormulario.tipo_cambio)}
-                            helperText={erroresFormulario.tipo_cambio || 'Ingresa el valor con hasta tres decimales.'}
-                            inputProps={{ min: 0, step: '0.001' }}
-                            fullWidth
-                            required
-                            disabled={guardando}
-                            sx={{
-                                '& input[type=number]': { MozAppearance: 'textfield' },
-                                '& input[type=number]::-webkit-outer-spin-button': {
-                                    WebkitAppearance: 'none',
-                                    margin: 0
-                                },
-                                '& input[type=number]::-webkit-inner-spin-button': {
-                                    WebkitAppearance: 'none',
-                                    margin: 0
-                                }
-                            }}
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button
-                        onClick={handleCerrarEdicion}
-                        disabled={guardando}
-                        startIcon={<CloseIcon />}
-                        sx={{ borderRadius: 1, textTransform: 'none', fontWeight: 600 }}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleGuardarEdicion}
-                        disabled={guardando}
-                        startIcon={
-                            guardando
-                                ? <CircularProgress size={18} color="inherit" />
-                                : <Save />
-                        }
-                        sx={{ borderRadius: 1, textTransform: 'none', fontWeight: 600 }}
-                    >
-                        {guardando ? 'Guardando...' : 'Guardar cambios'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* NOTIFICACIONES */}
-            <Snackbar
-                open={Boolean(mensaje)}
-                autoHideDuration={3500}
-                onClose={handleCerrarMensaje}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            >
-                <Alert
-                    onClose={handleCerrarMensaje}
-                    severity="success"
-                    variant="filled"
-                    sx={{ width: '100%' }}
-                >
-                    {mensaje}
-                </Alert>
-            </Snackbar>
-            <Snackbar
-                open={Boolean(error)}
-                autoHideDuration={5000}
-                onClose={handleCerrarError}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            >
-                <Alert
-                    onClose={handleCerrarError}
-                    severity="error"
-                    variant="filled"
-                    sx={{ width: '100%' }}
-                >
-                    {error}
-                </Alert>
-            </Snackbar>
+            <TipoCambioDialogs
+                dialogPropuestaOpen={dialogPropuestaOpen}
+                setDialogPropuestaOpen={setDialogPropuestaOpen}
+                guardando={guardando}
+                propuesta={propuesta}
+                setPropuesta={setPropuesta}
+                handleConfirmarPropuesta={handleConfirmarPropuesta}
+                dialogEdicionOpen={dialogEdicionOpen}
+                handleCerrarEdicion={handleCerrarEdicion}
+                tipoSeleccionado={tipoSeleccionado}
+                formulario={formulario}
+                handleChangeFormulario={handleChangeFormulario}
+                erroresFormulario={erroresFormulario}
+                handleGuardarEdicion={handleGuardarEdicion}
+                mensaje={mensaje}
+                handleCerrarMensaje={handleCerrarMensaje}
+                error={error}
+                handleCerrarError={handleCerrarError}
+            />
         </Box>
         </CompactModuleTheme>
     )

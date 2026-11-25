@@ -1,4 +1,6 @@
+// Gestiona estado y acciones de useUsuarios.
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEmpresa } from '../context/useEmpresa'
 
 import {
   actualizarUsuarioConEmpresas as actualizarUsuarioConEmpresasService,
@@ -12,6 +14,8 @@ import { obtenerEtiquetaPermiso } from '../components/usuarios/usuarioRules'
 const FILAS_POR_PAGINA = 10
 
 export function useUsuarios() {
+  const { empresaActual } = useEmpresa()
+  const idEmpresa = empresaActual?.id_empresa ?? null
   const [usuarios, setUsuarios] = useState([])
   const [permisos, setPermisos] = useState([])
   const [empresas, setEmpresas] = useState([])
@@ -23,7 +27,7 @@ export function useUsuarios() {
 
   const [pagina, setPagina] = useState(0)
   const [filasPorPagina, setFilasPorPagina] = useState(FILAS_POR_PAGINA)
-  const [filtros, setFiltros] = useState({ buscar: '', estado: '', permiso: '', empresa: '' })
+  const [filtros, setFiltros] = useState({ buscar: '', estado: '', permiso: '' })
   const [modalAbierto, setModalAbierto] = useState(false)
   const [usuarioEditar, setUsuarioEditar] = useState(null)
   const [notificacion, setNotificacion] = useState({ open: false, mensaje: '', severity: 'success' })
@@ -73,6 +77,8 @@ export function useUsuarios() {
     cargarUsuarios()
   }, [cargarMaestros, cargarUsuarios])
 
+  useEffect(() => { setPagina(0) }, [idEmpresa])
+
   // ============================================================
   // NORMALIZAR TEXTO
   // ============================================================
@@ -97,11 +103,11 @@ export function useUsuarios() {
       const coincideBuscar = !buscar || normalizarTexto(nombreCompleto).includes(buscar) || normalizarTexto(permiso).includes(buscar)
       const coincideEstado = !filtros.estado || usuario.estado === filtros.estado
       const coincidePermiso = !filtros.permiso || Number(usuario.id_permiso) === Number(filtros.permiso)
-      const coincideEmpresa = !filtros.empresa || empresasUsuario.some((empresaUsuario) => empresaUsuario.estado === true && Number(empresaUsuario.id_empresa) === Number(filtros.empresa))
+      const coincideEmpresa = idEmpresa === null || empresasUsuario.some((empresaUsuario) => empresaUsuario.estado === true && Number(empresaUsuario.id_empresa) === Number(idEmpresa))
       return (coincideBuscar && coincideEstado && coincidePermiso && coincideEmpresa)
     })
   },
-    [usuarios, filtros])
+    [usuarios, filtros, idEmpresa])
 
   // ============================================================
   // PAGINACIÓN
@@ -138,7 +144,6 @@ export function useUsuarios() {
         buscar: '',
         estado: '',
         permiso: '',
-        empresa: '',
       })
       setPagina(0)
     }, [])
@@ -292,6 +297,7 @@ export function useUsuarios() {
   // ============================================================
 
   return {
+    idEmpresa,
     usuarios,
     usuariosPaginados,
     usuariosFiltrados,

@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de excelService.
 import * as XLSX from 'xlsx'
 
 export function prepararDatosCentrosCostoExcel(centros) {
@@ -215,6 +216,37 @@ export function exportarLaboresExcel(labores, nombreArchivo = 'Labor') {
 
 export function exportarTiposJornalExcel(tipos, nombreArchivo = 'Tipos_de_Jornal') {
   descargarExcel(prepararDatosTiposJornalExcel(tipos), 'Tipos de Jornal', nombreArchivo, [12, 42, 14])
+}
+
+export function exportarTiposCuentaExcel(tipos, nombreArchivo = 'Tipos_de_Cuenta') {
+  const datos = tipos.map((tipo) => ({
+    Código: tipo.Id_Tipo_Cuenta ?? '',
+    Descripción: tipo.DESCRIPCION_TIPO_CUENTA ?? '',
+    Estado: Number(tipo.estado) === 1 ? 'Activo' : 'Inactivo',
+  }))
+  descargarExcel(datos, 'Tipos de Cuenta', nombreArchivo, [12, 42, 14])
+}
+
+export function exportarCuentasComparativoExcel(cuentas, nombreArchivo = 'Cuentas_Comparativo') {
+  const datos = cuentas.map((cuenta) => ({
+    Código: cuenta.Id_Cuenta_Comparativo ?? '',
+    'Cuenta Comparativo': cuenta.Des_Cuenta_Comparativo ?? '',
+    'Tipo de Cuenta': cuenta.tipoCuentaDescripcion ?? '',
+    Estado: Number(cuenta.estado) === 1 ? 'Activo' : 'Inactivo',
+  }))
+  descargarExcel(datos, 'Cuenta Comparativo', nombreArchivo, [12, 52, 34, 14])
+}
+
+export function exportarCuentasExcel(cuentas, nombreArchivo = 'Cuentas') {
+  const datos = cuentas.map((cuenta) => ({
+    Empresa: cuenta.empresaNombre ?? '',
+    Cuenta: cuenta.CUENTA ?? '',
+    'Cuenta global': cuenta.CUENTA_PK ?? '',
+    Descripción: cuenta.DESCRIPCION_CUENTA ?? '',
+    'Cuenta Comparativo': cuenta.comparativoNombre ?? '',
+    Estado: Number(cuenta.estado) === 1 ? 'Activo' : 'Inactivo',
+  }))
+  descargarExcel(datos, 'Cuentas', nombreArchivo, [28, 14, 18, 48, 42, 14])
 }
 
 export function exportarJornalesExcel(periodos, tipos, nombreArchivo = 'Jornales') {

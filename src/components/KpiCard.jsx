@@ -1,3 +1,4 @@
+// Define el componente reutilizable KpiCard.
 import { Box, Card, CardContent, Typography } from '@mui/material'
 
 function KpiCard({

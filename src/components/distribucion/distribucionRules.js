@@ -1,3 +1,4 @@
+// Define el componente reutilizable distribucionRules.
 const PRECISION = 4
 const ESCALA_PORCENTAJE = 10 ** PRECISION
 

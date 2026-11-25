@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de jornalService.
 import { supabase } from '../lib/supabase'
 
 const CAMPOS_JORNAL = 'Id_Jornal, id_Tipo_Jornal, Inicio, Fin, Importe_Soles, estado, created_at, updated_at'

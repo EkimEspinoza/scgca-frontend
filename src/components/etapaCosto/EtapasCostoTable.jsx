@@ -1,3 +1,4 @@
+// Presenta la tabla de EtapasCosto.
 import { Edit as EditIcon } from '@mui/icons-material'
 import {
   Box,
@@ -205,6 +206,7 @@ export default function EtapasCostoTable({
         registrosPorPagina={registrosPorPagina}
         onPageChange={onChangePagina}
         onRowsPerPageChange={onChangeRegistrosPorPagina}
+        leadingContent={`${totalRegistros} ${totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}`}
       />
 
       <Dialog

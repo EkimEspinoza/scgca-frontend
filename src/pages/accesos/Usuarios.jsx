@@ -1,3 +1,4 @@
+// Compone la pantalla Usuarios y conecta sus componentes.
 import {
   Alert,
   Box,
@@ -102,7 +103,6 @@ function Usuarios() {
         <UsuariosFilters
           filtros={filtros}
           permisos={permisos}
-          empresas={empresas}
           loading={
             loading ||
             loadingMaestros

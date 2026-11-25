@@ -1,5 +1,8 @@
+// Encapsula las operaciones de datos de movMOService.
 import { supabase } from '../lib/supabase'
 import { obtenerPorIdsPaginado, obtenerTodasLasPaginas } from './paginacionService'
+import { obtenerLabores } from './laborService'
+import { obtenerEtapasCosto } from './etapaCostoService'
 
 const tablas = ['mov_mo', 'mov_mo_proceso', 'mov_mo_pendiente']
 const columnas = 'id_mov_mo,id_empresa,cod_cc_pk,cod_cc,cod_labor,labor_scire,imp_labor_sol,ess_labor_sol,fec_labor,etapa_costo,obs,estado,created_at,updated_at'
@@ -15,6 +18,19 @@ export async function obtenerCentrosCatalogoMO(idEmpresa = null) {
     if (idEmpresa) query = query.eq('id_empresa', Number(idEmpresa))
     return query.order('desc_cc').order('cod_cc_pk').range(desde, hasta)
   })
+}
+
+export async function obtenerCatalogosFormularioMO(idEmpresa = null) {
+  const [empresasResult, centros, labores, etapas, tiposResult] = await Promise.all([
+    supabase.from('Dim_Empresa').select('id_empresa,nombre_comercial,descripcion,estado').eq('estado', true).order('nombre_comercial'),
+    obtenerCentrosCatalogoMO(idEmpresa),
+    obtenerLabores(),
+    obtenerEtapasCosto(),
+    supabase.from('Dim_TipoCC').select('id_tip_cc,des_tip_cc,estado'),
+  ])
+  if (empresasResult.error) throw empresasResult.error
+  if (tiposResult.error) throw tiposResult.error
+  return { empresas: empresasResult.data ?? [], centros, labores, etapas, tipos: tiposResult.data ?? [] }
 }
 
 function aplicarFiltros(query, { idEmpresa, fechaDesde, fechaHasta, estado, busquedaScire, busquedaFinal, centroCostoPk, centrosTipoIds = [], tipoCentroId, gruposLaborIds = [], grupoLaborId, laborFinalIdsBusqueda = [] }) {

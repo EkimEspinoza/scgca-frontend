@@ -1,3 +1,4 @@
+// Presenta los filtros de LaborFinal.
 import CatalogFiltersToolbar from '../common/CatalogFiltersToolbar'
 
 export default function LaborFinalFilters({ loading, totalRegistros, busqueda, filtroEstado, error, onExportar, onNuevo, onCambioBusqueda, onCambioEstado, onCerrarError }) {
@@ -18,5 +19,6 @@ export default function LaborFinalFilters({ loading, totalRegistros, busqueda, f
     searchLabel="Buscar labor final"
     createLabel="Nueva Labor Final"
     showInlineClear
+    showResultCount={false}
   />
 }

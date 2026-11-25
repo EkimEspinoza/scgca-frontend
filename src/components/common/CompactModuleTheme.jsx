@@ -1,3 +1,4 @@
+// Define el componente reutilizable CompactModuleTheme.
 import { useMemo } from 'react'
 import { ThemeProvider, useTheme } from '@mui/material/styles'
 import { createCompactScgcaTheme } from '../../theme/themes'

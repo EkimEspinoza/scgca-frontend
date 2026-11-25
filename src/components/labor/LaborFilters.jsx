@@ -1,3 +1,4 @@
+// Presenta los filtros de Labor.
 import CatalogFiltersToolbar from '../common/CatalogFiltersToolbar'
 
 export default function LaborFilters({ loading, totalRegistros, busqueda, filtroEstado, error, onExportar, onNuevo, onCambioBusqueda, onCambioEstado, onCerrarError }) {
@@ -18,5 +19,6 @@ export default function LaborFilters({ loading, totalRegistros, busqueda, filtro
     searchLabel="Buscar labor"
     createLabel="Nueva Labor"
     showInlineClear
+    showResultCount={false}
   />
 }

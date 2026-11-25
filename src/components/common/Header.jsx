@@ -1,18 +1,16 @@
+// Define el componente reutilizable Header.
 import {
   AccountCircle,
   ExpandMore,
   Menu as MenuIcon,
-  LockOutlined,
 } from '@mui/icons-material'
 
 import {
   AppBar,
   Box,
-  Divider,
   FormControl,
   IconButton,
   InputLabel,
-  Menu,
   MenuItem,
   Select,
   Toolbar,
@@ -28,6 +26,7 @@ import {
 
 import { useAuth } from '../../context/useAuth'
 import { useEmpresa } from '../../context/useEmpresa'
+import HeaderAccountMenu from './HeaderAccountMenu'
 
 
 function Header({
@@ -448,69 +447,14 @@ function Header({
             MENÚ USUARIO
         ================================================== */}
 
-        <Menu
+        <HeaderAccountMenu
           anchorEl={anchorEl}
           open={menuOpen}
-          onClose={
-            handleMenuClose
-          }
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'right',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-          }}
-        >
-
-          {/* USUARIO */}
-
-          <MenuItem disabled>
-            {perfil?.nombre}{' '}
-            {perfil?.apellido}
-          </MenuItem>
-
-
-          <Divider />
-
-          <Divider />
-
-
-          {/* CAMBIAR CONTRASEÑA */}
-
-          <MenuItem
-            onClick={
-              handleCambiarContrasena
-            }
-          >
-            <LockOutlined
-              fontSize="small"
-              sx={{
-                mr: 1.5,
-                color:
-                  'text.secondary',
-              }}
-            />
-
-            Cambiar contraseña
-          </MenuItem>
-
-
-          <Divider />
-
-
-          {/* CERRAR SESIÓN */}
-
-          <MenuItem
-            onClick={
-              handleLogout
-            }
-          >
-            Cerrar sesión
-          </MenuItem>
-
-        </Menu>
+          perfil={perfil}
+          onClose={handleMenuClose}
+          onChangePassword={handleCambiarContrasena}
+          onLogout={handleLogout}
+        />
 
       </Toolbar>
     </AppBar>

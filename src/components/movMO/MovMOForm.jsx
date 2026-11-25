@@ -1,11 +1,10 @@
+// Presenta formularios y diálogos de MovMO.
 import { useEffect, useMemo, useState } from 'react'
 import { Alert, Autocomplete, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material'
 import { AddCircleOutlineOutlined, EditOutlined, PaymentsOutlined } from '@mui/icons-material'
-import { supabase } from '../../lib/supabase'
-import { obtenerLabores } from '../../services/laborService'
 import SearchableSelect from '../common/SearchableSelect'
-import { obtenerEtapasCosto } from '../../services/etapaCostoService'
-import { obtenerCentrosCatalogoMO } from '../../services/movMOService'
+import { obtenerCatalogosFormularioMO } from '../../services/movMOService'
+import { motivoValidacion } from './motivoValidacion'
 
 const fechaLocalHoy = () => {
   const hoy = new Date()
@@ -40,6 +39,7 @@ export default function MovMOForm({ open, registro, guardando, onClose, onGuarda
   const [cargandoCatalogos, setCargandoCatalogos] = useState(false)
   const [error, setError] = useState('')
   const [valores, setValores] = useState(valoresIniciales(registro, empresaInicial, fechaInicial))
+  const motivosPendiente = (registro?.errores_validacion ?? []).map((motivo) => motivoValidacion(motivo, registro))
   const centrosPorPk = useMemo(() => new Map(centros.map((centro) => [String(centro.cod_cc_pk), centro])), [centros])
   const centroSeleccionado = centrosPorPk.get(valores.cod_cc_pk) ?? null
   const valorEtapaActual = String(valores.etapa_costo ?? '').trim()
@@ -60,19 +60,11 @@ export default function MovMOForm({ open, registro, guardando, onClose, onGuarda
     setValores(valoresDelFormulario)
     setError('')
     setCargandoCatalogos(true)
-    Promise.all([
-      supabase.from('Dim_Empresa').select('id_empresa,nombre_comercial,descripcion,estado').eq('estado', true).order('nombre_comercial'),
-      obtenerCentrosCatalogoMO(valoresDelFormulario.id_empresa),
-      obtenerLabores(),
-      obtenerEtapasCosto(),
-      supabase.from('Dim_TipoCC').select('id_tip_cc,des_tip_cc,estado'),
-    ]).then(([empresasResult, centrosResultado, catalogoLabores, catalogoEtapas, tiposResult]) => {
-      for (const resultado of [empresasResult, tiposResult]) if (resultado.error) throw resultado.error
+    obtenerCatalogosFormularioMO(valoresDelFormulario.id_empresa).then(({ empresas, centros: centrosResultado, labores: catalogoLabores, etapas: catalogoEtapas, tipos: catalogoTipos }) => {
       if (!vigente) return
-      setEmpresas(empresasResult.data ?? [])
+      setEmpresas(empresas)
       setCentros(centrosResultado ?? [])
       const centroActual = centrosResultado?.find((centro) => Number(centro.cod_cc_pk) === Number(valoresDelFormulario.cod_cc_pk))
-      const catalogoTipos = tiposResult.data ?? []
       const tiposActivosIds = new Set(catalogoTipos.filter((tipo) => tipo.estado === true || Number(tipo.estado) === 1).map((tipo) => Number(tipo.id_tip_cc)))
       setTipoCentroId(centroActual && tiposActivosIds.has(Number(centroActual.id_tip_cc)) ? String(centroActual.id_tip_cc) : '')
       setLabores(catalogoLabores ?? [])
@@ -124,6 +116,11 @@ export default function MovMOForm({ open, registro, guardando, onClose, onGuarda
       </DialogTitle>
       <DialogContent dividers>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {!modoNuevo && (motivosPendiente.length > 0 || registro?.estado_validacion) && <Alert severity="warning" sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Motivo de la validación</Typography>
+          {motivosPendiente.length ? <Box component="ul" sx={{ m: 0, pl: 2 }}>{motivosPendiente.map((mensaje, index) => <li key={`${registro?.id_mov_mo}-${index}`}>{mensaje}</li>)}
+          </Box> : <Typography variant="body2">{registro?.estado_validacion}</Typography>}
+        </Alert>}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5, pt: 0.5 }}>
           {modoNuevo && <FormControl size="small" fullWidth required>
             <InputLabel id="mov-mo-new-company-label">Empresa</InputLabel>

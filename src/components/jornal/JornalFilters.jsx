@@ -1,3 +1,4 @@
+// Presenta los filtros de Jornal.
 import CatalogFiltersToolbar from '../common/CatalogFiltersToolbar'
 
 export default function JornalFilters({ loading, totalRegistros, busqueda, filtroEstado, error, onExportar, onNuevo, onCambioBusqueda, onCambioEstado, onCerrarError }) {
@@ -18,5 +19,6 @@ export default function JornalFilters({ loading, totalRegistros, busqueda, filtr
     searchLabel="Buscar periodos de jornal"
     createLabel="Nuevo periodo"
     showInlineClear
+    showResultCount={false}
   />
 }

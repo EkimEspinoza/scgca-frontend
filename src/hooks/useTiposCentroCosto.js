@@ -1,3 +1,4 @@
+// Gestiona estado y acciones de useTiposCentroCosto.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   actualizarTipoCentroCosto,

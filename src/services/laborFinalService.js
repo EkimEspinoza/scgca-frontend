@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de laborFinalService.
 import { supabase } from '../lib/supabase'
 
 const CAMPOS_LABOR_FINAL = 'Id_Lab_Fin, DESCRIPCION, Id_Grupo_Labor, id_Tipo_Jornal, estado, created_at, updated_at'

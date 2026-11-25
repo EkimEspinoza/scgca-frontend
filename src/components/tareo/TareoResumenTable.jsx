@@ -1,3 +1,4 @@
+// Presenta la tabla de TareoResumen.
 import { useEffect, useMemo, useState } from 'react'
 import { Box, Card, Skeleton, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Typography } from '@mui/material'
 

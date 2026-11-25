@@ -1,3 +1,4 @@
+// Gestiona estado y acciones de useGrupoLabor.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { actualizarGrupoLabor, cambiarEstadoGrupoLabor, crearGrupoLabor, obtenerGruposLabor } from '../services/grupoLaborService'
 

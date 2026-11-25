@@ -1,3 +1,4 @@
+// Presenta la tabla de TipoJornal.
 import { Edit as EditIcon } from '@mui/icons-material'
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, Switch, Tooltip, Typography } from '@mui/material'
 import DataTable from '../common/DataTable'
@@ -24,7 +25,7 @@ export default function TipoJornalTable({ loading, tipos, totalRegistros, busque
 
   return <Paper elevation={0} sx={{ width: '100%', minWidth: 0, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden', backgroundColor: 'background.paper' }}>
     <DataTable columns={columnas} rows={tipos} loading={loading} emptyMessage="No existen tipos de jornal registrados." emptySearchMessage="No se encontraron tipos de jornal." hasSearch={Boolean(busqueda.trim()) || filtroEstado !== 'todos'} getRowKey={(tipo) => tipo.Id_Tipo_Jornal} />
-    <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} />
+    <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} leadingContent={`${totalRegistros} ${totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}`} />
     <Dialog open={Boolean(tipoCambioEstado)} onClose={onCerrarConfirmacionEstado} maxWidth="xs" fullWidth>
       <DialogTitle>{tipoCambioEstado?.nuevoEstado === 1 ? 'Reactivar Tipo de Jornal' : 'Desactivar Tipo de Jornal'}</DialogTitle>
       <DialogContent><Typography>{tipoCambioEstado?.nuevoEstado === 1

@@ -1,3 +1,4 @@
+// Presenta los filtros de GrupoLabor.
 import CatalogFiltersToolbar from '../common/CatalogFiltersToolbar'
 
 export default function GrupoLaborFilters({ loading, totalRegistros, busqueda, filtroEstado, error, onExportar, onNuevo, onCambioBusqueda, onCambioEstado, onCerrarError }) {
@@ -18,5 +19,6 @@ export default function GrupoLaborFilters({ loading, totalRegistros, busqueda, f
     searchLabel="Buscar grupo de labor"
     createLabel="Nuevo Grupo Labor"
     showInlineClear
+    showResultCount={false}
   />
 }

@@ -1,3 +1,4 @@
+// Compone la pantalla Dashboard y conecta sus componentes.
 import {
   Business,
   Security,

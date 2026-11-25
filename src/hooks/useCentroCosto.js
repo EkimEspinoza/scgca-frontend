@@ -1,10 +1,25 @@
+// Gestiona estado y acciones de useCentroCosto.
 import { useEffect, useMemo, useState } from 'react'
+import { useEmpresa } from '../context/useEmpresa'
+import { useCentroCostoFilters } from './useCentroCostoFilters'
 import { obtenerCentrosCosto, obtenerOpcionesFiltros, obtenerCentrosCostoParaExportar, cambiarEstadoCentroCosto } from '../services/centroCostoService'
 import { obtenerEmpresas } from '../services/empresaService'
 import { obtenerTiposCentroCosto, obtenerTiposMaquinaria, obtenerComparativos, obtenerVariedades } from '../services/maestroService'
-import { mostrarTipoMaquinaria, mostrarComparativo, mostrarVariedad, requiereLimpiarFiltrosDependientes } from '../components/centroCosto/centroCostoRules'
+import { mostrarTipoMaquinaria, mostrarComparativo, mostrarVariedad } from '../components/centroCosto/centroCostoRules'
 
 export function useCentroCosto() {
+    const { empresaActual } = useEmpresa()
+    const empresaId = empresaActual?.id_empresa == null ? '' : String(empresaActual.id_empresa)
+    const filtros = useCentroCostoFilters()
+    const {
+        estado, setEstado, tipoCcId, setTipoCcId,
+        tipoMaqId, setTipoMaqId, comparativoId, setComparativoId, variedadId, setVariedadId,
+        busqueda, setBusqueda, busquedaAplicada, setBusquedaAplicada,
+        pagina, setPagina, registrosPorPagina, setRegistrosPorPagina,
+        handleEstadoChange, handleTipoCcChange, handleTipoMaqChange,
+        handleComparativoChange, handleVariedadChange, handleBusquedaChange, limpiarFiltros,
+        handleChangePagina, handleChangeRegistrosPorPagina,
+    } = filtros
 
     // ==========================================================
     // DATOS
@@ -67,21 +82,11 @@ export function useCentroCosto() {
     // FILTROS
     // ==========================================================
 
-    const [empresaId, setEmpresaId] = useState('')
-    const [estado, setEstado] = useState('')
-    const [tipoCcId, setTipoCcId] = useState('')
-    const [tipoMaqId, setTipoMaqId] = useState('')
-    const [comparativoId, setComparativoId] = useState('')
-    const [variedadId, setVariedadId] = useState('')
-    const [busqueda, setBusqueda] = useState('')
-    const [busquedaAplicada, setBusquedaAplicada] = useState('')
 
     // ==========================================================
     // PAGINACIÓN
     // ==========================================================
 
-    const [pagina, setPagina] = useState(0)
-    const [registrosPorPagina, setRegistrosPorPagina] = useState(25)
     const [total, setTotal] = useState(0)
 
     // ==========================================================
@@ -244,65 +249,6 @@ export function useCentroCosto() {
     // LIMPIAR FILTROS DEPENDIENTES
     // ==========================================================
 
-    const limpiarFiltrosDependientes =
-        () => {
-            setTipoCcId('')
-            setTipoMaqId('')
-            setComparativoId('')
-            setVariedadId('')
-        }
-
-    // ==========================================================
-    // MANEJO DE FILTROS
-    // ==========================================================
-
-    const handleEmpresaChange =
-        (event) => {
-            setEmpresaId(event.target.value)
-            if (requiereLimpiarFiltrosDependientes('empresa')) { limpiarFiltrosDependientes() }
-            setPagina(0)
-        }
-
-    const handleEstadoChange = (event) => {
-        setEstado(event.target.value)
-        if (requiereLimpiarFiltrosDependientes('estado')) { limpiarFiltrosDependientes() }
-        setPagina(0)
-    }
-
-    const handleTipoCcChange =
-        (event) => {
-            setTipoCcId(event.target.value)
-            if (requiereLimpiarFiltrosDependientes('tipoCc')) {
-                setTipoMaqId('')
-                setComparativoId('')
-                setVariedadId('')
-            } setPagina(0)
-        }
-
-    const handleTipoMaqChange =
-        (event) => {
-            setTipoMaqId(event.target.value)
-            setPagina(0)
-        }
-
-    const handleComparativoChange =
-        (event) => {
-            setComparativoId(event.target.value)
-            setPagina(0)
-        }
-
-    const handleVariedadChange =
-        (event) => {
-            setVariedadId(event.target.value)
-            setPagina(0)
-        }
-
-    const handleBusquedaChange =
-        (event) => {
-            setBusqueda(event.target.value)
-            setPagina(0)
-        }
-
     const handleSolicitarCambioEstado = (centro) => {
         setCambioEstadoPendiente({
             ...centro,
@@ -352,17 +298,6 @@ export function useCentroCosto() {
     // LIMPIAR FILTROS
     // ==========================================================
 
-    const limpiarFiltros = () => {
-        setEmpresaId('')
-        setEstado('')
-        setTipoCcId('')
-        setTipoMaqId('')
-        setComparativoId('')
-        setVariedadId('')
-        setBusqueda('')
-        setPagina(0)
-    }
-
     // ==========================================================
     // EXPORTAR A EXCEL
     // ==========================================================
@@ -411,18 +346,6 @@ export function useCentroCosto() {
     // PAGINACIÓN
     // ==========================================================
 
-
-    const handleChangePagina =
-        (
-            _,
-            nuevaPagina,
-        ) => { setPagina(nuevaPagina) }
-
-    const handleChangeRegistrosPorPagina =
-        (event) => {
-            setRegistrosPorPagina(parseInt(event.target.value, 10))
-            setPagina(0)
-        }
 
     // ==========================================================
     // NUEVO CENTRO DE COSTO
@@ -545,7 +468,6 @@ export function useCentroCosto() {
 
         // Eventos
 
-        handleEmpresaChange,
         handleEstadoChange,
         handleTipoCcChange,
         handleTipoMaqChange,

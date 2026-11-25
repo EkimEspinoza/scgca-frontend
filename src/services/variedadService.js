@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de variedadService.
 import { supabase } from '../lib/supabase'
 
 

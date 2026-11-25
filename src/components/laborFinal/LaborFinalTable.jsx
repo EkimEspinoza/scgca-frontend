@@ -1,3 +1,4 @@
+// Presenta la tabla de LaborFinal.
 import { Edit as EditIcon } from '@mui/icons-material'
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, Switch, Tooltip, Typography } from '@mui/material'
 import DataTable from '../common/DataTable'
@@ -26,7 +27,7 @@ export default function LaborFinalTable({ loading, labores, totalRegistros, busq
 
   return <Paper elevation={0} sx={{ width: '100%', minWidth: 0, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden', backgroundColor: 'background.paper' }}>
     <DataTable columns={columnas} rows={labores} loading={loading} emptyMessage="No existen labores finales registradas." emptySearchMessage="No se encontraron labores finales." hasSearch={Boolean(busqueda.trim()) || filtroEstado !== 'todos'} getRowKey={(labor) => labor.Id_Lab_Fin} />
-    <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} />
+    <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} leadingContent={`${totalRegistros} ${totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}`} />
     <Dialog open={Boolean(laborCambioEstado)} onClose={onCerrarConfirmacionEstado} maxWidth="xs" fullWidth>
       <DialogTitle>{laborCambioEstado?.nuevoEstado === 1 ? 'Reactivar Labor Final' : 'Desactivar Labor Final'}</DialogTitle>
       <DialogContent><Typography>{laborCambioEstado?.nuevoEstado === 1

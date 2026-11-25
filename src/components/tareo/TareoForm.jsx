@@ -1,3 +1,4 @@
+// Presenta formularios y diálogos de Tareo.
 import { useEffect, useState } from 'react'
 import {
   Alert,

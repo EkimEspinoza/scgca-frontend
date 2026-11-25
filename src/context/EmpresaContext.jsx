@@ -1,3 +1,4 @@
+// Gestiona el contexto compartido de EmpresaContext.
 import {
   useEffect,
   useState,

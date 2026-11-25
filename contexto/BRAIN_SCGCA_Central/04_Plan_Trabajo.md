@@ -1,6 +1,6 @@
 # Plan de trabajo y seguimiento — SCGCA Central
 
-**Actualizado:** 2026-11-19
+**Actualizado:** 2026-11-24
 La lista registra pendientes y seguimiento. La actualización visual de Centro de Costos y Campañas quedó publicada. Tipo de Cambio usa tres decimales y quedó preparado para ingreso manual mientras se identifica una API de SUNAT estable.
 
 ## 07. Prioridades y plan de trabajo
@@ -47,3 +47,11 @@ El trabajo activo abarca **Mov_Tareo** y **Mov_MO**. La importación de Tareo ti
 4. Diseñar e implementar la importación Excel de Mov_MO con identificación por empresa, año y mes, revisión de duplicados y flujo de pendientes, sin sobrescribir datos ya procesados.
 
 - **CONFIRMADO — GitHub:** el código, las migraciones locales y la función actualizada se publicaron en `main` con el commit `c7211ff`; el BRAIN se publicó en `815c56b`. Esto no despliega el frontend a hosting.
+
+### Actualización al 24 de noviembre de 2026
+
+- **CONFIRMADO — Catálogos de Servicios:** vistas locales para Tipo de Cuenta, Cuenta Comparativo y Cuenta. Supabase Central tiene 11 tipos, 263 comparativos y 790 cuentas con RLS ADMIN-only; sus tres migraciones están aplicadas y presentes localmente.
+- **CONFIRMADO — conteo de resultados:** se colocó a la izquierda de la paginación en los catálogos revisados; en Centro de Costos se integró junto a la paginación propia. Queda validación responsive/visual.
+- **CONFIRMADO — filtro global de empresa:** se quitó duplicidad del selector donde empresa ya está controlada por el encabezado global.
+- **PENDIENTE — calidad frontend:** no se ejecutaron build, pruebas ni validación visual manual hoy.
+- **PENDIENTE — GitHub:** publicar commit `f7c359d` y los cambios posteriores una vez consolidados y comprobado el estado remoto.

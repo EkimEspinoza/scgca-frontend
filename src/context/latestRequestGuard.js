@@ -1,3 +1,4 @@
+// Gestiona el contexto compartido de latestRequestGuard.
 export function createLatestRequestGuard() {
   let version = 0
 

@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de tipoMaquinariaService.
 import { supabase } from '../lib/supabase'
 
 

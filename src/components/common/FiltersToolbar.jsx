@@ -1,3 +1,4 @@
+// Define el componente reutilizable FiltersToolbar.
 import { Box, Button, Chip, Divider, Paper, Tooltip, Typography } from '@mui/material'
 
 export function ActiveFilterChips({ filters = [], onClear, disabled = false }) {

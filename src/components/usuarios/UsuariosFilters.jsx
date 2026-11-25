@@ -1,3 +1,4 @@
+// Presenta los filtros de Usuarios.
 import {
   Box,
   FormControl,
@@ -22,7 +23,6 @@ import SearchableSelect from '../common/SearchableSelect'
 function UsuariosFilters({
   filtros,
   permisos = [],
-  empresas = [],
   loading = false,
   onFiltroChange,
   onLimpiarFiltros,
@@ -30,10 +30,8 @@ function UsuariosFilters({
 }) {
   const activeFilters = []
   const permiso = permisos.find((item) => String(item.id_permiso) === String(filtros.permiso))
-  const empresa = empresas.find((item) => String(item.id_empresa) === String(filtros.empresa))
   if (filtros.estado) activeFilters.push({ id: 'estado', label: `Estado: ${{ ACTIVO: 'Activo', PENDIENTE: 'Pendiente', INACTIVO: 'Inactivo' }[filtros.estado] ?? filtros.estado}`, onRemove: () => onFiltroChange('estado', '') })
   if (filtros.permiso) activeFilters.push({ id: 'permiso', label: `Permiso: ${permiso ? obtenerEtiquetaPermiso(permiso.nombre) : filtros.permiso}`, onRemove: () => onFiltroChange('permiso', '') })
-  if (filtros.empresa) activeFilters.push({ id: 'empresa', label: `Empresa: ${empresa?.nombre_comercial ?? filtros.empresa}`, onRemove: () => onFiltroChange('empresa', '') })
   if (filtros.buscar?.trim()) activeFilters.push({ id: 'buscar', label: `Búsqueda: ${filtros.buscar}`, onRemove: () => onFiltroChange('buscar', '') })
 
   return (
@@ -117,58 +115,6 @@ function UsuariosFilters({
           onChange={(event) => onFiltroChange('permiso', event.target.value)}
           disabled={loading}
         />
-
-        {/* Empresa */}
-        <FormControl
-          size="small"
-          sx={{
-            width: {
-              xs: '100%',
-              sm: 190,
-            },
-            flexShrink: 0,
-          }}
-          disabled={loading}
-        >
-          <InputLabel>
-            Empresa
-          </InputLabel>
-
-          <Select
-            value={filtros.empresa}
-            label="Empresa"
-            onChange={(event) =>
-              onFiltroChange(
-                'empresa',
-                event.target.value,
-              )
-            }
-            sx={{
-              borderRadius: 1,
-            }}
-          >
-            <MenuItem value="">
-              Todas
-            </MenuItem>
-
-            {empresas.map(
-              (empresa) => (
-                <MenuItem
-                  key={
-                    empresa.id_empresa
-                  }
-                  value={
-                    empresa.id_empresa
-                  }
-                >
-                  {
-                    empresa.nombre_comercial
-                  }
-                </MenuItem>
-              ),
-            )}
-          </Select>
-        </FormControl>
 
         {/* Buscar */}
         <TextField

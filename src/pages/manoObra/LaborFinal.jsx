@@ -1,3 +1,4 @@
+// Compone la pantalla LaborFinal y conecta sus componentes.
 import { Alert, Box, Snackbar } from '@mui/material'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import LaborFinalFilters from '../../components/laborFinal/LaborFinalFilters'

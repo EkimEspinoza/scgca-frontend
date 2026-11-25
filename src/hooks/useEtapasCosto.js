@@ -1,3 +1,4 @@
+// Gestiona estado y acciones de useEtapasCosto.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   actualizarEtapaCosto,

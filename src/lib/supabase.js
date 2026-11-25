@@ -1,3 +1,4 @@
+// Define la configuración o utilidad supabase de la aplicación.
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl =

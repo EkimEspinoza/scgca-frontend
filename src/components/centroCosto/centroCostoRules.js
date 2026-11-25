@@ -1,3 +1,4 @@
+// Define el componente reutilizable centroCostoRules.
 /*
  * ============================================================
  * REGLAS DEL MÓDULO CENTRO DE COSTO

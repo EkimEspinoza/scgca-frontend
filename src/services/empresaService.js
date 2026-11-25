@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de empresaService.
 import { supabase } from '../lib/supabase'
 
 /*

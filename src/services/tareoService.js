@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de tareoService.
 import { supabase } from '../lib/supabase'
 import { obtenerPorIdsPaginado, obtenerTodasLasPaginas } from './paginacionService'
 

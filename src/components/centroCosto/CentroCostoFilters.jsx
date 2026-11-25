@@ -1,3 +1,4 @@
+// Presenta los filtros de CentroCosto.
 import {
   Box,
   FormControl,
@@ -13,7 +14,6 @@ import FiltersToolbar from '../common/FiltersToolbar'
 import SearchableSelect from '../common/SearchableSelect'
 
 function CentroCostoFilters({
-  empresas,
   tiposCentroCosto,
   tiposMaquinaria,
   comparativos,
@@ -23,7 +23,6 @@ function CentroCostoFilters({
   variedadesDisponibles,
   loadingMaestros,
   loadingOpciones,
-  empresaId,
   estado,
   tipoCcId,
   tipoMaqId,
@@ -33,7 +32,6 @@ function CentroCostoFilters({
   mostrarTipoMaquinaria,
   mostrarComparativo,
   mostrarVariedad,
-  onEmpresaChange,
   onEstadoChange,
   onTipoCcChange,
   onTipoMaqChange,
@@ -69,22 +67,6 @@ function CentroCostoFilters({
           flexWrap: { xs: 'wrap', xl: 'nowrap' },
         }}
       >
-        <FormControl
-          size="small"
-          disabled={cargando}
-          sx={{ flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 180px', lg: '0 1 180px' }, minWidth: { xs: 0, sm: 160, lg: 160 } }}
-        >
-          <InputLabel>Empresa</InputLabel>
-          <Select value={empresaId ?? ''} label="Empresa" onChange={onEmpresaChange}>
-            <MenuItem value="">Todas las empresas</MenuItem>
-            {empresas.map((empresa) => (
-              <MenuItem key={empresa.id_empresa} value={empresa.id_empresa}>
-                {empresa.nombre_comercial}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
         <SearchableSelect
           size="small"
           disabled={cargando}

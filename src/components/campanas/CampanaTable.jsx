@@ -1,3 +1,4 @@
+// Presenta la tabla de Campana.
 import {
   Box,
   CircularProgress,

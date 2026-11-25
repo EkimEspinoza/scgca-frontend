@@ -1,3 +1,4 @@
+// Gestiona el contexto compartido de useAuth.
 import { useContext } from 'react'
 import { AuthContext } from './authContextStore'
 

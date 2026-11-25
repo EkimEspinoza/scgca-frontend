@@ -1,3 +1,4 @@
+// Define el componente reutilizable SearchInput.
 import {
     InputAdornment,
     TextField,

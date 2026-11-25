@@ -1,3 +1,4 @@
+// Presenta la tabla de Data.
 import {
     CircularProgress,
     Table,

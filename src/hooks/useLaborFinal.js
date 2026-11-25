@@ -1,3 +1,4 @@
+// Gestiona estado y acciones de useLaborFinal.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { actualizarLaborFinal, cambiarEstadoLaborFinal, crearLaborFinal, obtenerLaboresFinales } from '../services/laborFinalService'
 import { obtenerGruposLabor } from '../services/grupoLaborService'

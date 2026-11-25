@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de paginacionService.
 export async function obtenerTodasLasPaginas(consultaPorRango, tamanoPagina = 1000) {
   const filas = []
   for (let desde = 0; ; desde += tamanoPagina) {

@@ -1,3 +1,4 @@
+// Presenta formularios y diálogos de CentroCosto.
 import { useEffect, useState } from 'react'
 import {
   Alert,
@@ -17,6 +18,8 @@ import {
 
 import { crearCentroCosto, actualizarCentroCosto } from '../../services/centroCostoService'
 import SearchableSelect from '../common/SearchableSelect'
+import { validarDatosCentroCosto } from './centroCostoFormRules'
+import { TIPOS_CC } from './centroCostoRules'
 
 function CentroCostoForm({
   open,
@@ -46,11 +49,6 @@ function CentroCostoForm({
   const [errorGuardar, setErrorGuardar] = useState('')
 
   // Identificadores de tipos que controlan campos dependientes.
-  const TIPO_MAQUINARIAS = 3
-  const TIPO_LEVANTE = 4
-  const TIPO_INVERSION_CAMPO = 15
-  const TIPO_VIVEROS = 16
-
   // Indica si el formulario edita un centro de costo.
   const modoEdicion = Boolean(centroCostoEditar)
 
@@ -120,11 +118,11 @@ function CentroCostoForm({
   }, [open, centroCostoEditar])
 
   // Muestra campos según el tipo de centro de costo seleccionado.
-  const mostrarTipoMaquinaria = Number(tipoCcId) === TIPO_MAQUINARIAS
+  const mostrarTipoMaquinaria = Number(tipoCcId) === TIPOS_CC.MAQUINARIA
 
-  const mostrarComparativo = Number(tipoCcId) === TIPO_LEVANTE || Number(tipoCcId) === TIPO_INVERSION_CAMPO
+  const mostrarComparativo = [TIPOS_CC.LEVANTE, TIPOS_CC.INVERSION_CAMPO].includes(Number(tipoCcId))
 
-  const mostrarVariedad = Number(tipoCcId) === TIPO_LEVANTE || Number(tipoCcId) === TIPO_INVERSION_CAMPO || Number(tipoCcId) === TIPO_VIVEROS
+  const mostrarVariedad = [TIPOS_CC.LEVANTE, TIPOS_CC.INVERSION_CAMPO, TIPOS_CC.VIVEROS].includes(Number(tipoCcId))
 
   const handleEmpresaChange = (event) => {
     setEmpresaId(event.target.value)
@@ -209,41 +207,10 @@ function CentroCostoForm({
 
   // Valida los campos obligatorios antes de enviar los datos.
   const validarFormulario = () => {
-    const nuevosErrores = {}
-
-    // La empresa siempre es obligatoria.
-    if (!empresaId) {
-      nuevosErrores.empresaId = 'Seleccione una empresa.'
-    }
-
-    // El código solo es obligatorio al crear.
-    if (!modoEdicion) {
-      const codigo = Number(codCc)
-
-      if (!codCc) {
-        nuevosErrores.codCc = 'Ingrese el código del Centro de Costo.'
-      } else if (!Number.isSafeInteger(codigo) || codigo < 0) {
-        nuevosErrores.codCc = 'Ingrese un código numérico entero mayor o igual a cero.'
-      }
-    }
-
-    // La descripción es obligatoria.
-    if (!descCc.trim()) {
-      nuevosErrores.descCc = 'Ingrese la descripción del Centro de Costo.'
-    }
-
-    // El tipo de centro de costo es obligatorio.
-    if (!tipoCcId) {
-      nuevosErrores.tipoCcId = 'Seleccione el Tipo de Centro de Costo.'
-    }
-
-    // El tipo de maquinaria es obligatorio para maquinaria.
-    if (Number(tipoCcId) === TIPO_MAQUINARIAS && !tipoMaqId) {
-      nuevosErrores.tipoMaqId = 'Seleccione el Tipo de Maquinaria.'
-    }
-
+    const nuevosErrores = validarDatosCentroCosto({
+      empresaId, codCc, descCc, tipoCcId, tipoMaqId, modoEdicion,
+    })
     setErrores(nuevosErrores)
-
     return Object.keys(nuevosErrores).length === 0
   }
 

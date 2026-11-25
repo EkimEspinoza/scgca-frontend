@@ -1,3 +1,4 @@
+// Gestiona estado y acciones de useJornal.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cambiarEstadoPeriodoJornal, guardarPeriodoJornal, obtenerJornales, obtenerTiposJornalParaJornal } from '../services/jornalService'
 

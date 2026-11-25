@@ -1,6 +1,6 @@
 # BRAIN maestro de SCGCA Central
 
-**Actualizado:** 2026-11-19
+**Actualizado:** 2026-11-24
 **Estado:** documento formal e índice del conocimiento consolidado del proyecto.
 **Regla de actualización:** cuando el usuario diga **BRAIN OK**, incorporar los acuerdos y avances recientes en los archivos pertinentes. Actualizar todos los archivos afectados por un cambio, sin duplicar información innecesariamente.
 
@@ -313,3 +313,10 @@ BRAIN OK significa consolidar los acuerdos y avances acumulados hasta ese moment
 - Evaluar tarjetas mensuales para resumir los tareos, definiendo sus estados y relación con cargados/pendientes.
 - Validar visualmente Distribución y probar guardado, cierre, reapertura ADMIN y permisos por rol. Importación/exportación Excel de Distribución siguen como futuro.
 - Ordenar visualmente el diagrama de tablas de Supabase. El push a `main` no publica por sí mismo el frontend en hosting.
+
+### Actualización al 24 de noviembre de 2026
+
+- **CONFIRMADO — interfaz:** el total de resultados se trasladó de los filtros a la izquierda de la paginación en los catálogos de Empresas, Centro de Costos, Campañas, Comparativos, Etapa de Costo, Tipos de Centro de Costo, Tipos de Maquinaria, Variedades y los maestros de Servicios/Mano de Obra: Tipo de Cuenta, Cuenta Comparativo, Cuenta, Tipo de Jornal, Jornal, Grupo Labor, Labor y Labor Final. Se reutilizan `Pagination.leadingContent` y `CatalogFiltersToolbar.showResultCount`; Centro de Costos usa su paginación propia.
+- **CONFIRMADO — selector de empresa:** se evita duplicar el selector global del encabezado con otro filtro Empresa en Cuenta, Usuarios, Centro de Costos y Campañas.
+- **CONFIRMADO — Supabase Central:** las migraciones `20261124231303`, `20261124232352` y `20261124234130` aparecen local y remotamente. Conteos verificados: Dim_TipoCuenta 11, Dim_Cuenta_Comparativo 263 y Dim_Cuenta 790. Total: 86 versiones de migración local/remota coincidentes; ninguna migración fue reaplicada.
+- **PENDIENTE — UI:** no se ejecutaron build, pruebas ni validación visual manual hoy; falta revisar paginación responsive y ambos temas.

@@ -1,3 +1,4 @@
+// Gestiona estado y acciones de useVariedades.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../context/useAuth'
 import {

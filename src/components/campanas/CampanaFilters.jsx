@@ -1,3 +1,4 @@
+// Presenta los filtros de Campana.
 import {
   Autocomplete,
   Box,
@@ -14,7 +15,6 @@ import FiltersToolbar from '../common/FiltersToolbar'
 import SearchableSelect from '../common/SearchableSelect'
 
 function CampanaFilters({
-  empresas,
   centrosCosto,
   empresaSeleccionada,
   tipoCentroCostoSeleccionado,
@@ -22,7 +22,6 @@ function CampanaFilters({
   estadoFiltro,
   cierreFiltro,
   busqueda = '',
-  onEmpresaChange,
   onTipoCentroCostoChange,
   onCentroCostoChange,
   onEstadoChange,
@@ -48,22 +47,6 @@ function CampanaFilters({
         className="app-filters-row"
         sx={{ display: 'flex', alignItems: 'center', gap: 0.75, width: '100%', minWidth: 0, flexWrap: 'wrap' }}
       >
-        <FormControl
-          size="small"
-          disabled={loading}
-          sx={{ flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 160px', lg: '0 1 180px' }, minWidth: { xs: 0, sm: 140, lg: 160 } }}
-        >
-          <InputLabel>Empresa</InputLabel>
-          <Select value={empresaSeleccionada ?? ''} label="Empresa" onChange={onEmpresaChange}>
-            <MenuItem value="">Todas las empresas</MenuItem>
-            {empresas.map((empresa) => (
-              <MenuItem key={empresa.id_empresa} value={empresa.id_empresa}>
-                {empresa.nombre_comercial}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
         <SearchableSelect
           size="small"
           disabled={loading || !empresaSeleccionada}

@@ -1,3 +1,4 @@
+// Presenta la tabla de TiposMaquinaria.
 import { Edit as EditIcon } from '@mui/icons-material'
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, Switch, Tooltip, Typography } from '@mui/material'
 import useMediaQuery from '@mui/material/useMediaQuery'
@@ -38,7 +39,7 @@ export default function TiposMaquinariaTable({ loading, tiposMaquinariaPaginados
               </Box>)}
         </Box>
       ) : <DataTable columns={columnas} rows={tiposMaquinariaPaginados} loading={loading} emptyMessage="No existen tipos de maquinaria registrados." emptySearchMessage="No se encontraron tipos de maquinaria." hasSearch={Boolean(busqueda.trim()) || filtroEstado !== 'todos'} getRowKey={(tipo) => tipo.id_tipo_maq} />}
-      <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} />
+      <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} leadingContent={`${totalRegistros} ${totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}`} />
       <Dialog open={Boolean(tipoCambioEstado)} onClose={onCerrarConfirmacionEstado} maxWidth="xs" fullWidth>
         <DialogTitle>{tipoCambioEstado?.nuevoEstado ? 'Reactivar tipo de maquinaria' : 'Desactivar tipo de maquinaria'}</DialogTitle>
         <DialogContent><Typography>{tipoCambioEstado?.nuevoEstado ? `¿Deseas reactivar "${tipoCambioEstado?.des_tipo_maquinaria}"?` : `¿Deseas desactivar "${tipoCambioEstado?.des_tipo_maquinaria}"? El registro se conservará en la base de datos.`}</Typography></DialogContent>

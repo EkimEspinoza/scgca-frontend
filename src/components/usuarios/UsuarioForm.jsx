@@ -1,15 +1,8 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
-
+// Presenta formularios y diálogos de Usuario.
 import {
   Alert,
   Box,
   Button,
-  Checkbox,
-  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -17,21 +10,19 @@ import {
   DialogTitle,
   Divider,
   FormControl,
-  FormHelperText,
   InputLabel,
   MenuItem,
-  OutlinedInput,
   Select,
   Stack,
   TextField,
   Typography,
 } from '@mui/material'
 
-import { esPermisoAdministrador, obtenerEtiquetaPermiso, validarFormularioUsuario } from './usuarioRules'
+import { obtenerEtiquetaPermiso } from './usuarioRules'
 import SearchableSelect from '../common/SearchableSelect'
-
+import useUsuarioForm from '../../hooks/useUsuarioForm'
+import UsuarioEmpresasField from './UsuarioEmpresasField'
 import {
-  Business as BusinessIcon,
   Close as CloseIcon,
   Save as SaveIcon,
 } from '@mui/icons-material'
@@ -46,336 +37,8 @@ function UsuarioForm({
   onClose,
   onSave,
 }) {
-  const esEdicion = Boolean(usuario)
+  const { esEdicion, formulario, errores, esAdmin, manejarCambio, manejarPermiso, manejarGuardar } = useUsuarioForm({ open, usuario, permisos, guardando, onSave })
 
-  const [formulario, setFormulario] = useState({
-    email: '',
-    nombre: '',
-    apellido: '',
-    id_permiso: '',
-    estado: 'PENDIENTE',
-    empresas: [],
-  })
-
-  const [errores, setErrores] = useState({})
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    // Reinitialize the draft whenever the dialog opens or its target user changes.
-    // eslint-disable-next-line react/set-state-in-effect
-    if (usuario) {
-      const empresasAsignadas = (
-        usuario.usuario_empresa ?? []
-      )
-        .filter(
-          (empresa) =>
-            empresa.estado === true,
-        )
-        .map(
-          (empresa) =>
-            Number(empresa.id_empresa),
-        )
-
-      // eslint-disable-next-line react/set-state-in-effect
-      setFormulario({
-        email: usuario.email ?? '',
-        nombre: usuario.nombre ?? '',
-        apellido: usuario.apellido ?? '',
-        id_permiso: usuario.id_permiso ? String(usuario.id_permiso) : '',
-        estado:
-          usuario.estado ??
-          'PENDIENTE',
-        empresas:
-          empresasAsignadas,
-      })
-    } else {
-      setFormulario({
-        email: '',
-        nombre: '',
-        apellido: '',
-        id_permiso: '',
-        estado: 'PENDIENTE',
-        empresas: [],
-      })
-    }
-
-    setErrores({})
-  }, [
-    open,
-    usuario,
-  ])
-
-
-  const permisoSeleccionado =
-    useMemo(() => {
-      return permisos.find(
-        (permiso) =>
-          Number(
-            permiso.id_permiso,
-          ) ===
-          Number(
-            formulario.id_permiso,
-          ),
-      )
-    }, [
-      permisos,
-      formulario.id_permiso,
-    ])
-
-
-  const esAdmin =
-    esPermisoAdministrador(permisoSeleccionado?.nombre)
-
-
-  const manejarCambio = (
-    campo,
-    valor,
-  ) => {
-    setFormulario(
-      (prev) => ({
-        ...prev,
-        [campo]: valor,
-      }),
-    )
-
-    if (errores[campo]) {
-      setErrores(
-        (prev) => ({
-          ...prev,
-          [campo]: '',
-        }),
-      )
-    }
-  }
-
-
-  const manejarPermiso = (
-    event,
-  ) => {
-    const valor =
-      event.target.value
-
-    const permiso =
-      permisos.find(
-        (item) =>
-          Number(
-            item.id_permiso,
-          ) ===
-          Number(valor),
-      )
-
-    const nuevoEsAdmin =
-      permiso?.nombre ===
-      'ADMIN'
-
-    setFormulario(
-      (prev) => ({
-        ...prev,
-        id_permiso: valor,
-        empresas: nuevoEsAdmin
-          ? []
-          : prev.empresas,
-      }),
-    )
-
-    if (errores.id_permiso) {
-      setErrores(
-        (prev) => ({
-          ...prev,
-          id_permiso: '',
-        }),
-      )
-    }
-  }
-
-
-  const validar = () => {
-    const nuevosErrores = validarFormularioUsuario(formulario, {
-      esEdicion,
-      esAdmin,
-    })
-
-    setErrores(nuevosErrores)
-    return Object.keys(nuevosErrores).length === 0
-  }
-
-
-  const manejarGuardar = async () => {
-    if (!validar()) {
-      return
-    }
-
-    await onSave({
-      ...(esEdicion
-        ? {}
-        : {
-            email:
-              formulario.email
-                .trim()
-                .toLowerCase(),
-          }),
-
-      nombre:
-        formulario.nombre.trim(),
-
-      apellido:
-        formulario.apellido.trim(),
-
-      id_permiso:
-        Number(
-          formulario.id_permiso,
-        ),
-
-      estado:
-        formulario.estado,
-
-      empresas:
-        esAdmin
-          ? []
-          : formulario.empresas,
-    })
-  }
-
-
-  const renderEmpresas = () => {
-    if (esAdmin) {
-      return (
-        <Alert
-          severity="info"
-          icon={<BusinessIcon />}
-          sx={{
-            borderRadius: 1,
-          }}
-        >
-          <Typography
-            variant="body2"
-          >
-            Los usuarios con permiso
-            <strong> ADMIN </strong>
-            tienen acceso a todas las
-            empresas. No es necesario
-            asignarlas individualmente.
-          </Typography>
-        </Alert>
-      )
-    }
-
-    return (
-      <FormControl
-        fullWidth
-        error={Boolean(
-          errores.empresas,
-        )}
-      >
-        <InputLabel>
-          Empresas asignadas
-        </InputLabel>
-
-        <Select
-          multiple
-          value={
-            formulario.empresas
-          }
-          onChange={(event) => {
-            manejarCambio(
-              'empresas',
-              event.target.value.map(
-                (value) =>
-                  Number(value),
-              ),
-            )
-          }}
-          input={
-            <OutlinedInput
-              label="Empresas asignadas"
-            />
-          }
-          renderValue={(
-            seleccionadas,
-          ) => (
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap:
-                  'wrap',
-                gap: 0.5,
-              }}
-            >
-              {seleccionadas.map(
-                (idEmpresa) => {
-                  const empresa =
-                    empresas.find(
-                      (item) =>
-                        Number(
-                          item.id_empresa,
-                        ) ===
-                        Number(
-                          idEmpresa,
-                        ),
-                    )
-
-                  return (
-                    <Chip
-                      key={
-                        idEmpresa
-                      }
-                      label={
-                        empresa?.nombre_comercial ??
-                        idEmpresa
-                      }
-                      size="small"
-                    />
-                  )
-                },
-              )}
-            </Box>
-          )}
-          sx={{
-            minHeight: 42,
-            borderRadius: 1,
-          }}
-        >
-          {empresas.map(
-            (empresa) => (
-              <MenuItem
-                key={
-                  empresa.id_empresa
-                }
-                value={
-                  empresa.id_empresa
-                }
-              >
-                <Checkbox
-                  checked={formulario.empresas.includes(
-                    Number(
-                      empresa.id_empresa,
-                    ),
-                  )}
-                  size="small"
-                />
-
-                <Typography
-                  variant="body2"
-                >
-                  {
-                    empresa.nombre_comercial
-                  }
-                </Typography>
-              </MenuItem>
-            ),
-          )}
-        </Select>
-
-        <FormHelperText>
-          {errores.empresas ||
-            'Selecciona las empresas a las que tendrá acceso el usuario.'}
-        </FormHelperText>
-      </FormControl>
-    )
-  }
 
 
   return (
@@ -651,7 +314,7 @@ function UsuarioForm({
               Acceso a empresas
             </Typography>
 
-            {renderEmpresas()}
+            <UsuarioEmpresasField esAdmin={esAdmin} empresas={empresas} formulario={formulario} errores={errores} manejarCambio={manejarCambio} />
           </Box>
 
         </Stack>

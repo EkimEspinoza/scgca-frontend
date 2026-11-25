@@ -1,5 +1,6 @@
+// Presenta la tabla de MovMOResumen.
 import { Fragment, useState } from 'react'
-import { Box, Card, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Typography } from '@mui/material'
+import { Box, Card, Skeleton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Typography } from '@mui/material'
 
 const moneda = (value) => Number(value ?? 0).toLocaleString('es-PE', { style: 'currency', currency: 'PEN', minimumFractionDigits: 2 })
 const nombreEmpresa = (fila) => fila.empresa?.nombre_comercial?.trim() || fila.empresa?.descripcion?.trim() || `Empresa ${fila.id_empresa}`
@@ -15,6 +16,9 @@ function totalizar(filas) {
 
 export default function MovMOResumenTable({ filas, cargando, error }) {
   const [orden, setOrden] = useState({ campo: 'periodo', direccion: 'desc' })
+  const filasResumen = Array.isArray(filas) ? filas : []
+  const filasConPeriodo = filasResumen.filter((fila) => fila && /^\d{4}-\d{2}/.test(String(fila.periodo ?? '')))
+  const hayPeriodosInvalidos = filasConPeriodo.length !== filasResumen.length
   const columnas = [
     { key: 'empresa', label: 'Empresa' },
     { key: 'periodo', label: 'Mes' },
@@ -24,8 +28,8 @@ export default function MovMOResumenTable({ filas, cargando, error }) {
   ]
   const cambiarOrden = (campo) => setOrden((actual) => ({ campo, direccion: actual.campo === campo && actual.direccion === 'desc' ? 'asc' : 'desc' }))
   const porAnio = new Map()
-  for (const fila of filas) {
-    const anio = fila.periodo.slice(0, 4)
+  for (const fila of filasConPeriodo) {
+    const anio = String(fila.periodo).slice(0, 4)
     const porEmpresa = porAnio.get(anio) ?? new Map()
     const registrosEmpresa = porEmpresa.get(Number(fila.id_empresa)) ?? []
     registrosEmpresa.push(fila)
@@ -34,7 +38,7 @@ export default function MovMOResumenTable({ filas, cargando, error }) {
   }
 
   return <Card className="tareo-table-card" variant="outlined" sx={{ display: 'flex', flex: '1 1 0%', minHeight: 0, flexDirection: 'column', overflow: 'hidden' }}>
-    {error && <Box role="alert" sx={{ p: 1.5, color: 'error.main' }}>{error}</Box>}
+    {(error || hayPeriodosInvalidos) && <Box role="alert" sx={{ p: 1.5, color: 'error.main' }}>{error || 'El resumen recibió registros sin un periodo válido. Actualiza la vista o revisa la respuesta del servicio.'}</Box>}
     <TableContainer className="app-data-table" sx={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'auto', scrollbarWidth: 'thin', scrollbarColor: 'var(--mui-palette-divider) transparent' }}>
       <Table stickyHeader size="small" className="tareo-table" sx={{ minWidth: 780 }}>
         <TableHead><TableRow>{columnas.map((column) => {
@@ -44,8 +48,12 @@ export default function MovMOResumenTable({ filas, cargando, error }) {
           </TableCell>
         })}</TableRow></TableHead>
         <TableBody>
-          {cargando && <TableRow><TableCell colSpan={5} align="center" sx={{ py: 6 }}>Cargando resumen mensual…</TableCell></TableRow>}
-          {!cargando && !filas.length && <TableRow><TableCell colSpan={5} align="center" sx={{ py: 6 }}><Typography color="text.secondary">No hay importes para resumir en el periodo seleccionado.</Typography></TableCell></TableRow>}
+          {cargando && Array.from({ length: 6 }, (_, index) => <TableRow key={`skeleton-${index}`}>
+            {columnas.map((column) => <TableCell key={column.key} align={column.numeric ? 'right' : 'left'}>
+              <Skeleton animation="wave" variant="text" width={column.numeric ? '58%' : index % 2 ? '72%' : '86%'} sx={{ ml: column.numeric ? 'auto' : 0 }} />
+            </TableCell>)}
+          </TableRow>)}
+          {!cargando && !filasConPeriodo.length && <TableRow><TableCell colSpan={5} align="center" sx={{ py: 6 }}><Typography color="text.secondary">No hay importes para resumir en el periodo seleccionado.</Typography></TableCell></TableRow>}
           {!cargando && [...porAnio.entries()].sort(([a], [b]) => b.localeCompare(a)).map(([anio, empresas]) => {
             const filasAnio = [...empresas.values()].flat()
             const totalAnio = totalizar(filasAnio)

@@ -1,3 +1,4 @@
+// Gestiona estado y acciones de useTipoJornal.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { actualizarTipoJornal, cambiarEstadoTipoJornal, crearTipoJornal, obtenerTiposJornal } from '../services/tipoJornalService'
 

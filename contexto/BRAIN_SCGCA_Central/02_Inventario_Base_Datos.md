@@ -314,3 +314,13 @@ Proyecto Supabase Central `ajzmheqoanihdujmgbhv`.
 - `mov_tareo` y `mov_tareo_pendiente` están en la publicación `supabase_realtime`.
 - Migraciones: `20261107000440`, `20261107000709`, `20261107000836`, `20261107001649`, `20261107001922`, `20261107004536`, `20261107010252`, `20261107010552`. Consulta de solo lectura el 2026-11-12: 57 versiones locales y 57 remotas sin faltantes; tres tablas con RLS y nueve políticas. Conteo de filas: 3,678 cargadas, 0 pendientes y 0 cambios manuales auditados.
 - RLS/metadatos/conteos verificados en vivo el 2026-11-12. No se simuló una sesión por nivel; la promoción automática se invocó mediante la función interna de revalidación.
+
+## Delta de inventario: catálogos de Servicios verificados el 2026-11-24
+
+Consulta MCP al proyecto Central `ajzmheqoanihdujmgbhv` (PostgreSQL 17.6). Las tres tablas tienen RLS habilitado y políticas ADMIN-only:
+
+- `public."Dim_TipoCuenta"`: `Id_Tipo_Cuenta` smallint, `DESCRIPCION_TIPO_CUENTA` varchar, `estado` smallint (0/1), `created_at`, `updated_at`; 11 filas.
+- `public."Dim_Cuenta_Comparativo"`: `Id_Cuenta_Comparativo` smallint, `Des_Cuenta_Comparativo` varchar, `Id_Tipo_Cuenta` smallint FK a `Dim_TipoCuenta`, `estado` smallint (0/1), `created_at`, `updated_at`; 263 filas.
+- `public."Dim_Cuenta"`: `ID_CUENTA` integer, `Id_Empresa` bigint FK a `Dim_Empresa`, `CUENTA` integer, `CUENTA_PK` bigint UNIQUE, `DESCRIPCION_CUENTA` varchar, `Id_Cuenta_Comparativo` smallint FK a `Dim_Cuenta_Comparativo`, `estado` smallint (0/1), `created_at`, `updated_at`; 790 filas.
+
+Las migraciones `20261124231303_dim_tipo_cuenta_admin_catalog`, `20261124232352_dim_cuenta_comparativo_admin_catalog` y `20261124234130_dim_cuenta_admin_catalog` están tanto en historial remoto como local. No se reaplicaron. Al 2026-11-24, las 86 versiones locales coinciden con Supabase Central.

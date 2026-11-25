@@ -1,3 +1,4 @@
+// Define el componente reutilizable CatalogFiltersToolbar.
 import { Add, CleaningServices, Download } from '@mui/icons-material'
 import { Alert, Box, Button, IconButton, MenuItem, TextField, Tooltip, Typography } from '@mui/material'
 import PageHeader from './PageHeader'
@@ -7,7 +8,7 @@ import FiltersToolbar from './FiltersToolbar'
 export default function CatalogFiltersToolbar({
   title, description, loading, totalRegistros, busqueda, filtroEstado, error,
   searchValue = busqueda, searchPlaceholder, searchLabel, createLabel, canCreate = true,
-  onExportar, onCreate, onCambioBusqueda, onCambioEstado, onCerrarError, showInlineClear = false, hideSearchChip = false,
+  onExportar, onCreate, onCambioBusqueda, onCambioEstado, onCerrarError, showInlineClear = false, hideSearchChip = false, showResultCount = true,
 }) {
   const activeFilters = []
   if (busqueda?.trim() && !hideSearchChip) activeFilters.push({ id: 'busqueda', label: `Búsqueda: ${busqueda}`, onRemove: () => onCambioBusqueda({ target: { value: '' } }) })
@@ -32,7 +33,7 @@ export default function CatalogFiltersToolbar({
         {canCreate && <Button className="app-create-action-button" variant="contained" startIcon={<Add />} onClick={onCreate}>{createLabel}</Button>}
       </>}
     >
-      <Box className="app-filters-row" sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+      <Box className="app-filters-row" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
         <Box sx={{ flex: '1 1 280px', minWidth: { xs: '100%', sm: 240 } }}>
           <SearchInput value={searchValue} onChange={onCambioBusqueda} placeholder={searchPlaceholder} ariaLabel={searchLabel} maxWidth="none" />
         </Box>
@@ -41,10 +42,10 @@ export default function CatalogFiltersToolbar({
           <MenuItem value="activos">Activo</MenuItem>
           <MenuItem value="inactivos">Inactivo</MenuItem>
         </TextField>
-        <Typography variant="body2" color="text.secondary" aria-live="polite" sx={{ ml: { xs: 'auto', sm: 0 }, whiteSpace: 'nowrap', fontWeight: 500 }}>
+        {showResultCount && <Typography variant="body2" color="text.secondary" aria-live="polite" sx={{ ml: { xs: 'auto', sm: 0 }, whiteSpace: 'nowrap', fontWeight: 500 }}>
           <Box component="span" sx={{ color: 'primary.light', fontWeight: 700 }}>{totalRegistros}</Box>{' '}
           {totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}
-        </Typography>
+        </Typography>}
         {showInlineClear && <Tooltip title="Limpiar filtros" arrow>
           <span>
             <IconButton className="app-clear-filters-icon" onClick={clear} disabled={loading || !clear} aria-label="Limpiar filtros de variedades">

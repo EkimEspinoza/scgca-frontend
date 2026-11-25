@@ -1,8 +1,6 @@
-import { Fragment, useRef, useState } from 'react'
+// Define el componente reutilizable Sidebar.
+import { useState } from 'react'
 import {
-    Dashboard as DashboardIcon,
-    Assessment,
-    Percent,
     Logout,
     Menu,
     ExpandMore,
@@ -11,8 +9,7 @@ import {
     AdminPanelSettings,
     AccessTime,
     Person,
-    LightMode,
-    DarkMode,
+    ListAlt,
 } from '@mui/icons-material'
 import {
     Box,
@@ -30,7 +27,9 @@ import {
 } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
-import { useAppTheme } from '../../context/useAppTheme'
+import { getVisibleSidebarItems, sidebarGroupRoutes } from './sidebarNavigation'
+import { SidebarPrimaryItems, SidebarSubmenuItems } from './SidebarNavigationItems'
+import SidebarThemeToggle from './SidebarThemeToggle'
 
 const drawerWidth = 240
 const collapsedWidth = 72
@@ -44,47 +43,6 @@ const activeNavItemSx = {
     },
     '&:hover': { backgroundColor: 'var(--primary-soft)' },
     '& .MuiListItemIcon-root': { color: 'var(--primary-active-text)' },
-}
-
-function ThemeToggle({ collapsed = false }) {
-    const { themeName, cambiarTema, guardandoTema } = useAppTheme()
-    const clickOrigin = useRef(null)
-    const isDark = themeName === 'dark'
-    const ModeIcon = isDark ? DarkMode : LightMode
-
-    const handleToggle = async (event) => {
-        clickOrigin.current = { x: event.clientX, y: event.clientY }
-        try {
-            await cambiarTema(isDark ? 'light' : 'dark', clickOrigin.current)
-        } catch (error) {
-            console.error('Error guardando la preferencia de tema:', error)
-        } finally {
-            clickOrigin.current = null
-        }
-    }
-
-    const toggle = (
-        <Tooltip title="Cambiar tema" placement={collapsed ? 'right' : 'top'}>
-            <span>
-                <IconButton onClick={handleToggle} disabled={guardandoTema} aria-label="Cambiar tema" aria-pressed={isDark} size="small">
-                    <ModeIcon fontSize="small" />
-                </IconButton>
-            </span>
-        </Tooltip>
-    )
-
-    if (collapsed) {
-        return (
-            <Box sx={{ minHeight: 42, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{toggle}</Box>
-        )
-    }
-
-    return (
-        <Box sx={{ minHeight: 42, display: 'flex', alignItems: 'center', pl: 2, pr: 1 }}>
-            <ListItemText primary="Tema oscuro" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
-            {toggle}
-        </Box>
-    )
 }
 
 function Sidebar({
@@ -108,165 +66,20 @@ function Sidebar({
      * Estado del grupo Maestros.
      * Se abre automáticamente si estamos dentro de alguna de sus opciones.
      */
-    const rutasMaestros = [
-        '/empresas',
-        '/etapa-costo',
-        '/centro-costos',
-        '/variedades',
-        '/tipos-centro-costo',
-        '/tipos-maquinaria',
-        '/comparativos',
-        '/tipo-cambio',
-        '/campanas',
-    ]
-    const maestrosActivo = rutasMaestros.some((path) =>
+    const maestrosActivo = sidebarGroupRoutes.maestros.some((path) =>
         location.pathname.startsWith(path)
     )
     const [maestrosOpen, setMaestrosOpen] = useState(maestrosActivo)
-    const rutasTareos = ['/mov-tareo']
-    const tareosActivo = rutasTareos.some((path) => location.pathname.startsWith(path))
+    const tareosActivo = sidebarGroupRoutes.tareos.some((path) => location.pathname.startsWith(path))
     const [tareosOpen, setTareosOpen] = useState(tareosActivo)
-    const rutasManoObra = ['/grupo-labor', '/labor-final', '/labor', '/jornal', '/tipo-jornal', '/mov-mo']
-    const manoObraActivo = rutasManoObra.some((path) => location.pathname.startsWith(path))
+    const manoObraActivo = sidebarGroupRoutes.manoObra.some((path) => location.pathname.startsWith(path))
     const [manoObraOpen, setManoObraOpen] = useState(manoObraActivo)
-    const rutasAccesos = ['/usuarios', '/modulos', '/permisos']
-    const accesosActivo = rutasAccesos.some((path) => location.pathname.startsWith(path))
+    const serviciosActivo = sidebarGroupRoutes.servicios.some((path) => location.pathname.startsWith(path))
+    const [serviciosOpen, setServiciosOpen] = useState(serviciosActivo)
+    const accesosActivo = sidebarGroupRoutes.accesos.some((path) => location.pathname.startsWith(path))
     const [accesosOpen, setAccesosOpen] = useState(accesosActivo)
 
-    /*
-     * Menú principal.
-     */
-    const menuItems = [
-        {
-            text: 'Dashboard',
-            icon: <DashboardIcon fontSize="small" />,
-            path: '/dashboard',
-        },
-        {
-            text: 'Distribución',
-            icon: <Percent fontSize="small" />,
-            path: '/distribucion',
-            moduleCode: 'DISTRIBUCION',
-        },
-
-        {
-            text: 'Reportes',
-            icon: <Assessment fontSize="small" />,
-            path: '/reportes',
-        },
-    ]
-
-    /*
-     * Opciones del grupo Maestros.
-     */
-    const maestrosItems = [
-        {
-            text: 'Campañas',
-            path: '/campanas',
-            moduleCode: 'CAMPANAS',
-            permissions: ['ADMIN'],
-        },
-        {
-            text: 'Centro de Costos',
-            path: '/centro-costos',
-            moduleCode: 'CENTRO_COSTOS',
-            permissions: ['ADMIN'],
-        },
-        {
-            text: 'Comparativos',
-            path: '/comparativos',
-            moduleCode: 'COMPARATIVOS',
-            permissions: ['ADMIN'],
-        },
-        {
-            text: 'Empresas',
-            path: '/empresas',
-            moduleCode: 'EMPRESAS',
-            permissions: ['ADMIN'],
-        },
-        {
-            text: 'Etapa de Costo Inversión',
-            path: '/etapa-costo',
-            moduleCode: 'ETAPAS_COSTO',
-            permissions: ['ADMIN'],
-        },
-        {
-            text: 'Tipos de Centro de Costo',
-            path: '/tipos-centro-costo',
-            moduleCode: 'TIPOS_CENTRO_COSTO',
-            permissions: ['ADMIN'],
-        },
-        {
-            text: 'Tipos de Maquinaria',
-            path: '/tipos-maquinaria',
-            moduleCode: 'TIPOS_MAQUINARIA',
-            permissions: ['ADMIN'],
-        },
-        {
-            text: 'Variedades',
-            path: '/variedades',
-            moduleCode: 'VARIEDADES',
-            permissions: ['ADMIN'],
-        },
-        {
-            text: 'Tipo Cambio',
-            path: '/tipo-cambio',
-            moduleCode: 'TIPO_CAMBIO',
-            permissions: ['ADMIN'],
-        },
-    ]
-
-    const tareosItems = [
-        {
-            text: 'Mov. Tareo',
-            path: '/mov-tareo',
-            moduleCode: 'MOV_TAREO',
-            permissions: ['ADMIN'],
-        },
-    ]
-    const manoObraItems = [
-        { text: 'Labor', path: '/labor', permissions: ['ADMIN'] },
-        { text: 'Labor Final', path: '/labor-final', permissions: ['ADMIN'] },
-        { text: 'Grupo Labor', path: '/grupo-labor', permissions: ['ADMIN'] },
-        { text: 'Jornal', path: '/jornal', permissions: ['ADMIN'] },
-        { text: 'Tipo de Jornal', path: '/tipo-jornal', permissions: ['ADMIN'] },
-        { text: 'Mov. Mano de Obra', path: '/mov-mo', permissions: ['ADMIN'], separador: true },
-    ]
-
-    const accesosItems = [
-        { text: 'Usuarios', path: '/usuarios' },
-        { text: 'Módulos', path: '/modulos' },
-        { text: 'Permisos', path: '/permisos' },
-    ]
-
-    /*
-     * Filtrar opciones según el permiso del usuario.
-     */
-    const itemsVisibles = menuItems.filter((item) => {
-        if (item.permissions && !item.permissions.includes(permiso)) return false
-        if (!item.moduleCode) return true
-        return perfil?.modulos?.some((modulo) => modulo.codigo === item.moduleCode && (permiso === 'ADMIN' || ['QUERY', 'WRITER'].includes(modulo.nivel)))
-    })
-    const maestrosVisibles = maestrosItems.filter((item) => {
-        if (item.permissions && !item.permissions.includes(permiso)) {
-            return false
-        }
-        if (item.moduleCode) {
-            return perfil?.modulos?.some((modulo) =>
-                modulo.codigo === item.moduleCode &&
-                (permiso === 'ADMIN' || ['QUERY', 'WRITER'].includes(modulo.nivel)),
-            )
-        }
-        return true
-    })
-    const tareosVisibles = tareosItems.filter((item) =>
-        (!item.permissions || item.permissions.includes(permiso)) &&
-        perfil?.modulos?.some((modulo) =>
-            modulo.codigo === item.moduleCode &&
-            (permiso === 'ADMIN' || ['QUERY', 'WRITER'].includes(modulo.nivel)),
-        ),
-    )
-    const manoObraVisibles = manoObraItems.filter((item) => !item.permissions || item.permissions.includes(permiso))
+    const { menuItems: itemsVisibles, maestrosItems: maestrosVisibles, tareosItems: tareosVisibles, manoObraItems: manoObraVisibles, serviciosItems: serviciosVisibles, accesosItems } = getVisibleSidebarItems(perfil, permiso)
 
     /*
      * Navegar a una ruta y cerrar el menú móvil cuando corresponda.
@@ -317,6 +130,15 @@ function Sidebar({
             return
         }
         setManoObraOpen((prev) => !prev)
+    }
+
+    const handleServiciosToggle = () => {
+        if (!isMobile && collapsed) {
+            onToggle()
+            setServiciosOpen(true)
+            return
+        }
+        setServiciosOpen((prev) => !prev)
     }
 
     const handleAccesosToggle = () => {
@@ -390,36 +212,7 @@ function Sidebar({
 
                 {/* MENÚ PRINCIPAL */}
                 <List sx={{ px: 0.5, py: 0.75 }}>
-                    {itemsVisibles.map((item) => {
-                        const active = isActive(item.path)
-                        return (
-                            <ListItemButton
-                                key={item.text}
-                                selected={active}
-                                onClick={() => handleNavigate(item.path)}
-                                sx={{
-                                    minHeight: 42,
-                                    justifyContent: 'initial',
-                                    px: 2,
-                                '&.Mui-selected': activeNavItemSx,
-                                    '&:hover': {
-                                        backgroundColor: 'action.hover',
-                                    },
-                                }}
-                            >
-                                <ListItemIcon
-                                    sx={{
-                                        minWidth: 0,
-                                        mr: 2,
-                                        justifyContent: 'center',
-                                    }}
-                                >
-                                    {item.icon}
-                                </ListItemIcon>
-                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
-                            </ListItemButton>
-                        )
-                    })}
+                    <SidebarPrimaryItems items={itemsVisibles} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} />
 
                     {tareosVisibles.length > 0 && (
                         <>
@@ -435,11 +228,7 @@ function Sidebar({
                             </ListItemButton>
                             <Collapse in={tareosOpen} timeout="auto" unmountOnExit>
                                 <List component="div" disablePadding>
-                                    {tareosVisibles.map((item) => (
-                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
-                                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
-                                        </ListItemButton>
-                                    ))}
+                                    <SidebarSubmenuItems items={tareosVisibles} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} />
                                 </List>
                             </Collapse>
                         </>
@@ -454,12 +243,22 @@ function Sidebar({
                             </ListItemButton>
                             <Collapse in={manoObraOpen} timeout="auto" unmountOnExit>
                                 <List component="div" disablePadding>
-                                    {manoObraVisibles.map((item) => <Fragment key={item.path}>
-                                        {item.separador && <Divider sx={{ mx: 2, my: 0.75 }} />}
-                                        <ListItemButton selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
-                                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
-                                        </ListItemButton>
-                                    </Fragment>)}
+                                    <SidebarSubmenuItems items={manoObraVisibles} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} separators />
+                                </List>
+                            </Collapse>
+                        </>
+                    )}
+
+                    {serviciosVisibles.length > 0 && (
+                        <>
+                            <ListItemButton onClick={handleServiciosToggle} sx={{ minHeight: 42, px: 2, backgroundColor: serviciosActivo ? 'action.hover' : 'transparent', '&:hover': { backgroundColor: 'action.hover' } }}>
+                                <ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: 'center' }}><ListAlt fontSize="small" /></ListItemIcon>
+                                <ListItemText primary="Servicios" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
+                                {serviciosOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
+                            </ListItemButton>
+                            <Collapse in={serviciosOpen} timeout="auto" unmountOnExit>
+                                <List component="div" disablePadding>
+                                    <SidebarSubmenuItems items={serviciosVisibles} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} />
                                 </List>
                             </Collapse>
                         </>
@@ -498,31 +297,7 @@ function Sidebar({
                     </ListItemButton>
                     <Collapse in={maestrosOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
-                            {maestrosVisibles.map((item) => {
-                                const active = isActive(item.path)
-                                return (
-                                    <ListItemButton
-                                        key={item.text}
-                                        selected={active}
-                                        onClick={() => handleNavigate(item.path)}
-                                        sx={{
-                                            minHeight: 38,
-                                            /*
-                                             * Se mantiene el ajuste de indentación
-                                             * para acercar las opciones hacia la izquierda.
-                                             */
-                                            pl: 2.5,
-                                            pr: 1.5,
-                                            '&.Mui-selected': activeNavItemSx,
-                                            '&:hover': {
-                                                backgroundColor: 'action.hover',
-                                            },
-                                        }}
-                                    >
-                                        <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
-                                    </ListItemButton>
-                                )
-                            })}
+                            <SidebarSubmenuItems items={maestrosVisibles} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} hover />
                         </List>
                     </Collapse>
                     {permiso === 'ADMIN' && (
@@ -534,11 +309,7 @@ function Sidebar({
                             </ListItemButton>
                             <Collapse in={accesosOpen} timeout="auto" unmountOnExit>
                                 <List component="div" disablePadding>
-                                    {accesosItems.map((item) => (
-                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
-                                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
-                                        </ListItemButton>
-                                    ))}
+                                    <SidebarSubmenuItems items={accesosItems} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} />
                                 </List>
                             </Collapse>
                         </>
@@ -548,7 +319,7 @@ function Sidebar({
                 {/* FOOTER MÓVIL */}
                 <Box sx={{ marginTop: 'auto' }}>
                     <Divider />
-                    <ThemeToggle />
+                    <SidebarThemeToggle />
                     <Divider />
                     <ListItemButton
                         onClick={handleLogout}
@@ -642,48 +413,7 @@ function Sidebar({
 
             {/* MENÚ PRINCIPAL */}
             <List sx={{ px: 0.5, py: 0.75 }}>
-                {itemsVisibles.map((item) => {
-                    const active = isActive(item.path)
-                    const button = (
-                        <ListItemButton
-                            key={item.text}
-                            selected={active}
-                            onClick={() => handleNavigate(item.path)}
-                            sx={{
-                                minHeight: 42,
-                                justifyContent: collapsed ? 'center' : 'initial',
-                                px: 2,
-                                '&.Mui-selected': activeNavItemSx,
-                                '&:hover': {
-                                    backgroundColor: 'action.hover',
-                                },
-                            }}
-                        >
-                            <ListItemIcon
-                                sx={{
-                                    minWidth: 0,
-                                    mr: collapsed ? 0 : 2,
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                {item.icon}
-                            </ListItemIcon>
-                            {!collapsed && <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />}
-                        </ListItemButton>
-                    )
-                    if (collapsed) {
-                        return (
-                            <Tooltip
-                                key={item.text}
-                                title={item.text}
-                                placement="right"
-                            >
-                                {button}
-                            </Tooltip>
-                        )
-                    }
-                    return button
-                })}
+                <SidebarPrimaryItems items={itemsVisibles} collapsed={collapsed} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} />
 
                 {tareosVisibles.length > 0 && (
                     <>
@@ -702,11 +432,7 @@ function Sidebar({
                         {!collapsed && (
                             <Collapse in={tareosOpen} timeout="auto" unmountOnExit>
                                 <List component="div" disablePadding>
-                                    {tareosVisibles.map((item) => (
-                                        <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
-                                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
-                                        </ListItemButton>
-                                    ))}
+                                    <SidebarSubmenuItems items={tareosVisibles} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} />
                                 </List>
                             </Collapse>
                         )}
@@ -736,12 +462,7 @@ function Sidebar({
                         {!collapsed && (
                             <Collapse in={manoObraOpen} timeout="auto" unmountOnExit>
                                 <List component="div" disablePadding>
-                                    {manoObraVisibles.map((item) => <Fragment key={item.path}>
-                                        {item.separador && <Divider sx={{ mx: 2, my: 0.75 }} />}
-                                        <ListItemButton selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
-                                            <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
-                                        </ListItemButton>
-                                    </Fragment>)}
+                                    <SidebarSubmenuItems items={manoObraVisibles} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} separators />
                                 </List>
                             </Collapse>
                         )}
@@ -750,6 +471,34 @@ function Sidebar({
                                 <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                                     <ListItemButton onClick={handleManoObraToggle} sx={{ minHeight: 42, justifyContent: 'center', px: 2, backgroundColor: manoObraActivo ? 'action.hover' : 'transparent' }}>
                                         <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}><Person fontSize="small" /></ListItemIcon>
+                                    </ListItemButton>
+                                </Box>
+                            </Tooltip>
+                        )}
+                    </>
+                )}
+
+                {serviciosVisibles.length > 0 && (
+                    <>
+                        {!collapsed && (
+                            <ListItemButton onClick={handleServiciosToggle} sx={{ minHeight: 42, px: 2, backgroundColor: serviciosActivo ? 'action.hover' : 'transparent', '&:hover': { backgroundColor: 'action.hover' } }}>
+                                <ListItemIcon sx={{ minWidth: 0, mr: 2, justifyContent: 'center' }}><ListAlt fontSize="small" /></ListItemIcon>
+                                <ListItemText primary="Servicios" sx={{ '& .MuiListItemText-primary': { fontSize: '0.8125rem', lineHeight: 1.25 } }} />
+                                {serviciosOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
+                            </ListItemButton>
+                        )}
+                        {!collapsed && (
+                            <Collapse in={serviciosOpen} timeout="auto" unmountOnExit>
+                                <List component="div" disablePadding>
+                                    <SidebarSubmenuItems items={serviciosVisibles} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} />
+                                </List>
+                            </Collapse>
+                        )}
+                        {collapsed && (
+                            <Tooltip title="Servicios" placement="right">
+                                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <ListItemButton onClick={handleServiciosToggle} sx={{ minHeight: 42, justifyContent: 'center', px: 2, backgroundColor: serviciosActivo ? 'action.hover' : 'transparent' }}>
+                                        <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}><ListAlt fontSize="small" /></ListItemIcon>
                                     </ListItemButton>
                                 </Box>
                             </Tooltip>
@@ -795,34 +544,7 @@ function Sidebar({
                 {!collapsed && (
                     <Collapse in={maestrosOpen} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
-                            {maestrosVisibles.map((item) => {
-                                const active = isActive(item.path)
-                                return (
-                                    <ListItemButton
-                                        key={item.text}
-                                        selected={active}
-                                        onClick={() => handleNavigate(item.path)}
-                                        sx={{
-                                            minHeight: 38,
-                                            /*
-                                             * Se mantiene el ajuste de indentación
-                                             * que mueve las opciones hacia la izquierda.
-                                             */
-                                            pl: 2.5,
-                                            pr: 1.5,
-                                            '&.Mui-selected': activeNavItemSx,
-                                            '&:hover': {
-                                                backgroundColor: 'action.hover',
-                                            },
-                                        }}
-                                    >
-                                        {/*
-                                         * Las opciones de Maestros no utilizan iconos individuales.
-                                         */}
-                                        <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
-                                    </ListItemButton>
-                                )
-                            })}
+                            <SidebarSubmenuItems items={maestrosVisibles} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} hover />
                         </List>
                     </Collapse>
                 )}
@@ -864,11 +586,7 @@ function Sidebar({
                         </ListItemButton>
                         <Collapse in={accesosOpen} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
-                                {accesosItems.map((item) => (
-                                    <ListItemButton key={item.path} selected={isActive(item.path)} onClick={() => handleNavigate(item.path)} sx={{ minHeight: 38, pl: 2.5, pr: 1.5, '&.Mui-selected': activeNavItemSx }}>
-                                        <ListItemText primary={item.text} sx={{ '& .MuiListItemText-primary': { fontSize: '0.75rem', lineHeight: 1.2 } }} />
-                                    </ListItemButton>
-                                ))}
+                                <SidebarSubmenuItems items={accesosItems} isActive={isActive} onNavigate={handleNavigate} selectedSx={activeNavItemSx} />
                             </List>
                         </Collapse>
                     </>
@@ -887,7 +605,7 @@ function Sidebar({
             {/* FOOTER DESKTOP */}
             <Box sx={{ marginTop: 'auto' }}>
                 <Divider />
-                <ThemeToggle collapsed={collapsed} />
+                <SidebarThemeToggle collapsed={collapsed} />
                 <Divider />
                 <Tooltip
                     title={collapsed ? 'Cerrar sesión' : ''}

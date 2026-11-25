@@ -1,3 +1,5 @@
+// Inicia la aplicación React y monta su árbol principal.
+// Inicia la aplicación React y monta su árbol principal.
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'

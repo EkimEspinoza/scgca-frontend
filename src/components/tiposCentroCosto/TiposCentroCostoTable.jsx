@@ -1,3 +1,4 @@
+// Presenta la tabla de TiposCentroCosto.
 import { Edit as EditIcon } from '@mui/icons-material'
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, Switch, Tooltip, Typography } from '@mui/material'
 import useMediaQuery from '@mui/material/useMediaQuery'
@@ -42,7 +43,7 @@ export default function TiposCentroCostoTable({
               </Box>)}
         </Box>
       ) : <DataTable columns={columnas} rows={tiposPaginados} loading={loading} emptyMessage="No existen tipos de centro de costo registrados." emptySearchMessage="No se encontraron tipos de centro de costo para la búsqueda." hasSearch={Boolean(busqueda.trim()) || filtroEstado !== 'todos'} getRowKey={(tipo) => tipo.id_tip_cc} />}
-      <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} />
+      <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} leadingContent={`${totalRegistros} ${totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}`} />
       <Dialog open={Boolean(tipoCambioEstado)} onClose={onCerrarConfirmacionEstado} maxWidth="xs" fullWidth>
         <DialogTitle>{tipoCambioEstado?.nuevoEstado ? 'Reactivar tipo de centro de costo' : 'Desactivar tipo de centro de costo'}</DialogTitle>
         <DialogContent><Typography>{tipoCambioEstado?.nuevoEstado ? `¿Deseas reactivar "${tipoCambioEstado?.des_tip_cc}"?` : `¿Deseas desactivar "${tipoCambioEstado?.des_tip_cc}"? El registro se conservará en la base de datos.`}</Typography></DialogContent>

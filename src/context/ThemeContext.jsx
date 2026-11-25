@@ -1,3 +1,4 @@
+// Gestiona el contexto compartido de ThemeContext.
 import {
   useCallback,
   useEffect,
@@ -52,7 +53,7 @@ export function AppThemeProvider({ children }) {
       Math.hypot(window.innerWidth - x, y),
       Math.hypot(x, window.innerHeight - y),
       Math.hypot(window.innerWidth - x, window.innerHeight - y),
-    ))
+    ) + 24)
     document.documentElement.style.setProperty('--theme-reveal-x', `${x}px`)
     document.documentElement.style.setProperty('--theme-reveal-y', `${y}px`)
     document.documentElement.style.setProperty('--theme-reveal-radius', `${radio}px`)

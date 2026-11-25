@@ -1,3 +1,4 @@
+// Compone la pantalla CentroCostos y conecta sus componentes.
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Snackbar, Typography, } from '@mui/material'
 import { Add as AddIcon, Storage as StorageIcon, TableView as TableViewIcon } from '@mui/icons-material'
 
@@ -64,7 +65,6 @@ function CentroCostos() {
      // FILTROS
      // =====================================================
      
-    empresaId,
     estado,
     tipoCcId,
     tipoMaqId,
@@ -92,7 +92,6 @@ function CentroCostos() {
      // EVENTOS
      // =====================================================
      
-    handleEmpresaChange,
     handleEstadoChange,
     handleTipoCcChange,
     handleTipoMaqChange,
@@ -164,7 +163,6 @@ function CentroCostos() {
       <Box sx={{flexShrink: 0,minWidth: 0}}>
 
         <CentroCostoFilters
-          empresas={empresas}
           tiposCentroCosto={tiposCentroCostoFiltrados}
           tiposMaquinaria={tiposMaquinaria}
           comparativos={comparativos}
@@ -174,7 +172,6 @@ function CentroCostos() {
           variedadesDisponibles={variedadesDisponibles}
           loadingMaestros={loadingMaestros}
           loadingOpciones={loadingOpciones}
-          empresaId={empresaId}
           estado={estado}
           tipoCcId={tipoCcId}
           tipoMaqId={tipoMaqId}
@@ -185,7 +182,6 @@ function CentroCostos() {
           mostrarComparativo={mostrarComparativo}
           mostrarVariedad={mostrarVariedad}
           
-          onEmpresaChange={handleEmpresaChange}
           onEstadoChange={handleEstadoChange}
           onTipoCcChange={handleTipoCcChange}
           onTipoMaqChange={handleTipoMaqChange}

@@ -1,3 +1,4 @@
+// Presenta formularios y diálogos de EtapasCosto.
 import { Close as CloseIcon, Save } from '@mui/icons-material'
 import {
   Box,

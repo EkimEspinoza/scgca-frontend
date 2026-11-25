@@ -1,3 +1,4 @@
+// Presenta formularios y diálogos de TiposMaquinaria.
 import { Close as CloseIcon, Save } from '@mui/icons-material'
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, TextField, Typography } from '@mui/material'
 

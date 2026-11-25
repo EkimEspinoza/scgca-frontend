@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de grupoLaborService.
 import { supabase } from '../lib/supabase'
 
 const CAMPOS_GRUPO_LABOR = `

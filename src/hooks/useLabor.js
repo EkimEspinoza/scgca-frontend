@@ -1,3 +1,4 @@
+// Gestiona estado y acciones de useLabor.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { actualizarLabor, cambiarEstadoLabor, crearLabor, obtenerLabores } from '../services/laborService'
 import { obtenerLaboresFinales } from '../services/laborFinalService'

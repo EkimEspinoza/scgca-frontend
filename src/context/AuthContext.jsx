@@ -1,3 +1,4 @@
+// Gestiona el contexto compartido de AuthContext.
 import {
   useCallback,
   useEffect,

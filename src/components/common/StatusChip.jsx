@@ -1,3 +1,4 @@
+// Define el componente reutilizable StatusChip.
 import { Chip, Typography, useTheme } from '@mui/material'
 
 function StatusChip({

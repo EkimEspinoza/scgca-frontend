@@ -1,3 +1,4 @@
+// Define el componente reutilizable PageTitle.
 import PageHeader from './common/PageHeader'
 
 function PageTitle({ title, subtitle }) {

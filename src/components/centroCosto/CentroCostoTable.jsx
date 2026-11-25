@@ -1,3 +1,4 @@
+// Presenta la tabla de CentroCosto.
 import {
   Box,
   Divider,
@@ -217,25 +218,29 @@ function CentroCostoTable({ centros, loading, total, pagina, registrosPorPagina,
         </Table>
       </TableContainer>
 
-      <TablePagination
-        component="div"
-        count={total}
-        page={pagina}
-        onPageChange={onChangePagina}
-        rowsPerPage={registrosPorPagina}
-        onRowsPerPageChange={onChangeRegistrosPorPagina}
-        rowsPerPageOptions={[10, 25, 50, 100]}
-        labelRowsPerPage="Registros por página"
-        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
-        sx={{
-          borderTop: '1px solid #E8ECEA',
-          flexShrink: 0,
-          '& .MuiTablePagination-toolbar': { minHeight: 48, px: { xs: 0.5, sm: 1.5 }, flexWrap: { xs: 'wrap', sm: 'nowrap' }, justifyContent: { xs: 'center', sm: 'flex-end' } },
-          '& .MuiTablePagination-selectLabel': { fontSize: '12px' },
-          '& .MuiTablePagination-displayedRows': { fontSize: '12px' },
-          '& .MuiTablePagination-select': { fontSize: '12px' },
-        }}
-      />
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 0, flexShrink: 0, borderTop: '1px solid #E8ECEA' }}>
+        <Typography variant="body2" color="text.secondary" sx={{ pl: 2, whiteSpace: 'nowrap', flexShrink: 0 }}>
+          {total} {total === 1 ? 'registro encontrado' : 'registros encontrados'}
+        </Typography>
+        <TablePagination
+          component="div"
+          count={total}
+          page={pagina}
+          onPageChange={onChangePagina}
+          rowsPerPage={registrosPorPagina}
+          onRowsPerPageChange={onChangeRegistrosPorPagina}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          labelRowsPerPage="Registros por página"
+          labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
+          sx={{
+            flex: 1, minWidth: 0,
+            '& .MuiTablePagination-toolbar': { minHeight: 48, px: { xs: 0.5, sm: 1.5 }, flexWrap: { xs: 'wrap', sm: 'nowrap' }, justifyContent: { xs: 'center', sm: 'flex-end' } },
+            '& .MuiTablePagination-selectLabel': { fontSize: '12px' },
+            '& .MuiTablePagination-displayedRows': { fontSize: '12px' },
+            '& .MuiTablePagination-select': { fontSize: '12px' },
+          }}
+        />
+      </Box>
     </Paper>
   )
 }

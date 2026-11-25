@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de distribucionService.
 import { supabase } from '../lib/supabase'
 
 export async function obtenerEmpresasDistribucion() {

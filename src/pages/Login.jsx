@@ -1,3 +1,4 @@
+// Compone la pantalla Login y conecta sus componentes.
 import { useState } from 'react'
 import { useAuth } from '../context/useAuth'
 import '../styles/Login.css'

@@ -1,3 +1,4 @@
+// Define el componente reutilizable campanaRules.
 export const TIPOS_CC_PERMITIDOS = [
     'LEVANTE Y MANTENIMIENTO',
     'INVERSIÓN E INSTALACIÓN CAMPO',

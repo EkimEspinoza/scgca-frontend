@@ -1,3 +1,4 @@
+// Presenta la tabla de Usuario.
 import {
   Box,
   IconButton,
@@ -20,8 +21,7 @@ import {
 } from '@mui/icons-material'
 
 import { obtenerEtiquetaPermiso } from './usuarioRules'
-
-const usuarioCollator = new Intl.Collator('es-PE', { numeric: true, sensitivity: 'base' })
+import { ordenarUsuarios } from './usuarioTableSort'
 
 const COLORES_EMPRESA = {
   RANCHO: '#1976D2',
@@ -129,18 +129,8 @@ function UsuarioTable({
   onEditar,
 }) {
   const [orden, setOrden] = useState({ campo: '', direccion: 'asc' })
-  const camposOrden = {
-    nombre: (usuario) => usuario.nombre,
-    apellido: (usuario) => usuario.apellido,
-    permiso: (usuario) => usuario.permiso?.nombre,
-    empresas: (usuario) => obtenerTextoEmpresas(usuario),
-    estado: (usuario) => usuario.estado,
-  }
   const usuariosOrdenados = useMemo(() => {
-    if (!orden.campo) return usuarios
-    const obtenerValor = camposOrden[orden.campo]
-    const factor = orden.direccion === 'asc' ? 1 : -1
-    return [...usuarios].sort((a, b) => usuarioCollator.compare(String(obtenerValor(a) ?? ''), String(obtenerValor(b) ?? '')) * factor)
+    return ordenarUsuarios(usuarios, orden, obtenerTextoEmpresas)
   }, [usuarios, orden])
   const cambiarOrden = (campo) => setOrden((actual) => ({ campo, direccion: actual.campo === campo && actual.direccion === 'asc' ? 'desc' : 'asc' }))
   const encabezadoOrdenable = (texto, campo, width) => {

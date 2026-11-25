@@ -1,3 +1,4 @@
+// Define el componente reutilizable SearchableSelect.
 import { Autocomplete, TextField } from '@mui/material'
 
 export default function SearchableSelect({

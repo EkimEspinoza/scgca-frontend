@@ -1,3 +1,4 @@
+// Define estilos compartidos del tema de la aplicación.
 import { alpha, createTheme } from '@mui/material/styles'
 
 import { tokens } from './tokens'

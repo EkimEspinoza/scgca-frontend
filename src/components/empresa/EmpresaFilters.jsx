@@ -1,3 +1,4 @@
+// Presenta los filtros de Empresa.
 import CatalogFiltersToolbar from '../common/CatalogFiltersToolbar'
 
 export default function EmpresaFilters({ loading, puedeAdministrar, totalRegistros, busqueda, filtroEstado, error, onExportar, onNuevaEmpresa, onCambioBusqueda, onCambioEstado, onCerrarError }) {
@@ -18,5 +19,6 @@ export default function EmpresaFilters({ loading, puedeAdministrar, totalRegistr
     searchLabel="Buscar empresa o nombre comercial"
     createLabel="Nueva Empresa"
     canCreate={puedeAdministrar}
+    showResultCount={false}
   />
 }

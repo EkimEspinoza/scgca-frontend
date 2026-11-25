@@ -1,3 +1,4 @@
+// Gestiona el contexto compartido de useEmpresa.
 import { useContext } from 'react'
 import { EmpresaContext } from './empresaContextStore'
 

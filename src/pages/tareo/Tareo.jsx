@@ -1,3 +1,4 @@
+// Compone la pantalla Tareo y conecta sus componentes.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Alert,
@@ -32,15 +33,13 @@ import { useAuth } from '../../context/useAuth'
 import { useEmpresa } from '../../context/useEmpresa'
 import { supabase } from '../../lib/supabase'
 import { actualizarEstadoMovimientoTareo, actualizarMovimientoTareo, buscarPartesTareoAusentes, contarMovimientosTareo, importarMovimientosTareo, inactivarMovimientosTareo, listarMovimientosTareo, obtenerOpcionesFiltrosTareo, obtenerResumenMensualTareo } from '../../services/tareoService'
+import { useTareoSummary } from '../../hooks/useTareoSummary'
 
 function Tareo() {
   const { perfil } = useAuth()
   const { empresaActual, empresas, loading: empresasCargando, error: errorEmpresas } = useEmpresa()
   const [pestana, setPestana] = useState(0)
-  const [resumen, setResumen] = useState({ registros: 0, enProceso: 0, pendientes: 0 })
   const [filas, setFilas] = useState([])
-  const [filasResumen, setFilasResumen] = useState([])
-  const [cargandoResumen, setCargandoResumen] = useState(false)
   const [total, setTotal] = useState(0)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
@@ -69,21 +68,13 @@ function Tareo() {
   const [cambiandoEstadoId, setCambiandoEstadoId] = useState(null)
   const cargarFilasRef = useRef(null)
   const idEmpresa = empresaActual?.id_empresa ?? null
+  const { resumen, setResumen, filasResumen, cargandoResumen, cargarResumenMensual } = useTareoSummary({
+    pestana, idEmpresa, fechaDesde, fechaHasta, setError,
+  })
   const empresasTabla = [...empresas, ...empresasComplementarias]
   const nivelModulo = perfil?.modulos?.find((modulo) => modulo.codigo === 'MOV_TAREO')?.nivel
   const esAdmin = perfil?.permiso?.nombre === 'ADMIN'
   const puedeEditar = esAdmin || nivelModulo === 'WRITER'
-
-  useEffect(() => {
-    let vigente = true
-    contarMovimientosTareo(idEmpresa, fechaDesde, fechaHasta)
-      .then((data) => { if (vigente) setResumen(data) })
-      .catch((err) => {
-        console.error('Error cargando los totales de Tareo:', err)
-        if (vigente) setError(err?.message || 'No se pudieron cargar los totales de Tareo.')
-      })
-    return () => { vigente = false }
-  }, [idEmpresa, fechaDesde, fechaHasta])
 
   const cargarFilas = useCallback(async () => {
     if (pestana === 3) {
@@ -127,28 +118,6 @@ function Tareo() {
   }, [pestana, idEmpresa, fechaDesde, fechaHasta, busqueda, estadoFiltro, centroCostoFiltro, maquinariaFiltro, pagina, filasPorPagina])
 
   useEffect(() => { void cargarFilas() }, [cargarFilas])
-
-  const cargarResumenMensual = useCallback(async () => {
-    if (pestana !== 3) return
-    if (fechaDesde && fechaHasta && fechaDesde > fechaHasta) {
-      setFilasResumen([])
-      setCargandoResumen(false)
-      return
-    }
-    setCargandoResumen(true)
-    setError('')
-    try {
-      setFilasResumen(await obtenerResumenMensualTareo({ idEmpresa, fechaDesde, fechaHasta }))
-    } catch (err) {
-      console.error('Error cargando el resumen mensual de Tareo:', err)
-      setError(err?.message || 'No se pudo cargar el resumen mensual de Tareo.')
-      setFilasResumen([])
-    } finally {
-      setCargandoResumen(false)
-    }
-  }, [pestana, idEmpresa, fechaDesde, fechaHasta])
-
-  useEffect(() => { void cargarResumenMensual() }, [cargarResumenMensual])
 
   useEffect(() => {
     let vigente = true

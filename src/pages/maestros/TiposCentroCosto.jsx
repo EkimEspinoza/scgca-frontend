@@ -1,3 +1,4 @@
+// Compone la pantalla TiposCentroCosto y conecta sus componentes.
 import { Alert, Box, Snackbar } from '@mui/material'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import TiposCentroCostoFilters from '../../components/tiposCentroCosto/TiposCentroCostoFilters'

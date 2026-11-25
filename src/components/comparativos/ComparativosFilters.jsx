@@ -1,3 +1,4 @@
+// Presenta los filtros de Comparativos.
 import CatalogFiltersToolbar from '../common/CatalogFiltersToolbar'
 
 export default function ComparativosFilters({ loading, totalRegistros, busqueda, filtroEstado, error, onExportar, onNuevo, onCambioBusqueda, onCambioEstado, onCerrarError }) {
@@ -19,5 +20,6 @@ export default function ComparativosFilters({ loading, totalRegistros, busqueda,
     searchLabel="Buscar comparativo"
     createLabel="Nuevo comparativo"
     showInlineClear
+    showResultCount={false}
   />
 }

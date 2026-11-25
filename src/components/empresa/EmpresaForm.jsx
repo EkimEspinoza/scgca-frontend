@@ -1,3 +1,4 @@
+// Presenta formularios y diálogos de Empresa.
 import { Close, Save } from '@mui/icons-material'
 import {
   Box,

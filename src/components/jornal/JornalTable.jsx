@@ -1,3 +1,4 @@
+// Presenta la tabla de Jornal.
 import { Fragment, useMemo, useState } from 'react'
 import { KeyboardArrowDown, KeyboardArrowUp, Edit as EditIcon } from '@mui/icons-material'
 import { Box, Button, CircularProgress, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Tooltip, Typography } from '@mui/material'
@@ -77,7 +78,7 @@ export default function JornalTable({ loading, periodos, tiposJornal, totalRegis
         </TableBody>
       </Table>
     </TableContainer>
-    <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} />
+    <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} leadingContent={`${totalRegistros} ${totalRegistros === 1 ? 'periodo encontrado' : 'periodos encontrados'}`} />
     <Dialog open={Boolean(periodoCambioEstado)} onClose={onCerrarConfirmacionEstado} maxWidth="xs" fullWidth>
       <DialogTitle>{periodoCambioEstado?.nuevoEstado === 1 ? 'Reactivar periodo' : 'Desactivar periodo'}</DialogTitle>
       <DialogContent><Typography>¿Deseas {periodoCambioEstado?.nuevoEstado === 1 ? 'reactivar' : 'desactivar'} todos los tipos de jornal del periodo {formatoFecha(periodoCambioEstado?.Inicio)} a {formatoFecha(periodoCambioEstado?.Fin)}?</Typography></DialogContent>

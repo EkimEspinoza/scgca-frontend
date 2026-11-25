@@ -1,15 +1,12 @@
+// Presenta la tabla de MovMO.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Edit as EditIcon, ViewColumn } from '@mui/icons-material'
 import { Box, Card, Chip, Checkbox, FormControlLabel, FormGroup, IconButton, Popover, Skeleton, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Tooltip, Typography } from '@mui/material'
 import { obtenerEtapasCosto } from '../../services/etapaCostoService'
+import { motivoValidacion } from './motivoValidacion'
 
 const fecha = (value) => value ? new Intl.DateTimeFormat('es-PE').format(new Date(`${value.slice(0, 10)}T00:00:00`)) : '—'
 const soles = (value) => value == null || value === '' ? '—' : Number(value).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const mensajesValidacion = { SIN_CAMPANA_EN_FECHA: 'No existe una campaña activa para la fecha' }
-const motivoValidacion = (error) => {
-  const codigo = typeof error === 'string' ? error : error?.codigo ?? error?.code ?? error?.message ?? String(error)
-  return mensajesValidacion[codigo] ?? codigo.replaceAll('_', ' ').toLocaleLowerCase('es-PE')
-}
 const anchosColumnas = [150, 116, 160, 220, 180, 145, 260, 120, 120, 130, 220, 130, 64]
 const offsetsFijos = [0, anchosColumnas[0], anchosColumnas[0] + anchosColumnas[1], anchosColumnas[0] + anchosColumnas[1] + anchosColumnas[2]]
 const estiloCelda = (ancho) => ({ width: ancho, minWidth: ancho, maxWidth: ancho, boxSizing: 'border-box' })
@@ -109,7 +106,7 @@ export default function MovMOTable({ filas, cargando, error, total, pagina, fila
             {columnasVisibles.imp_labor_sol !== false && <TableCell align="right" sx={{ ...estiloCelda(anchosColumnas[7]), fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{soles(fila.imp_labor_sol)}</TableCell>}
             {columnasVisibles.ess_labor_sol !== false && <TableCell align="right" sx={{ ...estiloCelda(anchosColumnas[8]), fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{soles(fila.ess_labor_sol)}</TableCell>}
             {columnasVisibles.etapa_costo !== false && <TableCell sx={{ ...estiloCelda(anchosColumnas[9]), overflow: 'hidden' }}><Tooltip title={descripcionEtapa(fila.etapa_costo)}><Typography variant="body2" noWrap>{descripcionEtapa(fila.etapa_costo) || '—'}</Typography></Tooltip></TableCell>}
-            {columnasVisibles.observacion !== false && <TableCell sx={{ ...estiloCelda(anchosColumnas[10]), overflow: 'hidden' }}>{pendientes ? <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>{fila.errores_validacion?.length ? fila.errores_validacion.map((error) => <Tooltip key={motivoValidacion(error)} title={motivoValidacion(error)}><Chip size="small" color="warning" variant="outlined" label={motivoValidacion(error)} sx={{ maxWidth: '100%' }} /></Tooltip>) : <Chip size="small" color="warning" variant="outlined" label={fila.estado_validacion || 'Pendiente de revisión'} />}</Box> : <Tooltip title={fila.obs || ''}><Typography variant="body2" noWrap color={fila.obs ? 'warning.main' : 'text.secondary'}>{fila.obs || '—'}</Typography></Tooltip>}</TableCell>}
+            {columnasVisibles.observacion !== false && <TableCell sx={{ ...estiloCelda(anchosColumnas[10]), overflow: 'hidden' }}>{pendientes ? <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>{fila.errores_validacion?.length ? fila.errores_validacion.map((error) => { const mensaje = motivoValidacion(error, fila); return <Tooltip key={mensaje} title={mensaje}><Chip size="small" color="warning" variant="outlined" label={mensaje} sx={{ maxWidth: '100%' }} /></Tooltip> }) : <Chip size="small" color="warning" variant="outlined" label={fila.estado_validacion || 'Pendiente de revisión'} />}</Box> : <Tooltip title={fila.obs || ''}><Typography variant="body2" noWrap color={fila.obs ? 'warning.main' : 'text.secondary'}>{fila.obs || '—'}</Typography></Tooltip>}</TableCell>}
             {columnasVisibles.estado !== false && <TableCell sx={{ ...estiloCelda(anchosColumnas[11]), whiteSpace: 'nowrap' }}><Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}><Switch size="small" checked={Number(fila.estado) === 1} disabled={!onCambiarEstado || cambiandoEstadoId === fila.id_mov_mo} onChange={() => onCambiarEstado?.(fila)} inputProps={{ 'aria-label': `${Number(fila.estado) === 1 ? 'Desactivar' : 'Activar'} movimiento ${fila.id_mov_mo}` }} /><Typography variant="body2" color={Number(fila.estado) === 1 ? 'success.main' : 'text.secondary'}>{Number(fila.estado) === 1 ? 'Activo' : 'Inactivo'}</Typography></Box></TableCell>}
             <TableCell align="center" sx={{ ...estiloCelda(anchosColumnas[12]), p: 0.5 }}><Tooltip title={enProceso ? 'Editar centro de costo, labor y etapa' : pendientes ? 'Corregir centro de costo, labor y etapa' : 'Editar centro de costo y etapa de labor'}><span><IconButton size="small" aria-label={`Editar movimiento ${fila.id_mov_mo}`} onClick={() => onEditar?.(fila)} disabled={!onEditar}><EditIcon fontSize="small" /></IconButton></span></Tooltip></TableCell>
           </TableRow>)}

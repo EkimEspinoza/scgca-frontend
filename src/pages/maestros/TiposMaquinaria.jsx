@@ -1,3 +1,4 @@
+// Compone la pantalla TiposMaquinaria y conecta sus componentes.
 import { Alert, Box, Snackbar } from '@mui/material'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import TiposMaquinariaFilters from '../../components/tiposMaquinaria/TiposMaquinariaFilters'

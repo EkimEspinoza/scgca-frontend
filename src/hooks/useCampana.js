@@ -1,6 +1,9 @@
+// Coordina la carga, edición y operaciones principales del módulo Campañas.
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEmpresa } from '../context/useEmpresa'
 import { obtenerCampanas, obtenerEmpresasActivas, obtenerCentrosCostoParaCampana, crearCampana, actualizarCampana, cambiarEstadoCampana, cambiarCierreCampana, eliminarCampana } from '../services/campanaService'
 import { validarFormularioCampana, construirDatosCampana, obtenerMensajeErrorCampana } from '../components/campanas/campanaRules'
+import useCampanaFilters from './useCampanaFilters'
 
 export const formularioInicial = {
     id_campana_emp: '',
@@ -23,6 +26,8 @@ function sumarUnDia(fecha) {
 }
 
 function useCampana({ codCcPkContextual = '' } = {}) {
+    const { empresaActual } = useEmpresa()
+    const empresaGlobalId = empresaActual?.id_empresa == null ? '' : String(empresaActual.id_empresa)
     // ============================================================
     // DATOS
     // ============================================================
@@ -30,6 +35,8 @@ function useCampana({ codCcPkContextual = '' } = {}) {
     const [campanas, setCampanas] = useState([])
     const [empresas, setEmpresas] = useState([])
     const [centrosCosto, setCentrosCosto] = useState([])
+    const [centrosCostoFiltros, setCentrosCostoFiltros] = useState([])
+    const [loadingCentrosCostoFiltros, setLoadingCentrosCostoFiltros] = useState(false)
 
 
     /* ============================================================
@@ -41,25 +48,6 @@ function useCampana({ codCcPkContextual = '' } = {}) {
     const [loadingEmpresas, setLoadingEmpresas] = useState(true)
     const [loadingCentrosCosto, setLoadingCentrosCosto] = useState(false)
 
-
-    // ============================================================
-    // FILTROS
-    // ============================================================
-
-
-    const [busqueda, setBusqueda] = useState('')
-    const [empresaFiltro, setEmpresaFiltro] = useState('')
-    const [tipoCentroCostoFiltro, setTipoCentroCostoFiltro] = useState('')
-    const [centroCostoFiltro, setCentroCostoFiltro] = useState('')
-    const [estadoFiltro, setEstadoFiltro] = useState('')
-    const [cierreFiltro, setCierreFiltro] = useState('')
-
-    // ============================================================
-    // PAGINACIÓN
-    // ============================================================
-
-    const [pagina, setPagina] = useState(0)
-    const [registrosPorPagina, setRegistrosPorPagina] = useState(10)
 
     // ============================================================
     // FORMULARIO
@@ -136,6 +124,14 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         } finally { setLoadingCentrosCosto(false) }
     }, [mostrarMensaje])
 
+    const {
+        busqueda, setBusqueda, tipoCentroCostoFiltro, setTipoCentroCostoFiltro,
+        centroCostoFiltro, setCentroCostoFiltro, estadoFiltro, setEstadoFiltro, cierreFiltro, setCierreFiltro,
+        pagina, setPagina, registrosPorPagina, setRegistrosPorPagina, campanasFiltradas, campanasPaginadas,
+        handleBusquedaChange, handleTipoCentroCostoFiltroChange,
+        handleCentroCostoFiltroChange, handleEstadoFiltroChange, handleCierreFiltroChange, limpiarFiltros,
+    } = useCampanaFilters({ campanas, esModoContextual, codCcPkContextual, empresaGlobalId })
+
     // ============================================================
     // CARGA INICIAL
     // ============================================================
@@ -161,226 +157,25 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         void cargarCentrosCosto(formulario.id_empresa)
     }, [formulario.id_empresa, cargarCentrosCosto])
 
-    function handleBusquedaChange(event) {
-        setBusqueda(event.target.value)
-        setPagina(0)
-    }
-    // ============================================================
-    // FILTRO POR EMPRESA
-    // ============================================================
-
-    async function handleEmpresaFiltroChange(event) {
-        const idEmpresa = event.target.value
-        setEmpresaFiltro(idEmpresa)
-        setTipoCentroCostoFiltro('')
-        // Al cambiar la empresa,
-        // el Centro de Costo seleccionado
-        // deja de ser válido.
-        setCentroCostoFiltro('')
-        setPagina(0)
-        if (!idEmpresa) {
-            setCentrosCosto([])
-            return
-        }
-        await cargarCentrosCosto(idEmpresa)
-    }
-
-    // ============================================================
-    // FILTRO POR TIPO DE CENTRO DE COSTO
-    // ============================================================
-
-    function handleTipoCentroCostoFiltroChange(event) {
-        setTipoCentroCostoFiltro(event.target.value)
-        setCentroCostoFiltro('')
-        setPagina(0)
-    }
-
-    // ============================================================
-    // FILTRO POR CENTRO DE COSTO
-    // ============================================================
-
-    function handleCentroCostoFiltroChange(event) {
-        setCentroCostoFiltro(event.target.value)
-        setPagina(0)
-    }
-
-    // ============================================================
-    // FILTRO POR ESTADO
-    // ''     = Todos
-    // 'true' = Activo
-    // 'false'= Inactivo
-    // ============================================================
-
-    function handleEstadoFiltroChange(event) {
-        setEstadoFiltro(event.target.value)
-        setPagina(0)
-    }
-
-    // ============================================================
-    // FILTRO POR CIERRE
-    // ''     = Todos
-    // 'false'= Abierta
-    // 'true' = Cerrada
-    // ============================================================
-
-    function handleCierreFiltroChange(event) {
-        setCierreFiltro(event.target.value)
-        setPagina(0)
-    }
-
-    // ============================================================
-    // FILTROS / BÚSQUEDA
-    // ============================================================
-
-    const campanasFiltradas =
-        useMemo(() => {
-            const texto = busqueda.trim().toLowerCase()
-            let resultado = campanas
-
-            // ====================================================
-            // MODO CONTEXTUAL
-            // ====================================================
-
-            if (esModoContextual) { resultado = resultado.filter((campana) => String(campana.cod_cc_pk) === String(codCcPkContextual)) }
-
-            // ====================================================
-            // FILTRO POR EMPRESA
-            // ====================================================
-
-            if (empresaFiltro) {
-                resultado = resultado.filter((campana) => String(campana.id_empresa) === String(empresaFiltro))
-            }
-
-            // ====================================================
-            // FILTRO POR TIPO DE CENTRO DE COSTO
-            // ====================================================
-
-            if (tipoCentroCostoFiltro) {
-                resultado = resultado.filter((campana) => String(campana.centro_costo?.id_tip_cc) === String(tipoCentroCostoFiltro))
-            }
-
-            // ====================================================
-            // FILTRO POR CENTRO DE COSTO
-            // ====================================================
-
-            if (centroCostoFiltro) {
-                resultado = resultado.filter((campana) => String(campana.cod_cc_pk) === String(centroCostoFiltro))
-            }
-
-            // ====================================================
-            // FILTRO POR ESTADO
-            // ====================================================
-
-
-            if (estadoFiltro !== '') {
-                const estadoSeleccionado = estadoFiltro === 'true'
-                resultado = resultado.filter((campana) => Boolean(campana.estado) === estadoSeleccionado)
-            }
-
-            // ====================================================
-            // FILTRO POR CIERRE
-            // ====================================================
-
-            if (cierreFiltro !== '') {
-                const cierreSeleccionado = cierreFiltro === 'true'
-                resultado = resultado.filter((campana) => Boolean(campana.cierre_camp) === cierreSeleccionado)
-            }
-
-            // ====================================================
-            // BÚSQUEDA GENERAL
-            // ====================================================
-
-            if (!texto) { return resultado }
-            return resultado.filter(
-                (campana) => {
-                    const empresa = campana.empresa?.descripcion ?? ''
-                    const comercial = campana.empresa?.nombre_comercial ?? ''
-                    const centroCosto = campana.centro_costo?.desc_cc ?? ''
-                    const codigoCc = campana.centro_costo?.cod_cc?.toString() ?? ''
-                    const idCampana = campana.id_campana?.toString() ?? ''
-                    const idCampanaEmpresa = campana.id_campana_emp?.toString() ?? ''
-                    const nombre = campana.nombre_campana ?? ''
-                    const estado = campana.estado ? 'activo' : 'inactivo'
-                    const cierre = campana.cierre_camp ? 'cerrada' : 'abierta'
-
-                    return [
-                        empresa,
-                        comercial,
-                        centroCosto,
-                        codigoCc,
-                        idCampana,
-                        idCampanaEmpresa,
-                        nombre,
-                        estado,
-                        cierre,
-                    ]
-                        .join(' ')
-                        .toLowerCase()
-                        .includes(texto)
-                })
-        }, [
-            campanas,
-            busqueda,
-            empresaFiltro,
-            tipoCentroCostoFiltro,
-            centroCostoFiltro,
-            estadoFiltro,
-            cierreFiltro,
-            esModoContextual,
-            codCcPkContextual])
-
-
-    // ============================================================
-    // REINICIAR PÁGINA
-    // ============================================================
-
     useEffect(() => {
-        // Keep pagination valid when filters change.
-        // eslint-disable-next-line react/set-state-in-effect
-        setPagina(0)
-    }, [
-        busqueda,
-        empresaFiltro,
-        tipoCentroCostoFiltro,
-        centroCostoFiltro,
-        estadoFiltro,
-        cierreFiltro,
-        codCcPkContextual,
-    ])
-
-    // ============================================================
-    // PAGINACIÓN
-    // ============================================================
-
-    const campanasPaginadas =
-        useMemo(() => {
-            const inicio = pagina * registrosPorPagina
-            const fin = inicio + registrosPorPagina
-            return campanasFiltradas.slice(inicio, fin)
-        }, [
-            campanasFiltradas,
-            pagina,
-            registrosPorPagina,
-        ])
-    // ============================================================
-    // LIMPIAR FILTROS
-    // ============================================================
-
-    function limpiarFiltros() {
-        setEmpresaFiltro('')
-        setTipoCentroCostoFiltro('')
-        setCentroCostoFiltro('')
-        setEstadoFiltro('')
-        setCierreFiltro('')
-        setBusqueda('')
-        setPagina(0)
-        if (!esModoContextual) {
-            setCentrosCosto([])
+        let vigente = true
+        if (!empresaGlobalId) {
+            setCentrosCostoFiltros([])
+            setLoadingCentrosCostoFiltros(false)
+            return () => { vigente = false }
         }
-    }
+        setLoadingCentrosCostoFiltros(true)
+        obtenerCentrosCostoParaCampana(empresaGlobalId)
+            .then((data) => { if (vigente) setCentrosCostoFiltros(data ?? []) })
+            .catch((error) => {
+                if (!vigente) return
+                setCentrosCostoFiltros([])
+                mostrarMensaje(obtenerMensajeErrorCampana(error), 'error')
+            })
+            .finally(() => { if (vigente) setLoadingCentrosCostoFiltros(false) })
+        return () => { vigente = false }
+    }, [empresaGlobalId, mostrarMensaje])
 
-
-    // ============================================================
     // EXPORTAR A EXCEL
     // ============================================================
 
@@ -649,19 +444,20 @@ function useCampana({ codCcPkContextual = '' } = {}) {
 
         empresas,
         centrosCosto,
+        centrosCostoFiltros,
 
         /* Cargas */
 
         loading,
         loadingEmpresas,
         loadingCentrosCosto,
+        loadingCentrosCostoFiltros,
 
         /* Filtros */
 
         busqueda,
         setBusqueda,
-        empresaFiltro,
-        setEmpresaFiltro,
+        empresaGlobalId,
         tipoCentroCostoFiltro,
         setTipoCentroCostoFiltro,
         centroCostoFiltro,
@@ -671,7 +467,6 @@ function useCampana({ codCcPkContextual = '' } = {}) {
         cierreFiltro,
         setCierreFiltro,
         handleBusquedaChange,
-        handleEmpresaFiltroChange,
         handleTipoCentroCostoFiltroChange,
         handleCentroCostoFiltroChange,
         handleEstadoFiltroChange,

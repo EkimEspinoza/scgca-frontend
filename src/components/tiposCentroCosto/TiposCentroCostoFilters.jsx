@@ -1,3 +1,4 @@
+// Presenta los filtros de TiposCentroCosto.
 import CatalogFiltersToolbar from '../common/CatalogFiltersToolbar'
 
 export default function TiposCentroCostoFilters({ loading, totalRegistros, busqueda, filtroEstado, error, onExportar, onNuevo, onCambioBusqueda, onCambioEstado, onCerrarError }) {
@@ -19,5 +20,6 @@ export default function TiposCentroCostoFilters({ loading, totalRegistros, busqu
     searchLabel="Buscar tipo de centro de costo"
     createLabel="Nuevo tipo de Centro de Costo"
     showInlineClear
+    showResultCount={false}
   />
 }

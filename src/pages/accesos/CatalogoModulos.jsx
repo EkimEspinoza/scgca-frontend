@@ -1,3 +1,4 @@
+// Compone la pantalla CatalogoModulos y conecta sus componentes.
 import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,

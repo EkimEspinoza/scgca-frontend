@@ -1,3 +1,4 @@
+// Presenta la tabla de GrupoLabor.
 import { Edit as EditIcon } from '@mui/icons-material'
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, Switch, Tooltip, Typography } from '@mui/material'
 import DataTable from '../common/DataTable'
@@ -25,7 +26,7 @@ export default function GrupoLaborTable({ loading, grupos, totalRegistros, busqu
 
   return <Paper elevation={0} sx={{ width: '100%', minWidth: 0, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden', backgroundColor: 'background.paper' }}>
     <DataTable columns={columnas} rows={grupos} loading={loading} emptyMessage="No existen grupos de labor registrados." emptySearchMessage="No se encontraron grupos de labor." hasSearch={Boolean(busqueda.trim()) || filtroEstado !== 'todos'} getRowKey={(grupo) => grupo.Id_Grupo_Labor} />
-    <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} />
+    <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} leadingContent={`${totalRegistros} ${totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}`} />
     <Dialog open={Boolean(grupoCambioEstado)} onClose={onCerrarConfirmacionEstado} maxWidth="xs" fullWidth>
       <DialogTitle>{grupoCambioEstado?.nuevoEstado === 1 ? 'Reactivar Grupo Labor' : 'Desactivar Grupo Labor'}</DialogTitle>
       <DialogContent><Typography>{grupoCambioEstado?.nuevoEstado === 1

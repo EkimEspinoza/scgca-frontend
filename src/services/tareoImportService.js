@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de tareoImportService.
 import * as XLSX from 'xlsx'
 
 const ALIAS_COLUMNAS = {

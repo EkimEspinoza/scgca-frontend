@@ -1,3 +1,4 @@
+// Compone la pantalla Campanas y conecta sus componentes.
 import {Alert,Box,Button,Dialog,DialogActions,DialogContent,DialogTitle,Paper,Snackbar,Stack,Typography} from '@mui/material'
 import {Add as AddIcon,Campaign,TableView as TableViewIcon} from '@mui/icons-material'
 import { useSearchParams } from 'react-router-dom'
@@ -31,6 +32,7 @@ function Campanas() {
 
         empresas,
         centrosCosto,
+        centrosCostoFiltros,
         ultimaCampanaCentroCosto,
 
         //--------------------------------------------------------
@@ -40,6 +42,7 @@ function Campanas() {
         loading,
         loadingEmpresas,
         loadingCentrosCosto,
+        loadingCentrosCostoFiltros,
 
         // --------------------------------------------------------
         // Filtros
@@ -48,12 +51,11 @@ function Campanas() {
         busqueda,
         handleBusquedaChange,
 
-        empresaFiltro,
+        empresaGlobalId,
         tipoCentroCostoFiltro,
         centroCostoFiltro,
         estadoFiltro,
         cierreFiltro,
-        handleEmpresaFiltroChange,
         handleTipoCentroCostoFiltroChange,
         handleCentroCostoFiltroChange,
         handleEstadoFiltroChange,
@@ -190,16 +192,14 @@ function Campanas() {
             ===================================================== */}
                 <CampanaFilters
 
-                    empresas={empresas}
                     tipoCentroCostoSeleccionado={tipoCentroCostoFiltro}
-                    centrosCosto={centrosCosto}
-                    empresaSeleccionada={empresaFiltro}
+                    centrosCosto={centrosCostoFiltros}
+                    empresaSeleccionada={empresaGlobalId}
                     centroCostoSeleccionado={centroCostoFiltro}
                     estadoFiltro={estadoFiltro}
                     cierreFiltro={cierreFiltro}
                     busqueda={busqueda}
 
-                    onEmpresaChange={handleEmpresaFiltroChange}
                     onTipoCentroCostoChange={handleTipoCentroCostoFiltroChange}
                     onCentroCostoChange={handleCentroCostoFiltroChange}
                     onEstadoChange={handleEstadoFiltroChange}
@@ -207,7 +207,7 @@ function Campanas() {
                     onBusquedaChange={handleBusquedaChange}
                     onLimpiarFiltros={limpiarFiltros}
 
-                    loading={loading || loadingEmpresas || loadingCentrosCosto || eliminando}
+                    loading={loading || loadingCentrosCostoFiltros || eliminando}
                 />
             {/* ====================================================
                 TABLA
@@ -239,6 +239,7 @@ function Campanas() {
                         registrosPorPagina={registrosPorPagina}
                         onPageChange={handleChangePagina}
                         onRowsPerPageChange={handleChangeRegistrosPorPagina}
+                        leadingContent={`${campanasFiltradas.length} ${campanasFiltradas.length === 1 ? 'registro encontrado' : 'registros encontrados'}`}
                     />
                 </Box>
             </Paper>

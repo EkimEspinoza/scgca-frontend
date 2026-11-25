@@ -1,3 +1,4 @@
+// Encapsula las operaciones de datos de laborService.
 import { supabase } from '../lib/supabase'
 
 const CAMPOS_LABOR = 'Id_Lab, Lab_SCIRE, Id_Lab_Fin, estado, created_at, updated_at'

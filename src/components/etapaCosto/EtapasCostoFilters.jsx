@@ -1,3 +1,4 @@
+// Presenta los filtros de EtapasCosto.
 import CatalogFiltersToolbar from '../common/CatalogFiltersToolbar'
 
 export default function EtapasCostoFilters({ loading, totalRegistros, busqueda, filtroEstado, error, onExportar, onNuevaEtapa, onCambioBusqueda, onCambioEstado, onCerrarError }) {
@@ -17,5 +18,6 @@ export default function EtapasCostoFilters({ loading, totalRegistros, busqueda, 
     searchPlaceholder="Buscar por código o etapa..."
     searchLabel="Buscar etapa de costo"
     createLabel="Nueva etapa"
+    showResultCount={false}
   />
 }

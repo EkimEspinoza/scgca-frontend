@@ -1,3 +1,4 @@
+// Compone la pantalla EtapasCosto y conecta sus componentes.
 import { Alert, Box, Snackbar } from '@mui/material'
 import CompactModuleTheme from '../../components/common/CompactModuleTheme'
 import EtapasCostoFilters from '../../components/etapaCosto/EtapasCostoFilters'

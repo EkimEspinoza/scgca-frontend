@@ -1,3 +1,4 @@
+// Presenta la tabla de Variedades.
 import { Edit } from '@mui/icons-material'
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, Switch, Tooltip, Typography } from '@mui/material'
 import useMediaQuery from '@mui/material/useMediaQuery'
@@ -41,7 +42,7 @@ export default function VariedadesTable({ puedeAdministrar, loading, variedadesP
               </Box>)}
         </Box>
       ) : <DataTable columns={columnas} rows={variedadesPaginadas} loading={loading} emptyMessage="No existen variedades registradas." emptySearchMessage="No se encontraron variedades." hasSearch={Boolean(busqueda.trim()) || filtroEstado !== 'todos'} getRowKey={(variedad) => variedad.id_variedad} />}
-      <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} />
+      <Pagination total={totalRegistros} pagina={pagina} registrosPorPagina={registrosPorPagina} onPageChange={onChangePagina} onRowsPerPageChange={onChangeRegistrosPorPagina} leadingContent={`${totalRegistros} ${totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados'}`} />
       {puedeAdministrar && <Dialog open={Boolean(variedadCambioEstado)} onClose={onCerrarConfirmacionEstado} maxWidth="xs" fullWidth>
         <DialogTitle>{variedadCambioEstado?.nuevoEstado ? 'Reactivar variedad' : 'Desactivar variedad'}</DialogTitle>
         <DialogContent><Typography>{variedadCambioEstado?.nuevoEstado ? `¿Deseas reactivar "${variedadCambioEstado?.descripcion}"?` : `¿Deseas desactivar "${variedadCambioEstado?.descripcion}"? El registro se conservará en la base de datos.`}</Typography></DialogContent>
